@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "device_restored": "auto",
+  "new_background_job_completed": "e23a4dc948b14be7b417e4082b2ad33b",
+  "sampled_detection_count": 4,
+  "purpose": "Verify fresh-job path after evidence-overwrite protection; separate from full CPU experiment",
+  "full_cpu_job_preserved": "7ec10fd036ac4849aadbd87504c71183",
+  "ai_review_download_matches": true
+}

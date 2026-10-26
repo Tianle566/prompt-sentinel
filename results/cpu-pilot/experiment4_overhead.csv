@@ -1,0 +1,9 @@
+﻿layer,n,mean_ms,median_ms,p95_ms,source
+L1,74,0.08264359486339665,0.02606249472592026,0.07579199154861271,real inference; original detector latency retained across cache reuse
+L2,74,132.8955631210733,73.82537500234321,104.39095800393261,real inference; original detector latency retained across cache reuse
+L3,74,1666.4609425403082,1564.1739790007705,2681.27674999414,real inference; original detector latency retained across cache reuse
+L4,5,0.029600400011986494,0.02370899892412126,0.04495901521295309,real inference; original detector latency retained across cache reuse
+L5,5,0.3610833897255361,0.18962498870678246,1.1457079963292927,real inference; original detector latency retained across cache reuse
+detection_total,74,1799.508288270256,1641.7084580025403,2781.329249992268,real inference; original detector latency retained across cache reuse
+target_and_orchestration,5,8097.280374204274,9045.177331019659,9544.880123983603,wall-clock residual after measured layers; includes actual target inference and orchestration
+pipeline_total,5,9594.988674810156,10436.754667025525,10872.82158297603,real inference; original detector latency retained across cache reuse

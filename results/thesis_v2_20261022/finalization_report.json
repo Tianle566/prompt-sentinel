@@ -1,0 +1,60 @@
+{
+  "status": "verified_saved_evidence_consistency",
+  "completed_utc": "2026-10-22T10:07:22.855591+00:00",
+  "method": "Independent mathematical recomputation and saved structured oracle-evidence consistency only; no model-based oracle replay or target regeneration performed in finalization.",
+  "full_corpus": true,
+  "detection_inputs": 1316,
+  "asr_policy_sample_cells": 1800,
+  "independent_table_figure_checks": 3427,
+  "saved_oracle_evidence_checks": 1800,
+  "model_oracle_replay_performed": false,
+  "resumption": {
+    "reason": "Original unified exec session returned exit status 143 (SIGTERM); no Python exception was logged. Signal sender is not yet established.",
+    "original_exec_session": 23328,
+    "original_pid": 34811,
+    "last_saved_progress": {
+      "utc": "2026-10-22T09:21:00.221721+00:00",
+      "percent": 51.875,
+      "message": "策略测试 275/1800：hardening / indirect"
+    },
+    "resume_started_utc": "2026-10-22T09:24:47.857737+00:00",
+    "resume_pid": 36530,
+    "saved_detection_rows": 1316,
+    "saved_asr_prefix_rows": 275,
+    "saved_asr_prefix_bytes": 587082,
+    "saved_asr_prefix_sha256": "b941aa8546f63ac8e967bd09071b850f4d9dddbd13871df3873a8368fa21b17f",
+    "original_persistent_cache_hits": 4,
+    "preserved_artifact_sha256": {
+      "experiment1_l2_roc.csv": "e51201c6b869af398d3367ede7c28d517918d7452aa5779bdd75714d2149d9ef",
+      "experiment1_confusion.png": "526a0f0485cc5adfd11a9757713d89fb6cf764f3e10c903a4ab512a5b4ec0ea8",
+      "detection_predictions.jsonl": "4f6f67c2140e823ecf700fa443722d594124773e54306f3a69e2321f72be9e2d",
+      "experiment1_f1.png": "30c3981ea012df763e179ec5f9f40f8263bdd7a723fea418258051860a2e5418",
+      "asr_responses.jsonl": "b941aa8546f63ac8e967bd09071b850f4d9dddbd13871df3873a8368fa21b17f",
+      "config_snapshot.json": "55b84354f487650764f5eefcb069f354a1a5fe27cf2ba1f6e6ff440f7e18e4c2",
+      "experiment1_detection.csv": "eba4c16ab71cb70b2a8d5689417d313d7b9971b4985234e00d0285b990a8d345",
+      "experiment1_l2_roc.png": "70d87c354aa7bf8ae91c2710a75914dce59dab7c063ef8c7cd7a2ef13bab7b8c"
+    },
+    "resume_function_sha256": "05b92ece594ea13fc4a208cc49bb41e4961f665f83cf9f74a6279d37ad2273b9",
+    "method": "Private copy of the existing run_evaluation function resumes saved prediction and policy/sample cells; first 275 response lines are not regenerated or overwritten; elapsed includes interruption gap. No application source was modified.",
+    "limitation": "Canaries/nonces are process-local and intentionally random. Remaining cells use a new process; any in-flight unsaved generation at termination is not counted as a completed cell.",
+    "completed_remaining_asr_cells": 1525,
+    "elapsed_includes_interruption_gap": true
+  },
+  "preservation": {
+    "immutable_file_count": 45,
+    "immutable_changes": [],
+    "source_file_count": 51,
+    "source_changes": [],
+    "asr_275_prefix_unchanged": true,
+    "detection_stage_artifacts_unchanged": {
+      "experiment1_l2_roc.csv": true,
+      "experiment1_confusion.png": true,
+      "detection_predictions.jsonl": true,
+      "experiment1_f1.png": true,
+      "config_snapshot.json": true,
+      "experiment1_detection.csv": true,
+      "experiment1_l2_roc.png": true
+    }
+  },
+  "ai_review": "See ai_review_summary.json when separately completed; independent AI review is not human review or ground truth."
+}

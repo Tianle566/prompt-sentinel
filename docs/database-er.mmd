@@ -1,0 +1,44 @@
+erDiagram
+    USERS ||--o{ REQUEST_LOGS : creates
+    USERS ||--o{ EVALUATION_JOBS : launches
+    USERS ||--o{ POLICY_AUDITS : changes
+    USERS {
+        int id PK
+        string username UK
+        string password_hash
+        string role
+        datetime created_at
+    }
+    REQUEST_LOGS {
+        int id PK
+        int user_id FK
+        string kind
+        text text
+        bool protected
+        bool blocked
+        string attack_type
+        json hit_layers
+        float latency_ms
+        json result
+        datetime created_at
+    }
+    EVALUATION_JOBS {
+        string id PK
+        int user_id FK
+        string experiment
+        string status
+        float progress
+        text message
+        json config
+        json result
+        text error
+        datetime created_at
+        datetime updated_at
+    }
+    POLICY_AUDITS {
+        int id PK
+        int user_id FK
+        json before
+        json after
+        datetime created_at
+    }

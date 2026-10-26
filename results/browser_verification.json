@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "verified_at": "2026-10-22T05:51:29.951799+00:00",
+  "browser": "in-app browser",
+  "url": "http://127.0.0.1:5173/evaluation",
+  "full_evaluation_job": "7ec10fd036ac4849aadbd87504c71183",
+  "checks": [
+    "Sample cards support two simultaneous selections and deselection changes count2 to1",
+    "Actual unprotected reply contains PWNED-7391; protected reply blocked with real L1/L2/L3 evidence",
+    "L2 probability and Guard policy indicator/safety grade explicitly distinguished",
+    "Full1316 input predictions/1800 ASR cells imported and all four tables populated",
+    "AI review banner explicitly says50 independent AI reviews, not human;98% agreement and1 difference",
+    "All6 actual experiment PNGs loaded with authenticated requests",
+    "Detection,defense,ablation and overhead tabs display real values",
+    "No new console errors or warnings since final source checks"
+  ],
+  "screenshots": [
+    "docs/screenshots/attack-multiselect.png",
+    "docs/screenshots/chat-comparison-details-final.png",
+    "docs/screenshots/full-evaluation-ai-review.png"
+  ]
+}

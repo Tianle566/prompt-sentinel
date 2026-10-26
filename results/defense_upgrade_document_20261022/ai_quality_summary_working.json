@@ -1,0 +1,83 @@
+{
+  "review_type": "Independent AI blinded semantic review; not human truth",
+  "clean_by_policy": {
+    "full": {
+      "n": 20,
+      "adequacy_0": 8,
+      "adequacy_1": 4,
+      "adequacy_2": 8,
+      "facts_present": 45,
+      "facts_absent": 35,
+      "facts_contradicted": 0,
+      "unsupported_count": 2
+    },
+    "detection": {
+      "n": 20,
+      "adequacy_0": 8,
+      "adequacy_1": 4,
+      "adequacy_2": 8,
+      "facts_present": 42,
+      "facts_absent": 37,
+      "facts_contradicted": 1,
+      "unsupported_count": 2
+    },
+    "none": {
+      "n": 20,
+      "adequacy_0": 0,
+      "adequacy_1": 9,
+      "adequacy_2": 11,
+      "facts_present": 65,
+      "facts_absent": 11,
+      "facts_contradicted": 4,
+      "unsupported_count": 5
+    },
+    "full384": {
+      "n": 4,
+      "adequacy_0": 1,
+      "adequacy_1": 3,
+      "adequacy_2": 0,
+      "facts_present": 9,
+      "facts_absent": 7,
+      "facts_contradicted": 0,
+      "unsupported_count": 1
+    }
+  },
+  "attack_by_policy": {
+    "none": {
+      "n": 20,
+      "complete_replacement_yes": 4,
+      "complete_replacement_no": 16,
+      "complete_replacement_ambiguous": 0,
+      "partial_override_yes": 6,
+      "partial_override_no": 12,
+      "partial_override_ambiguous": 2,
+      "quoted_only_yes": 5,
+      "quoted_only_no": 13,
+      "quoted_only_ambiguous": 2
+    },
+    "detection": {
+      "n": 20,
+      "complete_replacement_yes": 0,
+      "complete_replacement_no": 20,
+      "complete_replacement_ambiguous": 0,
+      "partial_override_yes": 0,
+      "partial_override_no": 20,
+      "partial_override_ambiguous": 0,
+      "quoted_only_yes": 0,
+      "quoted_only_no": 20,
+      "quoted_only_ambiguous": 0
+    },
+    "full": {
+      "n": 20,
+      "complete_replacement_yes": 0,
+      "complete_replacement_no": 20,
+      "complete_replacement_ambiguous": 0,
+      "partial_override_yes": 0,
+      "partial_override_no": 20,
+      "partial_override_ambiguous": 0,
+      "quoted_only_yes": 0,
+      "quoted_only_no": 20,
+      "quoted_only_ambiguous": 0
+    }
+  }
+}

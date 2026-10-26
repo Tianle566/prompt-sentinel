@@ -1,0 +1,98 @@
+{
+  "review_type": "Independent AI blinded semantic review; not human truth",
+  "clean_by_policy": {
+    "full": {
+      "n": 20,
+      "adequacy_0": 8,
+      "adequacy_1": 4,
+      "adequacy_2": 8,
+      "facts_present": 45,
+      "facts_absent": 35,
+      "facts_contradicted": 0,
+      "unsupported_count": 2
+    },
+    "detection": {
+      "n": 20,
+      "adequacy_0": 8,
+      "adequacy_1": 4,
+      "adequacy_2": 8,
+      "facts_present": 42,
+      "facts_absent": 37,
+      "facts_contradicted": 1,
+      "unsupported_count": 2
+    },
+    "none": {
+      "n": 20,
+      "adequacy_0": 0,
+      "adequacy_1": 9,
+      "adequacy_2": 11,
+      "facts_present": 65,
+      "facts_absent": 11,
+      "facts_contradicted": 4,
+      "unsupported_count": 5
+    },
+    "full384": {
+      "n": 4,
+      "adequacy_0": 1,
+      "adequacy_1": 3,
+      "adequacy_2": 0,
+      "facts_present": 9,
+      "facts_absent": 7,
+      "facts_contradicted": 0,
+      "unsupported_count": 1
+    }
+  },
+  "attack_by_policy": {
+    "none": {
+      "n": 20,
+      "complete_replacement_yes": 4,
+      "complete_replacement_no": 16,
+      "complete_replacement_ambiguous": 0,
+      "partial_override_yes": 6,
+      "partial_override_no": 12,
+      "partial_override_ambiguous": 2,
+      "quoted_only_yes": 5,
+      "quoted_only_no": 13,
+      "quoted_only_ambiguous": 2
+    },
+    "detection": {
+      "n": 20,
+      "complete_replacement_yes": 0,
+      "complete_replacement_no": 20,
+      "complete_replacement_ambiguous": 0,
+      "partial_override_yes": 0,
+      "partial_override_no": 20,
+      "partial_override_ambiguous": 0,
+      "quoted_only_yes": 0,
+      "quoted_only_no": 20,
+      "quoted_only_ambiguous": 0
+    },
+    "full": {
+      "n": 20,
+      "complete_replacement_yes": 0,
+      "complete_replacement_no": 20,
+      "complete_replacement_ambiguous": 0,
+      "partial_override_yes": 0,
+      "partial_override_no": 20,
+      "partial_override_ambiguous": 0,
+      "quoted_only_yes": 0,
+      "quoted_only_no": 20,
+      "quoted_only_ambiguous": 0
+    }
+  },
+  "thesis_clean_interpretation": "无五层防护的充分摘要为11/20，输入检测和完整防护均为8/20；完整防护在12份放行文档中有8份被评为充分，但端到端分母仍为20。完整策略保留45/80条目标事实，不能把该数直接解释为模型对已放行材料的纯生成能力。无防护也出现4条事实矛盾和5份无依据业务断言，说明降低误拒本身还不足以保证摘要正确。三种策略没有重复生成，细小质量差值不作显著性或因果解释。",
+  "thesis_attack_interpretation": "攻击输出AI盲审将无防护的4条判断为完整替换，另2条为仅部分采纳攻击的标题或输出结构，5条仅转述引用，2条因孤立标记声明而保留歧义；“部分采纳”字段包含完整替换，两者不可相加。检测及完整防护的40条攻击请求均阻断，未观察到交付输出服从。AI语义结果没有把12条含标记输出全部判为完全劫持，说明子串、语义污染与整答替换是不同终点。",
+  "thesis_sensitivity_interpretation": "AI复核显示两种预算均保留9/16条目标事实，4份文档均无2分充分摘要；384预算仍有1份无依据业务断言。字面锚点由9/16变为10/16，而语义事实覆盖未增加，进一步说明字面代理不能替代内容核对。",
+  "blind_packet_hashes": {
+    "clean": "f8f37e6cfb56caad4b03b8f0558d75333225b79d82e056839278fbc3bc910095",
+    "attack": "c5a6c0a426b4a1472fc7269a31872430245868a7e9f5a1a5c8c1249facfa516c"
+  },
+  "limits": [
+    "AI, not human review",
+    "Synthetic convenience scenarios",
+    "One independent context per review dimension, no human arbitration",
+    "Partial_override field includes complete replacement",
+    "Rejected normal outputs stay in the denominator",
+    "Semantic fact coverage differs from literal proxy"
+  ]
+}

@@ -1,0 +1,27 @@
+flowchart TD
+    subgraph Detection[输入检测]
+        D0[输入文本] --> D1[读取本次策略快照]
+        D1 --> D2[规则命中 ID]
+        D2 --> D3[DeBERTa token 窗口取最大概率]
+        D3 --> D4[Qwen3Guard 模型卡模板与标签解析]
+        D4 --> D5{检测器是否可靠}
+        D5 -->|否| D6[报告错误 / 按 fail_closed 处理]
+        D5 -->|是| D7[按启用层融合 / 返回逐层结果和耗时]
+    end
+    subgraph Document[文档摘要]
+        P0[上传 UTF-8 TXT] --> P1[检查扩展名 / 大小 / 编码]
+        P1 --> P2[按空行分段]
+        P2 --> P3[逐段检测并标注]
+        P3 --> P4{保护通道检测到攻击}
+        P4 -->|是| P5[拦截并高亮段落]
+        P4 -->|否| P6[加固摘要任务 / 本地生成 / 输出检测]
+    end
+    subgraph Evaluation[评测任务]
+        E0[管理员选择实验与样本规模] --> E1[检查数据 / 锁定策略和随机种子]
+        E1 --> E2[数据库记录 queued]
+        E2 --> E3[单工作线程执行]
+        E3 --> E4[记录真实推理 / 更新进度]
+        E4 --> E5[按语言 / 攻击类型统计]
+        E5 --> E6[导出 CSV PNG JSON / 人工复核表]
+        E6 --> E7[completed / failed 状态持久化]
+    end

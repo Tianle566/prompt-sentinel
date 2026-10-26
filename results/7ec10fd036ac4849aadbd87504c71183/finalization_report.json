@@ -1,0 +1,21 @@
+{
+  "status": "verified",
+  "oracle_audit": {
+    "status": "verified",
+    "records": 1800,
+    "matches": 1800,
+    "unknown": 0,
+    "response_moderations": 246,
+    "elapsed_seconds": 522.1776068329928
+  },
+  "independent_checks": 3427,
+  "elapsed_seconds": 523.4340778329934,
+  "evaluation_job_id": null,
+  "human_review": {
+    "worksheet_count": 50,
+    "model_judged_output_count": 50,
+    "seed": 42,
+    "human_completed": false,
+    "scope": "Prefer actual unblocked replies judged by Qwen3Guard; human labels remain empty"
+  }
+}

@@ -1,0 +1,45 @@
+# Deterministic bilingual heuristics. Matches are signals, not ML probabilities.
+version: 1
+rules:
+  - id: IGNORE_EN_001
+    category: goal_hijacking
+    pattern: '\b(?:ignore|disregard|forget|override|bypass)\b[^\n.!?]{0,64}\b(?:previous|prior|above|earlier|all|system|developer|original)\b[^\n.!?]{0,40}\b(?:instructions?|prompts?|rules?|constraints?|directions?)\b'
+  - id: IGNORE_ZH_001
+    category: goal_hijacking
+    pattern: '(?:忽略|无视|忘记|丢弃|绕过|覆盖|不必遵守)[^\n。！？]{0,25}(?:以上|之前|先前|所有|系统|开发者|原来|此前)[^\n。！？]{0,20}(?:指令|提示|规则|限制|约束|要求)'
+  - id: IGNORE_ZH_002
+    category: goal_hijacking
+    pattern: '(?:不要|不再)(?:遵循|遵守|执行)[^\n。！？]{0,20}(?:指令|规则|系统提示)'
+  - id: ROLE_EN_001
+    category: jailbreak
+    pattern: '\b(?:you\s+are\s+now|act\s+as|pretend\s+(?:to\s+be|you\s+are)|enter|enable)\b[^\n.!?]{0,45}\b(?:DAN|jailbreak|unrestricted|unfiltered|developer\s+mode|do\s+anything\s+now)\b'
+  - id: ROLE_ZH_001
+    category: jailbreak
+    pattern: '(?:你现在是|扮演|假装|进入|开启|切换)[^\n。！？]{0,30}(?:DAN|越狱|开发者模式|无限制|无约束|不受限制|不受任何限制)'
+  - id: LEAK_EN_001
+    category: prompt_leakage
+    pattern: '\b(?:print|reveal|show|repeat|output|display|expose|give|tell|leak|list)\b[^\n.!?]{0,70}\b(?:system|developer|initial|hidden|secret|original)\b[^\n.!?]{0,35}\b(?:prompts?|instructions?|messages?|canary|token|strings?)\b'
+  - id: LEAK_EN_002
+    category: prompt_leakage
+    pattern: '\b(?:print|reveal|show|repeat|output|display|expose|leak)\b[^\n.!?]{0,45}\b(?:canary|SENTINEL_CANARY)\b'
+  - id: LEAK_EN_003
+    category: prompt_leakage
+    pattern: '\bwhat\s+(?:is|are)\s+your\s+(?:system|developer|initial|hidden|original)\s+(?:prompts?|instructions?|messages?)\b'
+  - id: LEAK_ZH_001
+    category: prompt_leakage
+    pattern: '(?:输出|显示|打印|复述|重复|泄露|透露|提供|告诉我|列出|展示)[^\n。！？]{0,40}(?:系统提示词|系统指令|初始提示词|隐藏指令|系统消息|金丝雀|秘密字符串|开发者指令)'
+  - id: LEAK_ZH_002
+    category: prompt_leakage
+    pattern: '(?:你的|你收到的|当前会话的)(?:系统提示词|系统指令|初始提示词|隐藏指令|开发者指令)(?:是什么|有哪些|写了什么|的内容是什么)'
+  - id: BASE64_001
+    category: encoding_obfuscation
+    pattern: '(?<![A-Za-z0-9+/_-])[A-Za-z0-9+/]{40,}={0,2}(?![A-Za-z0-9+/_=-])'
+  - id: HEX_001
+    category: encoding_obfuscation
+    pattern: '(?:0x[0-9a-f]{32,}|(?:\\x[0-9a-f]{2}){12,}|\b[0-9a-f]{80,}\b)'
+  - id: ZERO_WIDTH_001
+    category: encoding_obfuscation
+    pattern: '[\u200b\u200e\u200f\u202a-\u202e\u2060-\u2069\ufeff]'
+  - id: DELIMITER_001
+    category: indirect_injection
+    pattern: '(?:^\s*#{2,}\s*(?:system|developer|assistant)\b|<\|(?:im_start|start_header_id)\|>\s*(?:system|developer)|\[/?INST\]|<</?SYS>>|</?(?:system|developer)>)'

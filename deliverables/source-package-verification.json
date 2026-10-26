@@ -1,0 +1,18 @@
+{
+  "archive": "/Users/hw/Downloads/Prompt-Sentinel-source-20261022.zip",
+  "size_bytes": 255921,
+  "file_count": 106,
+  "uncompressed_bytes": 914725,
+  "sha256": "6686ba1b67a9f2b7b0f5fe606827fa13c7ea697cf0706e256bad7360e8c98b6a",
+  "zip_integrity": "passed",
+  "file_hashes": "passed",
+  "python_syntax": "passed",
+  "json_yaml_syntax": "passed",
+  "no_model_or_runtime_artifacts": true,
+  "documentation_adjustments": {
+    "README.md": "Removed completed-run metrics, review results and references to excluded artifacts; retained installation and usage instructions.",
+    "docs/CONTRACT.md": "Removed local absolute workspace path and agent ownership notes.",
+    "docs/Qwen3Guard-model-card.md": "Kept official safety definitions and source link only; removed all inference/output examples.",
+    "docs/HUMAN_REVIEW.md": "Generic review-method documentation without prior-run claims or results."
+  }
+}

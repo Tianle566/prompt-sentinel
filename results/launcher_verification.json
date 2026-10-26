@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "mode": "reuse verified existing project services, no model downloads or duplicate servers",
+  "before": {
+    "api": 200,
+    "frontend": 200,
+    "ollama": 200
+  },
+  "after_supervisor_exit": {
+    "api": 200,
+    "frontend": 200,
+    "ollama": 200
+  },
+  "existing_services_preserved": true
+}

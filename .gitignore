@@ -1,0 +1,15 @@
+models/
+.venv/
+.runtime/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.chart-data-*/
+.DS_Store
+frontend/node_modules/
+frontend/dist/
+data/*.db*
+data/raw/
+.env
+results/cache/
+backend/config.local.yaml

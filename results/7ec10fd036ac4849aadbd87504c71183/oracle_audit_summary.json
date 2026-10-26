@@ -1,0 +1,11 @@
+{
+  "status": "verified",
+  "records": 1800,
+  "matches": 1800,
+  "unknown": 0,
+  "response_moderations": 246,
+  "mismatches": [],
+  "elapsed_seconds": 522.1776068329928,
+  "configured_device": "cpu",
+  "method": "Independent oracle replay on saved real responses; no target replies regenerated; not human review"
+}

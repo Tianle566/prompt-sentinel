@@ -1,0 +1,14 @@
+{
+  "frozen_at": "2026-10-22T11:07:40.919529+00:00",
+  "files": {
+    "results/defense_upgrade_document_20261022/sensitivity_max_tokens_384/protocol.json": "6ca6a1285c3df20c1947dd800b34eca9f6553d973a00c637bcf4222825879dc8",
+    "results/defense_upgrade_document_20261022/sensitivity_max_tokens_384/config.json": "7ec44f87809ecffe2d0c5429fbe1e6edad9aa298cb62632fc3859c3d321a673b",
+    ".runtime/defense_upgrade/document/sensitivity_max_tokens_384/server.py": "af6ef8cdcf5f65cf088d2b59b7d7fbebb0bab9a4e50eba781e1cfdfc0509be55",
+    ".runtime/defense_upgrade/document/sensitivity.py": "d8c165897f7cb9df8717177aa57610ce1db2246d132846acac4ca3f694c0b08c",
+    "results/defense_upgrade_document_20261022/documents/office_17_clean.txt": "480c46b87f838568a60cf65c21273c23e35a382c7494be64580bbcf2d4634b59",
+    "results/defense_upgrade_document_20261022/documents/office_18_clean.txt": "0bc0786acde4b3074b575aebc3a9d9cf9e823a33f62da96fc00a98a7e0d16972",
+    "results/defense_upgrade_document_20261022/documents/office_19_clean.txt": "b527f00e07907d59ac7d58ee9365ef5e0b31ef281175ad926225361141e8598a",
+    "results/defense_upgrade_document_20261022/documents/office_20_clean.txt": "a7f15938562d3c91cb215995c1e21fda4b09a8d0f03ce5e0b76f7b7ce24f689b"
+  },
+  "main_manifest_sha256": "7f345eebff7ba28c54f53114377dc1824db430710b1ba6dbad38f6411cfb1dd7"
+}

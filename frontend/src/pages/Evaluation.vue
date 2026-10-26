@@ -1,0 +1,526 @@
+<script setup>
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ElMessage } from 'element-plus'
+import { api, errorText, number, percentage, dateTime, artifact, attackName } from '../api'
+import { auth } from '../auth'
+import Icon from '../components/Icon.vue'
+import EmptyState from '../components/EmptyState.vue'
+const datasets = ref([]),
+  jobs = ref([]),
+  active = ref(null),
+  loading = ref(true),
+  creating = ref(false),
+  error = ref(''),
+  tab = ref('detection'),
+  images = ref({}),
+  imageLoading = ref(false),
+  custom = ref(false),
+  config = ref(null),
+  pollError = ref('')
+const form = reactive({ dataset: 'detect', experiment: 'detection', limit: 100, asr_limit: 20 })
+const experiments = {
+  all: '全部四组实验',
+  detection: '实验 1 · 检测性能',
+  defense: '实验 2 · 防御效果',
+  ablation: '实验 3 · 消融实验',
+  overhead: '实验 4 · 运行开销',
+}
+const statusLabels = { queued: '排队中', running: '运行中', completed: '已完成', failed: '失败' }
+const tables = computed(() => active.value?.result?.tables || {})
+const artifacts = computed(() =>
+  (active.value?.result?.artifacts || [])
+    .map((v) => (typeof v === 'string' ? v.split(/[\\/]/).pop() : v.filename || v.name))
+    .filter(Boolean)
+)
+const metricCols = [
+  { key: 'configuration', title: '配置' },
+  { key: 'lang', title: '语言' },
+  { key: 'f1', title: 'F1', rate: true },
+  { key: 'precision', title: 'Precision', rate: true },
+  { key: 'recall', title: 'Recall', rate: true },
+  { key: 'fpr', title: '误报率', rate: true },
+  { key: 'evaluated', title: '有效样本' },
+  { key: 'unknown', title: '未判定' },
+  { key: 'mean_latency_ms', title: '平均延迟 ms' },
+]
+const tableSpecs = [
+  { id: 'detection', title: '检测性能', cols: metricCols },
+  {
+    id: 'defense',
+    title: '防御效果',
+    cols: [
+      { key: 'configuration', title: '防护配置' },
+      { key: 'attack_type', title: '攻击类型' },
+      { key: 'asr', title: 'ASR', rate: true },
+      { key: 'successes', title: '成功次数' },
+      { key: 'requested', title: '请求样本' },
+      { key: 'evaluated', title: '有效判定' },
+      { key: 'unknown', title: '未判定' },
+      { key: 'blocked', title: '拦截数' },
+      { key: 'mean_latency_ms', title: '平均延迟 ms' },
+    ],
+  },
+  {
+    id: 'ablation',
+    title: '消融实验',
+    cols: [
+      { key: 'configuration', title: '配置' },
+      { key: 'f1', title: 'F1', rate: true },
+      { key: 'asr', title: 'ASR', rate: true },
+      { key: 'delta_f1', title: 'Δ F1', rate: true },
+      { key: 'delta_asr', title: 'Δ ASR', rate: true },
+      ...metricCols.filter((v) => ['precision', 'recall', 'evaluated', 'unknown'].includes(v.key)),
+    ],
+  },
+  {
+    id: 'overhead',
+    title: '运行开销',
+    cols: [
+      { key: 'layer', title: '层 / 阶段' },
+      { key: 'n', title: '样本量' },
+      { key: 'mean_ms', title: '平均 ms' },
+      { key: 'median_ms', title: '中位数 ms' },
+      { key: 'p95_ms', title: 'P95 ms' },
+      { key: 'source', title: '数据来源' },
+    ],
+  },
+]
+let timer,
+  alive = true
+async function initialize() {
+  loading.value = true
+  try {
+    const [ds, js, cfg] = await Promise.all([
+      api.get('/eval/datasets'),
+      api.get('/eval/jobs'),
+      api.get('/config'),
+    ])
+    if (!alive) return
+    datasets.value = ds.data.items
+    jobs.value = js.data.items
+    config.value = cfg.data
+    active.value = jobs.value[0] || null
+    syncTab()
+  } catch (e) {
+    if (alive) error.value = errorText(e)
+  } finally {
+    if (alive) loading.value = false
+  }
+}
+function syncTab() {
+  const keys = Object.keys(active.value?.result?.tables || {})
+  tab.value = keys.find((key) => active.value?.result?.tables[key]?.length) || 'detection'
+}
+async function refresh(silent = false) {
+  if (!silent) loading.value = true
+  try {
+    const { data } = await api.get('/eval/jobs')
+    if (!alive) return
+    jobs.value = data.items
+    if (active.value) {
+      const next = data.items.find((v) => v.id === active.value.id)
+      if (next) {
+        const wasRunning = ['running', 'queued'].includes(active.value.status)
+        active.value = next
+        if (wasRunning && next.status === 'completed') {
+          syncTab()
+          ElMessage.success('评测任务已结束，可查看实际完成的指标与图表。')
+        }
+      }
+    } else active.value = data.items[0] || null
+    pollError.value = ''
+    if (!silent) error.value = ''
+  } catch (e) {
+    if (alive) {
+      if (silent) pollError.value = errorText(e)
+      else error.value = errorText(e)
+    }
+  } finally {
+    if (alive && !silent) loading.value = false
+  }
+}
+async function create() {
+  creating.value = true
+  error.value = ''
+  try {
+    const body = {
+      experiment: form.experiment,
+      limit: form.limit,
+      asr_limit: form.asr_limit,
+    }
+    if (custom.value && config.value)
+      body.config = { layers: config.value.layers, fusion: config.value.fusion }
+    const { data } = await api.post('/eval/jobs', body)
+    active.value = data
+    await refresh(true)
+    ElMessage.success('评测已加入后台队列，可以离开当前页面。')
+  } catch (e) {
+    error.value = errorText(e)
+  } finally {
+    creating.value = false
+  }
+}
+function setDataset() {
+  if (form.dataset) form.experiment = form.dataset === 'asr' ? 'defense' : 'detection'
+}
+function setExperiment() {
+  form.dataset = ['all', 'ablation'].includes(form.experiment)
+    ? null
+    : form.experiment === 'defense'
+      ? 'asr'
+      : 'detect'
+}
+function selectJob(job) {
+  active.value = job
+  syncTab()
+  clearImages()
+}
+function clearImages() {
+  Object.values(images.value).forEach(URL.revokeObjectURL)
+  images.value = {}
+}
+async function loadImages() {
+  if (!active.value || imageLoading.value) return
+  imageLoading.value = true
+  const id = active.value.id
+  try {
+    for (const filename of artifacts.value.filter((v) => v.endsWith('.png'))) {
+      if (images.value[filename]) continue
+      const url = await artifact(id, filename)
+      if (alive && active.value?.id === id) images.value[filename] = url
+      else URL.revokeObjectURL(url)
+    }
+  } catch (e) {
+    error.value = errorText(e)
+  } finally {
+    if (alive) imageLoading.value = false
+  }
+}
+async function download(filename) {
+  try {
+    await artifact(active.value.id, filename, true)
+  } catch (e) {
+    error.value = errorText(e)
+  }
+}
+function value(row, col) {
+  const value = row[col.key]
+  if (value === null || value === undefined) return '—'
+  if (col.key === 'attack_type') return attackName(value)
+  if (col.rate) return percentage(value)
+  return typeof value === 'number' ? number(value) : value
+}
+onMounted(async () => {
+  await initialize()
+  if (alive)
+    timer = setInterval(() => {
+      if (jobs.value.some((v) => ['queued', 'running'].includes(v.status))) refresh(true)
+    }, 4000)
+})
+onBeforeUnmount(() => {
+  alive = false
+  clearInterval(timer)
+  clearImages()
+})
+</script>
+<template>
+  <div>
+    <el-alert
+      v-if="error"
+      :title="error"
+      type="error"
+      :closable="false"
+      show-icon
+      class="mb20"
+      role="alert"
+    /><el-alert
+      v-if="pollError"
+      :title="`进度更新暂时失败，将自动重试：${pollError}`"
+      type="warning"
+      :closable="false"
+      class="mb20"
+    />
+    <div class="evaluation-layout">
+      <section class="panel evaluation-setup">
+        <div class="section-title">
+          <div>
+            <h2>创建评测任务</h2>
+            <p>固定随机种子，保留配置快照</p>
+          </div>
+          <Icon name="chart" class="text-teal" />
+        </div>
+        <el-alert
+          v-if="!auth.isAdmin.value"
+          title="普通用户可以查看自己的评测记录；创建评测需要管理员权限。"
+          type="info"
+          :closable="false"
+          class="mb20"
+        /><el-form label-position="top" :disabled="!auth.isAdmin.value || creating"
+          ><el-form-item label="数据集"
+            ><el-input
+              v-if="['all', 'ablation'].includes(form.experiment)"
+              model-value="检测集 + 攻击成功率集"
+              readonly /><el-select
+              v-else
+              v-model="form.dataset"
+              class="full-width"
+              @change="setDataset"
+              ><el-option
+                v-for="dataset in datasets"
+                :key="dataset.id"
+                :value="dataset.id"
+                :label="`${dataset.name}（${dataset.count} 条）`" /></el-select></el-form-item
+          ><el-form-item label="实验类型"
+            ><el-select v-model="form.experiment" class="full-width" @change="setExperiment"
+              ><el-option
+                v-for="(name, key) in experiments"
+                :key="key"
+                :value="key"
+                :label="name" /></el-select
+          ></el-form-item>
+          <p class="helper experiment-dataset-note">
+            {{
+              ['all', 'ablation'].includes(form.experiment)
+                ? '此实验使用检测集与攻击成功率集。'
+                : form.experiment === 'defense'
+                  ? '此实验使用攻击成功率集。'
+                  : '此实验使用检测集。'
+            }}
+          </p>
+          <el-form-item label="检测样本上限"
+            ><el-input-number
+              v-model="form.limit"
+              :min="1"
+              :max="100000"
+              controls-position="right"
+              class="full-width" /></el-form-item
+          ><el-form-item
+            v-if="['all', 'defense', 'ablation'].includes(form.experiment)"
+            label="攻击生成样本上限"
+            ><el-input-number
+              v-model="form.asr_limit"
+              :min="1"
+              :max="1000"
+              controls-position="right"
+              class="full-width"
+          /></el-form-item>
+          <div class="setting-row">
+            <div>
+              <strong>本次任务独立策略</strong>
+              <p>仅影响本次评测，不修改全局策略</p>
+            </div>
+            <el-switch v-model="custom" aria-label="启用本次评测独立策略" />
+          </div>
+          <div v-if="custom && config" class="eval-custom">
+            <label class="field-label">融合策略</label
+            ><el-select v-model="config.fusion.strategy" class="full-width"
+              ><el-option label="Any · 任意命中" value="any" /><el-option
+                label="Vote · 多数投票"
+                value="vote" /><el-option label="Weighted · 加权" value="weighted"
+            /></el-select>
+            <div class="setting-label">
+              <span>L2 分类阈值</span><strong>{{ config.layers.l2.threshold.toFixed(2) }}</strong>
+            </div>
+            <el-slider
+              v-model="config.layers.l2.threshold"
+              :min="0"
+              :max="1"
+              :step="0.01"
+              aria-label="本次评测 L2 阈值"
+            />
+            <div class="setting-row">
+              <div>
+                <strong>拦截 Controversial</strong>
+                <p>本次评测 L3 审核策略</p>
+              </div>
+              <el-switch
+                v-model="config.layers.l3.block_controversial"
+                aria-label="本次评测拦截争议输入"
+              />
+            </div>
+          </div>
+          <el-button
+            type="primary"
+            size="large"
+            class="full-width"
+            :loading="creating"
+            @click="create"
+            :disabled="!auth.isAdmin.value || !datasets.length || creating"
+            ><Icon v-if="!creating" name="bolt" :size="17" />启动后台评测</el-button
+          ></el-form
+        >
+        <p class="helper mt16">
+          各实验按固定协议启用对应防护层；全防护配置启用
+          L1—L5，消融逐层移除。独立策略只调整融合方式、阈值与争议输入处理。CPU
+          运行可能耗时较长，结果保留真实错误与未判定样本。
+        </p>
+      </section>
+      <section class="panel evaluation-jobs" v-loading="loading">
+        <div class="section-title">
+          <div>
+            <h2>后台任务</h2>
+            <p>进度每 4 秒自动更新</p>
+          </div>
+          <el-button :loading="loading" @click="refresh()"
+            ><Icon name="refresh" :size="15" />刷新</el-button
+          >
+        </div>
+        <EmptyState
+          v-if="!jobs.length"
+          title="还没有评测任务"
+          text="选择数据集与实验设置，启动第一轮可复现实验。"
+          icon="chart"
+        />
+        <div v-else class="job-list">
+          <button
+            v-for="job in jobs"
+            :key="job.id"
+            class="job-item"
+            :class="{ active: active?.id === job.id }"
+            @click="selectJob(job)"
+          >
+            <div class="job-title">
+              <strong>{{ experiments[job.experiment] || '评测任务' }}</strong
+              ><el-tag
+                :type="
+                  job.status === 'completed'
+                    ? 'success'
+                    : job.status === 'failed'
+                      ? 'danger'
+                      : 'warning'
+                "
+                size="small"
+                >{{ statusLabels[job.status] }}</el-tag
+              >
+            </div>
+            <p class="job-meta">
+              {{ dateTime(job.created_at) }} <span>#{{ job.id.slice(0, 8) }}</span>
+            </p>
+            <el-progress
+              :percentage="Math.round(job.progress || 0)"
+              :stroke-width="5"
+              :status="
+                job.status === 'failed'
+                  ? 'exception'
+                  : job.status === 'completed'
+                    ? 'success'
+                    : undefined
+              "
+            />
+            <p class="job-message">{{ job.error || job.message }}</p>
+          </button>
+        </div>
+      </section>
+    </div>
+    <section v-if="active" class="panel eval-output-panel">
+      <div class="section-title">
+        <div>
+          <h2>
+            实验结果 <span class="count-pill">#{{ active.id.slice(0, 8) }}</span>
+          </h2>
+          <p>{{ experiments[active.experiment] }} · {{ statusLabels[active.status] }}</p>
+        </div>
+        <el-button
+          v-if="artifacts.some((v) => v.endsWith('.png'))"
+          :loading="imageLoading"
+          @click="loadImages"
+          ><Icon name="eye" :size="16" />载入实验图表</el-button
+        >
+      </div>
+      <el-alert
+        v-if="active.status === 'failed'"
+        :title="active.error || '任务失败，请检查模型、数据集和后端日志。'"
+        type="error"
+        :closable="false"
+        show-icon
+      />
+      <div v-if="!active.result && active.status !== 'failed'" class="evaluation-wait">
+        <el-progress :percentage="Math.round(active.progress || 0)" :stroke-width="8" />
+        <p>{{ active.message }}</p>
+        <p class="helper">任务完成后将展示实际计算的指标、图表和可下载产物。</p>
+      </div>
+      <template v-if="active.result"
+        ><el-alert
+          v-if="active.result.ai_review"
+          :title="`${active.result.ai_review.count} 条独立 AI 复核已完成 · 非人工复核`"
+          :description="`与自动判据的一致率 ${percentage(active.result.ai_review.agreement_rate)}，差异 ${active.result.ai_review.disagreements} 条；涉及 ${active.result.ai_review.unique_sample_ids} 个不同输入。逐条理由和差异见 ai_review.csv。一致率不代表真实准确率。`"
+          type="info"
+          :closable="false"
+          show-icon
+          class="mb20"
+        /><el-alert
+          v-if="active.result.status === 'incomplete' || active.result.timed_out"
+          title="本次评测未完整完成。请结合错误、有效样本数与未判定数量解读指标，不能作为全量实验结论。"
+          type="warning"
+          :closable="false"
+          show-icon
+          class="mb20"
+        />
+        <details v-if="active.result.errors?.length" class="evaluation-errors">
+          <summary>查看评测错误（{{ active.result.errors.length }}）</summary>
+          <pre>{{ JSON.stringify(active.result.errors, null, 2) }}</pre>
+        </details>
+        <el-tabs v-model="tab"
+          ><el-tab-pane
+            v-for="spec in tableSpecs"
+            :key="spec.id"
+            :name="spec.id"
+            :label="spec.title"
+            ><el-table v-if="tables[spec.id]?.length" :data="tables[spec.id]" max-height="500"
+              ><el-table-column
+                v-for="col in spec.cols"
+                :key="col.key"
+                :label="col.title"
+                :min-width="col.key === 'configuration' || col.key === 'source' ? 150 : 105"
+                ><template #default="{ row }">{{ value(row, col) }}</template></el-table-column
+              ></el-table
+            ><EmptyState
+              v-else
+              title="本次任务没有该组实验结果"
+              text="可以创建对应实验，或检查评测是否完整完成。"
+              icon="chart" /></el-tab-pane
+        ></el-tabs>
+        <div v-if="Object.keys(images).length" class="eval-images">
+          <figure v-for="(url, filename) in images" :key="filename">
+            <img :src="url" :alt="`实际评测图表：${filename}`" />
+            <figcaption>
+              {{ filename
+              }}<el-button text type="primary" @click="download(filename)"
+                ><Icon name="download" :size="15" />下载</el-button
+              >
+            </figcaption>
+          </figure>
+        </div>
+        <div v-if="artifacts.length" class="artifact-list">
+          <div class="detail-label">结果文件</div>
+          <button
+            v-for="filename in artifacts"
+            :key="filename"
+            class="artifact-file"
+            @click="download(filename)"
+          >
+            <Icon :name="filename.endsWith('.png') ? 'chart' : 'document'" :size="17" /><span>{{
+              filename
+            }}</span
+            ><Icon name="download" :size="15" />
+          </button>
+        </div>
+        <details class="evaluation-errors">
+          <summary>查看实验元数据与数据范围</summary>
+          <pre>{{
+            JSON.stringify(
+              {
+                status: active.result.status,
+                counts: active.result.counts,
+                data_scope: active.result.data_scope,
+                timed_out: active.result.timed_out,
+              },
+              null,
+              2
+            )
+          }}</pre>
+        </details></template
+      >
+    </section>
+  </div>
+</template>

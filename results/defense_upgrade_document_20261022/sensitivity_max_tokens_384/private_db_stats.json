@@ -1,0 +1,59 @@
+{
+  "total_requests": 4,
+  "blocked_requests": 1,
+  "block_rate": 0.25,
+  "average_latency_ms": 58643.718333252764,
+  "attack_types": [
+    {
+      "name": "indirect_injection",
+      "value": 1
+    }
+  ],
+  "daily": [
+    {
+      "date": "2026-10-22",
+      "total": 4,
+      "blocked": 1
+    }
+  ],
+  "layers": [
+    {
+      "name": "L1",
+      "value": 0
+    },
+    {
+      "name": "L2",
+      "value": 1
+    },
+    {
+      "name": "L3",
+      "value": 0
+    },
+    {
+      "name": "L5",
+      "value": 0
+    }
+  ],
+  "latencies": [
+    {
+      "name": "L1",
+      "value": 3.0731144943274558
+    },
+    {
+      "name": "L2",
+      "value": 3399.421530761174
+    },
+    {
+      "name": "L3",
+      "value": 11868.79608273739
+    },
+    {
+      "name": "L4",
+      "value": 0.0338333387238284
+    },
+    {
+      "name": "L5",
+      "value": 2.4180000085228435
+    }
+  ]
+}

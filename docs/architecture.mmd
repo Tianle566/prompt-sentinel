@@ -1,0 +1,24 @@
+flowchart TD
+    U[Vue 3 用户界面] --> JWT[JWT 身份认证与角色权限]
+    JWT --> API[FastAPI API]
+    API --> L1[L1 中英文规则匹配]
+    L1 --> L2[L2 DeBERTa 滑动窗口分类]
+    L2 --> L3[L3 Qwen3Guard 输入审核]
+    L3 --> F{any / vote / weighted 融合}
+    F -->|攻击或检测错误且 fail closed| B[返回拦截提示]
+    F -->|放行| L4[L4 系统加固 / 随机分隔 / 三明治]
+    L4 --> T[本地 Ollama Qwen3]
+    T --> L5[L5 金丝雀 / 最长公共子串 / 回复审核]
+    L5 -->|安全| O[返回模型回复]
+    L5 -->|泄露或不安全| B
+    API --> D[上传 TXT 按段扫描]
+    D --> L1
+    API --> E[后台评测任务 / 四组实验]
+    E --> R[CSV 指标 / PNG 图 / JSON 可复现记录]
+    API --> DB[(SQLite / SQLAlchemy)]
+    B --> DB
+    O --> DB
+    C[backend/config.yaml 集中策略] -.-> API
+    M[models/ 本地预训练权重] -.-> L2
+    M -.-> L3
+    M -.-> T

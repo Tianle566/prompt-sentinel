@@ -1,0 +1,195 @@
+{
+  "main": {
+    "requests": 120,
+    "http200": 120,
+    "model_errors": 0,
+    "real_target_generations": 106,
+    "wall_seconds": 924.0199038982391,
+    "record_audit": "863/863",
+    "policies": {
+      "none": {
+        "attack_strict_asr": 0.2,
+        "attack_strict_success": 4,
+        "attack_contains_marker": 12,
+        "normal_input_refusal": 0,
+        "normal_pipeline_completed": 20,
+        "normal_fact_literal_proxy": "69/80"
+      },
+      "detection": {
+        "attack_strict_asr": 0.0,
+        "attack_strict_success": 0,
+        "attack_contains_marker": 0,
+        "normal_input_refusal": 8,
+        "normal_pipeline_completed": 12,
+        "normal_fact_literal_proxy": "43/80"
+      },
+      "full": {
+        "attack_strict_asr": 0.0,
+        "attack_strict_success": 0,
+        "attack_contains_marker": 0,
+        "normal_input_refusal": 8,
+        "normal_pipeline_completed": 12,
+        "normal_fact_literal_proxy": "45/80"
+      }
+    },
+    "input_detection_cache_counts": {
+      "none": {
+        "L2": {
+          "cache_hit": 0,
+          "fresh_inference": 0,
+          "disabled": 156,
+          "error": 0
+        },
+        "L3": {
+          "cache_hit": 0,
+          "fresh_inference": 0,
+          "disabled": 156,
+          "error": 0
+        }
+      },
+      "detection": {
+        "L2": {
+          "cache_hit": 68,
+          "fresh_inference": 88,
+          "disabled": 0,
+          "error": 0
+        },
+        "L3": {
+          "cache_hit": 68,
+          "fresh_inference": 88,
+          "disabled": 0,
+          "error": 0
+        }
+      },
+      "full": {
+        "L2": {
+          "cache_hit": 156,
+          "fresh_inference": 0,
+          "disabled": 0,
+          "error": 0
+        },
+        "L3": {
+          "cache_hit": 156,
+          "fresh_inference": 0,
+          "disabled": 0,
+          "error": 0
+        }
+      }
+    }
+  },
+  "posthoc384": {
+    "requests": 4,
+    "real_target_generations": 12,
+    "http_errors": 0,
+    "model_errors": 0,
+    "proxy_facts_192": 9,
+    "proxy_facts_384": 10,
+    "facts_denominator": 16,
+    "check_count": 16,
+    "passed": 16
+  },
+  "offline_fusion": {
+    "original_any": {
+      "strategy": "any",
+      "active_layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "confusion": {
+        "TP": 20,
+        "FP": 8,
+        "TN": 12,
+        "FN": 0
+      },
+      "attack_input_block_rate": 1.0,
+      "normal_input_block_rate": 0.4,
+      "precision": 0.7142857142857143,
+      "recall": 1.0,
+      "f1": 0.8333333333333334
+    },
+    "vote": {
+      "strategy": "vote",
+      "active_layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "confusion": {
+        "TP": 4,
+        "FP": 1,
+        "TN": 19,
+        "FN": 16
+      },
+      "attack_input_block_rate": 0.2,
+      "normal_input_block_rate": 0.05,
+      "precision": 0.8,
+      "recall": 0.2,
+      "f1": 0.32
+    },
+    "weighted": {
+      "strategy": "weighted",
+      "active_layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "confusion": {
+        "TP": 4,
+        "FP": 1,
+        "TN": 19,
+        "FN": 16
+      },
+      "attack_input_block_rate": 0.2,
+      "normal_input_block_rate": 0.05,
+      "precision": 0.8,
+      "recall": 0.2,
+      "f1": 0.32
+    },
+    "l1_l3_any": {
+      "strategy": "any",
+      "active_layers": [
+        "L1",
+        "L3"
+      ],
+      "confusion": {
+        "TP": 4,
+        "FP": 1,
+        "TN": 19,
+        "FN": 16
+      },
+      "attack_input_block_rate": 0.2,
+      "normal_input_block_rate": 0.05,
+      "precision": 0.8,
+      "recall": 0.2,
+      "f1": 0.32
+    },
+    "l2_only": {
+      "strategy": "any",
+      "active_layers": [
+        "L2"
+      ],
+      "confusion": {
+        "TP": 20,
+        "FP": 8,
+        "TN": 12,
+        "FN": 0
+      },
+      "attack_input_block_rate": 1.0,
+      "normal_input_block_rate": 0.4,
+      "precision": 0.7142857142857143,
+      "recall": 1.0,
+      "f1": 0.8333333333333334
+    }
+  },
+  "blind_clean_packet": "/Users/hw/毕设/results/defense_upgrade_document_20261022/fixed_blind_clean_packet.json",
+  "blind_attack_packet": "/Users/hw/毕设/results/defense_upgrade_document_20261022/fixed_blind_attack_packet.json",
+  "important_limits": [
+    "AI-authored scenarios, not natural enterprise samples or human truth.",
+    "Strict complete-answer marker ASR and substring contamination are separate.",
+    "Main policy latency is order/cache-confounded.",
+    "Normal summaries need independent AI semantic review, not proxy substitution.",
+    "Posthoc sensitivity is exploratory, not causal proof or a new benchmark.",
+    "Offline fusion replay covers input decisions only, not final attack success."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "protocol": "L5-Component-28-v1",
+  "total": 28,
+  "expected_behaviour_matched": 28,
+  "observed_blocks": 11,
+  "observed_passes": 17,
+  "scope": "28项预定义构造测试与当前实现行为一致性；不能解释为28次攻击全部防御成功",
+  "positive_canary_checks": "完整标记/大小写/全标记分隔/连续32字符主体命中",
+  "limitations": [
+    "裸hex主体分隔后不命中",
+    "Base64编码标记不解码",
+    "跨响应分片和非连续系统片段不累计",
+    "语义改写不检测",
+    "未知秘密不检测",
+    "合法长引用可能触发相似度误报"
+  ],
+  "source_sha256": {
+    "backend/app/defense/canary.py": "bbdb14bbc14aa157c98fdc2f62ef787c1f58aac8a845164487189dcb67bd6148",
+    "backend/app/defense/output_check.py": "0547bc1ad869793d7fa85a31177c85d31d3723cea1391bb7dfd9da386d4e51aa",
+    ".runtime/defense_upgrade/l5/run_component_cases.py": "4ba7ffbafea97d87143c78388d9079fba3217bf25fa4c832a11b0392093e2166"
+  },
+  "global_config_sha256": "cc5cdcda3e4f823508d7db301a28939b58a2382d7d2a81322f2388ecaed4a081",
+  "protocol_sha256": "68c591cade761e358bc319f436836dd41121eb233178d47866b27c4e4dcca048",
+  "results_sha256": "87f03f39de1d32e11b58ceac340243acb5eebbb186445df94fa169996965e1ee"
+}

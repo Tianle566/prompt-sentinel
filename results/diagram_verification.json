@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "renderer": "Mermaid12.2.0, native IAB, htmlLabelsfalse",
+  "count": 9,
+  "diagrams": [
+    {
+      "file": "architecture.svg",
+      "width": 646.7000122070312,
+      "height": 1703.6485595703125,
+      "foreignObjects": 0,
+      "text_elements": 22
+    },
+    {
+      "file": "auth-flow.svg",
+      "width": 575.7083740234375,
+      "height": 1643.4000244140625,
+      "foreignObjects": 0,
+      "text_elements": 21
+    },
+    {
+      "file": "chat-attack-flow.svg",
+      "width": 815.0625,
+      "height": 1118.4000244140625,
+      "foreignObjects": 0,
+      "text_elements": 18
+    },
+    {
+      "file": "database-er.svg",
+      "width": 866.6328125,
+      "height": 865.0,
+      "foreignObjects": 0,
+      "text_elements": 135
+    },
+    {
+      "file": "detection-flow.svg",
+      "width": 360.0,
+      "height": 879.6000366210938,
+      "foreignObjects": 0,
+      "text_elements": 10
+    },
+    {
+      "file": "document-flow.svg",
+      "width": 360.0,
+      "height": 775.5000610351562,
+      "foreignObjects": 0,
+      "text_elements": 9
+    },
+    {
+      "file": "evaluation-flow.svg",
+      "width": 168.0,
+      "height": 844.0,
+      "foreignObjects": 0,
+      "text_elements": 8
+    },
+    {
+      "file": "flows.svg",
+      "width": 1100.0,
+      "height": 878.0999755859375,
+      "foreignObjects": 0,
+      "text_elements": 30
+    },
+    {
+      "file": "policy-stats-flow.svg",
+      "width": 936.0,
+      "height": 618.199951171875,
+      "foreignObjects": 0,
+      "text_elements": 16
+    }
+  ]
+}

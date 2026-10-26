@@ -1,0 +1,94 @@
+{
+  "protocol": "Strict-Injection-AI-Blind-80-v1",
+  "seed": 20261022,
+  "selection": "按来源×来源标签×v2融合预测的9个非空层，不放回固定配额随机抽样；刻意提高稀有分歧层占比，禁止把未加权样本百分比外推为总体准确率。",
+  "strata": [
+    {
+      "source": "deepset/prompt-injections:test",
+      "source_label": 0,
+      "system_prediction": false,
+      "population": 55,
+      "sample": 9,
+      "inclusion_probability": 0.16363636363636364
+    },
+    {
+      "source": "deepset/prompt-injections:test",
+      "source_label": 0,
+      "system_prediction": true,
+      "population": 1,
+      "sample": 1,
+      "inclusion_probability": 1.0
+    },
+    {
+      "source": "deepset/prompt-injections:test",
+      "source_label": 1,
+      "system_prediction": false,
+      "population": 28,
+      "sample": 8,
+      "inclusion_probability": 0.2857142857142857
+    },
+    {
+      "source": "deepset/prompt-injections:test",
+      "source_label": 1,
+      "system_prediction": true,
+      "population": 32,
+      "sample": 8,
+      "inclusion_probability": 0.25
+    },
+    {
+      "source": "local:documented-template-v2",
+      "source_label": 1,
+      "system_prediction": true,
+      "population": 100,
+      "sample": 12,
+      "inclusion_probability": 0.12
+    },
+    {
+      "source": "shibing624/alpaca-zh",
+      "source_label": 0,
+      "system_prediction": false,
+      "population": 283,
+      "sample": 10,
+      "inclusion_probability": 0.0353356890459364
+    },
+    {
+      "source": "shibing624/alpaca-zh",
+      "source_label": 0,
+      "system_prediction": true,
+      "population": 17,
+      "sample": 8,
+      "inclusion_probability": 0.47058823529411764
+    },
+    {
+      "source": "thu-coai/Safety-Prompts:instruction_attack_scenarios",
+      "source_label": 1,
+      "system_prediction": false,
+      "population": 231,
+      "sample": 12,
+      "inclusion_probability": 0.05194805194805195
+    },
+    {
+      "source": "thu-coai/Safety-Prompts:instruction_attack_scenarios",
+      "source_label": 1,
+      "system_prediction": true,
+      "population": 369,
+      "sample": 12,
+      "inclusion_probability": 0.032520325203252036
+    }
+  ],
+  "blind_fields": [
+    "id",
+    "text",
+    "source",
+    "task_context"
+  ],
+  "hiding": "重新编号并洗牌；原始ID、来源二元标签、类型和系统预测只保留在private_mapping；评审不得读取private_mapping、sampling_protocol_private或源预测。来源按委托要求可见，因此这是标签与预测盲审，并非完全来源盲审。",
+  "sha256": {
+    "/Users/hw/毕设/.runtime/thesis/experiments/v2_dataset/data/processed/detect_set.jsonl": "56e235c9274a4157e51bf69fe2c6dd47971d5338ff302bc7b26bff4ed100aa0d",
+    "/Users/hw/毕设/results/thesis_v2_20261022/detection_predictions.jsonl": "4f6f67c2140e823ecf700fa443722d594124773e54306f3a69e2321f72be9e2d",
+    "/Users/hw/毕设/.runtime/defense_upgrade/label_audit/blind_80.json": "7d78de31c30e94c566593774cd788feaf45884c0326f7f08882b81cc27f018a7",
+    "/Users/hw/毕设/.runtime/defense_upgrade/label_audit/private_mapping.json": "7f114f5d0c9b471d690b9a06870f1dc1c2647db4ed98c56f9ec25bfdbca8aece"
+  },
+  "total_population": 1116,
+  "sample_size": 80
+}

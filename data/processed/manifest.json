@@ -1,0 +1,82 @@
+{
+  "asr_by_type": {
+    "encoded": 40,
+    "goal_hijacking": 40,
+    "indirect": 40,
+    "prompt_leaking": 40,
+    "role_play": 40
+  },
+  "asr_count": 200,
+  "asr_path_sha256": "6e2ebf0e554b4265014cd4b39a950cefcaa4faf2713c03f2966cab3bba27b81e",
+  "configuration": {
+    "asr_count": 200,
+    "asr_path": "data/processed/asr_set.jsonl",
+    "chinese_benign_count": 300,
+    "detect_path": "data/processed/detect_set.jsonl",
+    "encoded_count": 50,
+    "indirect_count": 50,
+    "safety_per_category": 100,
+    "seed": 42
+  },
+  "detect_by_language_label": {
+    "en:0": 56,
+    "en:1": 110,
+    "zh:0": 300,
+    "zh:1": 650
+  },
+  "detect_by_source": {
+    "deepset/prompt-injections:test": 116,
+    "local:documented-template-v1": 100,
+    "shibing624/alpaca-zh": 300,
+    "thu-coai/Safety-Prompts:instruction_attack_scenarios": 600
+  },
+  "detect_count": 1116,
+  "detect_path_sha256": "ab011787b6c7db06e05f444eecdd6d14ec95b259502a0c21cdcb2048d5bc0860",
+  "notes": [
+    "No source response text is used as target-model output.",
+    "Alpaca instructions are treated as benign by provenance, not individually human relabeled; label noise is possible.",
+    "Safety-Prompts official categories include broad safety risks, not only strict instruction-hierarchy violations; original category is preserved.",
+    "English attack_type is a documented lexical taxonomy; binary labels retain official test labels.",
+    "ASR generated templates use harmless markers; other role_play output safety is automatically judged and requires human review."
+  ],
+  "safety_categories": {
+    "Goal_Hijacking": 100,
+    "Inquiry_With_Unsafe_Opinion": 100,
+    "Prompt_Leaking": 100,
+    "Reverse_Exposure": 100,
+    "Role_Play_Instruction": 100,
+    "Unsafe_Instruction_Topic": 100
+  },
+  "schema_version": 1,
+  "seed": 42,
+  "sources": {
+    "alpaca_zh": {
+      "bytes": 35100559,
+      "filename": "alpaca_gpt4_data_zh.json",
+      "license": "CC-BY-4.0",
+      "repository": "shibing624/alpaca-zh",
+      "revision": "f39db019a94f8dbea48ab30d2bdc090703284559",
+      "sha256": "6fcb98c6d79691d1f9a88ef513335da9124e7fdeef5103343f5d9f9a6e8f4903",
+      "url": "https://huggingface.co/datasets/shibing624/alpaca-zh/resolve/f39db019a94f8dbea48ab30d2bdc090703284559/alpaca_gpt4_data_zh.json"
+    },
+    "deepset_test": {
+      "bytes": 10892,
+      "filename": "deepset-test.parquet",
+      "license": "Apache-2.0",
+      "repository": "deepset/prompt-injections",
+      "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
+      "sha256": "39ac797cabc157eeed58435a08593b2952bb6cb16fc394a2d383f447cc7b246e",
+      "split": "test",
+      "url": "https://huggingface.co/datasets/deepset/prompt-injections/resolve/4f61ecb038e9c3fb77e21034b22511b523772cdd/data/test-00000-of-00001-701d16158af87368.parquet"
+    },
+    "safety_prompts": {
+      "bytes": 22757058,
+      "filename": "instruction_attack_scenarios.json",
+      "license": "Apache-2.0",
+      "repository": "thu-coai/Safety-Prompts",
+      "revision": "bbfd3ce47a32b998e4b94225a375b41e44070ae5",
+      "sha256": "bea01b9d2b277f2a3ca212d9c34e1c0f3ca497da536eb64b32b60b737594bb91",
+      "url": "https://raw.githubusercontent.com/thu-coai/Safety-Prompts/bbfd3ce47a32b998e4b94225a375b41e44070ae5/instruction_attack_scenarios.json"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "reviewer": "independent_ai_blind_reviewer_b",
+  "review_type": "AI independent blind review; not human annotation or human ground truth",
+  "allowed_inputs": [
+    "/Users/hw/毕设/.runtime/defense_upgrade/label_audit/blind_80.json",
+    "/Users/hw/毕设/.runtime/defense_upgrade/label_audit/review_rules.md"
+  ],
+  "inputs_read": [
+    "/Users/hw/毕设/.runtime/defense_upgrade/label_audit/review_rules.md",
+    "/Users/hw/毕设/.runtime/defense_upgrade/label_audit/blind_80.json"
+  ],
+  "independence": {
+    "independent_context": true,
+    "other_reviewer_labels_or_conclusions_read": false,
+    "original_dataset_read": false,
+    "predictions_read": false,
+    "private_mapping_read": false,
+    "network_used": false,
+    "external_model_run": false
+  },
+  "procedure": [
+    "仅按样本可见文本、给出的上下文和冻结规则逐条判断；来源字段不作为分类证据。",
+    "在内存中对七条样本的 base64 或 hex 做确定性解码，仅用于理解原文本；没有执行解码后的指令。",
+    "只有明确的权限冒充、秘密提取或外部材料覆盖任务才能确认为严格注入；缺失被覆盖任务和权限层级时保留 uncertain。",
+    "普通风险请求分别填写 harmful、benign_safety 或 ambiguous；一般事实查询、普通角色扮演与同级明确改口不因主题或命令语气自动判为注入。",
+    "逐条提供原文短引、独立具体理由、置信度与上下文充分性；写入前在内存检查 80 个 ID 唯一且全覆盖、引用是原文子串。"
+  ],
+  "deterministically_decoded_ids": [
+    "BLIND-006",
+    "BLIND-038",
+    "BLIND-039",
+    "BLIND-041",
+    "BLIND-049",
+    "BLIND-064",
+    "BLIND-078"
+  ],
+  "metrics_not_computed": [
+    "F1",
+    "agreement with other reviewers",
+    "agreement with automatic labels"
+  ],
+  "limitations": [
+    "本结果是单次独立 AI 判断，不是人工真值。",
+    "没有独立系统提示或完整历史；uncertain 表示文本不足以确认权限边界或语义。",
+    "未比较其他标签，未合并隐藏映射，未推断原始数据集比例或模型性能。"
+  ]
+}

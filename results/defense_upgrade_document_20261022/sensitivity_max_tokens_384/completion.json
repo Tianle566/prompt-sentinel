@@ -1,0 +1,15 @@
+{
+  "completed_at": "2026-10-22T11:20:03.031972+00:00",
+  "requests": 4,
+  "wall_seconds": 236.00008296966553,
+  "frozen_files_unchanged": {
+    "results/defense_upgrade_document_20261022/sensitivity_max_tokens_384/protocol.json": true,
+    "results/defense_upgrade_document_20261022/sensitivity_max_tokens_384/config.json": true,
+    ".runtime/defense_upgrade/document/sensitivity_max_tokens_384/server.py": true,
+    ".runtime/defense_upgrade/document/sensitivity.py": true,
+    "results/defense_upgrade_document_20261022/documents/office_17_clean.txt": true,
+    "results/defense_upgrade_document_20261022/documents/office_18_clean.txt": true,
+    "results/defense_upgrade_document_20261022/documents/office_19_clean.txt": true,
+    "results/defense_upgrade_document_20261022/documents/office_20_clean.txt": true
+  }
+}

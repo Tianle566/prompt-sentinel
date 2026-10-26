@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "verified_at": "2026-10-22T04:33:08.288443+00:00",
+  "environment": "isolated same-host Python environment, empty SQLite database and separate ports",
+  "preseeded_model_weights": true,
+  "model_source": "original official HF downloads; immutable weights hardlinked, non-weight files independently copied",
+  "checks": [
+    "All three local models registered ready on fresh backend; project identity correct",
+    "Fresh random admin credentials authenticate",
+    "New database has no old request logs",
+    "Official datasets rebuilt with expected counts1116/200",
+    "Fresh frontend serves after npm ci",
+    "Vite proxy targets isolated backend8001",
+    "Swagger available on fresh installation",
+    "Independent official downloads reproduce all three processed file hashes exactly",
+    "Bootstrap credentials are owner-only0600"
+  ],
+  "dataset_hashes": {
+    "detect_set.jsonl": "ab011787b6c7db06e05f444eecdd6d14ec95b259502a0c21cdcb2048d5bc0860",
+    "asr_set.jsonl": "6e2ebf0e554b4265014cd4b39a950cefcaa4faf2713c03f2966cab3bba27b81e",
+    "manifest.json": "ba8e73e04911ed6a0cf6fc16743fd57bd4b0ad983d660786feb0370149e964d7"
+  },
+  "credentials_permissions": "0o600",
+  "cleanup": {
+    "fresh_backend": "stopped",
+    "fresh_frontend": "stopped",
+    "fresh_ollama": "stopped",
+    "original_backend": 200,
+    "original_frontend": 200,
+    "original_ollama": 200
+  }
+}

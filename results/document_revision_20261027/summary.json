@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "date": "2026-10-27",
+  "scope": "Document revision and rendering verification only; no new model-effectiveness experiment",
+  "implementation_baseline": "f34fba02258471fb9c2261cdb94c2997e931a308",
+  "documents": [
+    {
+      "file": "deliverables/开题报告_完整修订稿_20261027.docx",
+      "sha256": "2eb1eea7092a25c70ee64098365e3a81cb18f573d75be99dd1676d43d9777002",
+      "source_unchanged": true,
+      "source_sha256": "4e8299bcb885da9762e40e74c4f8b7560818e7f1ad2e2d1d632872faf3c6a5f8",
+      "page_system_unchanged": true,
+      "preserve_only_package_parts_unchanged": 16,
+      "all_text_colors_black_or_auto": true,
+      "margin_comments": 1,
+      "tables": 0,
+      "figures": 1,
+      "rendered_pages": 5,
+      "personal_information": "left blank as requested",
+      "original_numeric_tables_unchanged": null
+    },
+    {
+      "file": "deliverables/毕业论文_A4修订稿_20261027.docx",
+      "sha256": "10ce351fe1959b8583031a14c6a4ceb07bb2a7b476259295c3beacd8090cca8a",
+      "source_unchanged": true,
+      "source_sha256": "b0ed059622f219b8d0689fcf7012650b406d0fd313b929fc1ea709f775e3ac2a",
+      "page_system_unchanged": true,
+      "preserve_only_package_parts_unchanged": 28,
+      "all_text_colors_black_or_auto": true,
+      "margin_comments": 7,
+      "tables": 19,
+      "figures": 7,
+      "rendered_pages": 62,
+      "personal_information": "left blank as requested",
+      "original_numeric_tables_unchanged": true
+    }
+  ],
+  "rendering": {
+    "docx_to_pdf": "Native Microsoft Word 16.0, hidden instance, read-only export of final files",
+    "pdf_to_png": "Bundled documents/render_docx.py with a Windows Word-export adapter and bundled Poppler",
+    "pages_visually_reviewed": {
+      "proposal": 5,
+      "thesis": 62
+    },
+    "final_pass": "All final pages reviewed; unchanged PNG hashes carry the preceding review forward, final changed appendix page reviewed separately",
+    "toc": "56 native field results agree with native Word logical page numbers; anchors resolve",
+    "layout_repairs": [
+      "Kept new permission-table rows together across page breaks",
+      "Preserved abstract label emphasis without bolding the complete abstract",
+      "Balanced expanded proposal references across two columns",
+      "Condensed appendix to remove a two-line extra page without reducing type size"
+    ]
+  },
+  "source_preservation": {
+    "original_artifacts_sha256_rechecked": 2980,
+    "missing": [],
+    "changed": [],
+    "source_docx_inventory_verified": 4
+  },
+  "evidence_boundaries": [
+    "Original Apple M1 thesis-v2 numeric tables and experimental files are unchanged.",
+    "The recorded 311 tests belong to the administrator implementation validation; not rerun during this documentation-only task.",
+    "The 2/40 cancellation and cached 2/2 completion are isolated engineering QA, not a Windows reproduction of the full main experiment.",
+    "Model weights, local credentials, private database and backups were not edited; model weights were not rehashed in this documentation-only task.",
+    "Personal identity fields remain blank as requested; current school-specific template compliance is not claimed."
+  ],
+  "qa_intermediates": "Local ignored .runtime/documents_update_20261027; page PNGs and PDFs are QA intermediates, not new research results"
+}

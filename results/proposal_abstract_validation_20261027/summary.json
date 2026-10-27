@@ -1,0 +1,69 @@
+{
+  "status": "passed",
+  "date": "2026-10-27",
+  "scope": "Proposal abstract and typography revision; no model or application changes",
+  "file": "deliverables/开题报告_摘要背景修订稿_20261027.docx",
+  "sha256": "3551f8674866d71aeec7b2be394691081d5f01c9e23c8deb13ba2d4b06b160e8",
+  "source": "deliverables/开题报告_完整修订稿_20261027.docx",
+  "source_sha256": "2eb1eea7092a25c70ee64098365e3a81cb18f573d75be99dd1676d43d9777002",
+  "source_unchanged": true,
+  "abstract": {
+    "characters": 428,
+    "structure": [
+      "office-document application background",
+      "trust boundary and prompt injection risk",
+      "false rejection and normal-task cost",
+      "research objective and approach",
+      "evaluation and expected deliverable"
+    ],
+    "single_column": true,
+    "font_size_pt": 12
+  },
+  "format": {
+    "body_columns": 2,
+    "body_size_pt": 12,
+    "body_size_chinese": "小四",
+    "chinese_body_font": "宋体",
+    "latin_body_font": "Times New Roman",
+    "heading_font": "黑体",
+    "word_text_color": "000000",
+    "page_geometry_matches_source": true,
+    "original_diagram_and_footer_unchanged": true,
+    "caption_and_bibliography_keep_source_sizes": true
+  },
+  "native_word_equations": {
+    "count": 3,
+    "encoding": "OMML",
+    "stacked_fractions": 3,
+    "definitions": [
+      "ASR: S/K times100percent",
+      "Interception R: B/N times100percent",
+      "Traffic block rate L: C/T times100percent"
+    ],
+    "displayed_on_page": 5,
+    "editable_not_images": true
+  },
+  "content_preservation": {
+    "references_unchanged": 14,
+    "original_sections_retained": 8,
+    "other_changes": "Only abstract and mathematical definitions in6.3; other prose unchanged",
+    "original_artifacts_sha256_rechecked": 2980
+  },
+  "rendering": {
+    "pages": 6,
+    "visual_review": "All6 pages inspected; final pages1-4 match reviewed render-2 PNG hashes, revised pages5-6 inspected again",
+    "engine": "Native Microsoft Word16.0 PDF export and bundled render_docx.py PNG generation",
+    "formula_visual_review": "Three complete native fractions, labels and adjacent variable definitions are visible"
+  },
+  "changed_package_parts": [
+    "word/comments.xml",
+    "word/document.xml",
+    "word/styles.xml"
+  ],
+  "preserved_package_parts": 17,
+  "notes": [
+    "The source report was initially open; it was preserved, and the revision was saved separately.",
+    "QA PNGs and PDFs are local ignored intermediates.",
+    "No experimental results or personal identity fields were invented."
+  ]
+}

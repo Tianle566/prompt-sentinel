@@ -183,3 +183,5 @@ Codex 先读取隐藏自动标签的输入和真实回复，逐条写下安全�
 Windows已有真实模型和应用验证，管理扩展版本保存311项通过、1项集成测试排除的记录，见[Windows验证](../results/windows_validation_20261026/summary.json)、[管理验证](../results/admin_validation_20261027/summary.json)。主实验对应247项、迁移阶段249项和管理阶段311项属于不同源码阶段，不能相加。原Apple M1主实验、TXT、标签和L5结果均不修改；Windows功能检查不计入其样本分母，也不作为同协议模型效果或性能复现。
 
 文稿本轮使用原生Microsoft Word分页与目录字段更新、逐页PNG检查，以及原稿哈希、版式、关系、批注和数字表格核对。此次Word验证只针对新增DOCX，不补写为旧PPT已通过Microsoft PowerPoint验证。完整变更与检查结果见[文稿修订记录](DOCUMENT_REVISION_20261027.md)。
+
+后续按摘要反馈和新版文档规则新增[开题摘要背景修订稿](../deliverables/开题报告_摘要背景修订稿_20261027.docx)。6页，摘要先交代应用背景、注入风险和正常任务代价，正文小四双栏、摘要通栏，三项比例使用可编辑Word原生公式；原8部分正文、14项参考文献和图示保留。逐页渲染、公式结构与原材料校验见[开题格式验证](../results/proposal_abstract_validation_20261027/summary.json)。本轮为文档修改，原模型、应用及实验结果保留。

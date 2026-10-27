@@ -1,0 +1,35 @@
+{
+  "status": "passed",
+  "scope": "isolated QA database, actual local CPU detection",
+  "cancelled": {
+    "id": "bad7190f17b24c999b5ea62c2c506fd1",
+    "status": "cancelled",
+    "progress": 7,
+    "inference": {
+      "requested": 40,
+      "completed": 2,
+      "unreliable": 0,
+      "persistent_cache_hits": 0,
+      "fingerprint": "42892ef5e0d44221c1ae38bad983a29dc9e0a4c746718c9d93a4d85b0c347336",
+      "asr_requested": 0,
+      "asr_completed": 0
+    },
+    "timed_out": false
+  },
+  "completed": {
+    "id": "6aa2cc1eb8d24fd5afd70da65d9b900a",
+    "status": "completed",
+    "inference": {
+      "requested": 2,
+      "completed": 2,
+      "unreliable": 0,
+      "persistent_cache_hits": 2,
+      "fingerprint": "42892ef5e0d44221c1ae38bad983a29dc9e0a4c746718c9d93a4d85b0c347336",
+      "asr_requested": 0,
+      "asr_completed": 0
+    }
+  },
+  "comparison_protocol_difference": "passed",
+  "archive_unarchive_without_deletion": "passed",
+  "javascript_errors": []
+}

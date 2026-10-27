@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "browser": "Chrome on Windows, headless functional verification",
+  "steps": [
+    {
+      "step": "login",
+      "status": "passed"
+    },
+    {
+      "step": "/dashboard",
+      "status": "passed"
+    },
+    {
+      "step": "/chat",
+      "status": "passed"
+    },
+    {
+      "step": "/attack",
+      "status": "passed"
+    },
+    {
+      "step": "/documents",
+      "status": "passed"
+    },
+    {
+      "step": "/logs",
+      "status": "passed"
+    },
+    {
+      "step": "/policy",
+      "status": "passed"
+    },
+    {
+      "step": "/evaluation",
+      "status": "passed"
+    },
+    {
+      "step": "real chat comparison submitted through the UI",
+      "status": "passed",
+      "protected_blocked": true,
+      "unprotected_generated": true
+    }
+  ],
+  "javascript_errors": []
+}

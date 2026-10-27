@@ -2,11 +2,15 @@ erDiagram
     USERS ||--o{ REQUEST_LOGS : creates
     USERS ||--o{ EVALUATION_JOBS : launches
     USERS ||--o{ POLICY_AUDITS : changes
+    USERS ||--o{ ADMIN_AUDITS : operates
+    USERS ||--o{ CUSTOM_SAMPLES : maintains
     USERS {
         int id PK
         string username UK
         string password_hash
         string role
+        bool is_active
+        int session_version
         datetime created_at
     }
     REQUEST_LOGS {
@@ -32,6 +36,8 @@ erDiagram
         json config
         json result
         text error
+        bool cancel_requested
+        bool archived
         datetime created_at
         datetime updated_at
     }
@@ -41,4 +47,25 @@ erDiagram
         json before
         json after
         datetime created_at
+    }
+    ADMIN_AUDITS {
+        int id PK
+        int user_id FK
+        string action
+        string target
+        json details
+        datetime created_at
+    }
+    CUSTOM_SAMPLES {
+        string id PK
+        int user_id FK
+        text text
+        string lang
+        string attack_type
+        int label
+        string source
+        json oracle
+        bool enabled
+        datetime created_at
+        datetime updated_at
     }

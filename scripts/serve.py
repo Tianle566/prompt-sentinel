@@ -72,6 +72,8 @@ def run(setup=False, check=False):
     if not (ROOT / "frontend" / "node_modules").is_dir():
         subprocess.run([npm, "ci"], cwd=ROOT / "frontend", check=True, shell=os.name == "nt")
     (ROOT / ".runtime").mkdir(exist_ok=True)
+    stop_request = ROOT / ".runtime" / "stop.request"
+    stop_request.unlink(missing_ok=True)
     owned, streams = [], []
     stop = threading.Event()
     for name in ("SIGINT", "SIGTERM"):
@@ -150,6 +152,9 @@ def run(setup=False, check=False):
             ready(frontend_url, process)
         print(f"\nPrompt Sentinel 已就绪\n前端：{frontend_url}\nSwagger：{api_url}/docs\n初始账户：{ROOT / '.runtime' / 'credentials.json'}\nCtrl+C 仅停止本次启动的服务。\n", flush=True)
         while not stop.wait(1):
+            if stop_request.exists():
+                stop.set()
+                break
             for process in owned:
                 if process.poll() is not None:
                     raise RuntimeError(f"服务退出（{process.returncode}），请检查 .runtime 日志")

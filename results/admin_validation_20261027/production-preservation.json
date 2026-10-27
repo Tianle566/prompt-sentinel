@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "original_database_rows_unchanged": {
+    "users": 3,
+    "request_logs": 70,
+    "evaluation_jobs": 7,
+    "policy_audits": 7
+  },
+  "all_three_original_accounts_active": true,
+  "original_login_credentials_unchanged": true,
+  "sqlite_integrity": "ok",
+  "original_thesis_and_experiment_files_unchanged": 2980,
+  "original_model_files_sha256_verified": 26,
+  "migration_backup_count": 1
+}

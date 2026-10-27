@@ -14,8 +14,8 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def verify(base_url="http://127.0.0.1:8000", include_eval=True):
-    credentials = json.loads((ROOT / ".runtime" / "credentials.json").read_text())
+def verify(base_url="http://127.0.0.1:8000", include_eval=True, output_dir=None):
+    credentials = json.loads((ROOT / ".runtime" / "credentials.json").read_text(encoding="utf-8"))
     checks = []
     started = time.monotonic()
     with httpx.Client(base_url=base_url, timeout=300) as client:
@@ -95,7 +95,11 @@ def verify(base_url="http://127.0.0.1:8000", include_eval=True):
         assert all(row["user_id"] == user["user"]["id"] for row in isolated["items"])
         assert client.get(f"/api/logs/{comparison['protected']['id']}").status_code == 404
     report = {"status": "passed", "created_at": datetime.now(timezone.utc).isoformat(), "elapsed_seconds": time.monotonic() - started, "openapi_paths": len(specification["paths"]), "checks": checks, "comparison": comparison, "document": {"benign_blocked": document["result"]["blocked"], "indirect_blocked": indirect["result"]["blocked"], "malicious_paragraphs": [item["index"] for item in indirect["paragraphs"] if item["is_attack"]]}, "statistics": stats, "evaluation_job_id": eval_job["id"] if eval_job else None}
-    path = ROOT / "results" / "api_verification.json"
+    destination = Path(output_dir) if output_dir is not None else ROOT / "results"
+    if not destination.is_absolute():
+        destination = ROOT / destination
+    destination.mkdir(parents=True, exist_ok=True)
+    path = destination / "api_verification.json"
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     print(json.dumps({"status": "passed", "checks": len(checks), "elapsed_seconds": report["elapsed_seconds"], "report": str(path)}, indent=2))
     return report
@@ -105,5 +109,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     parser.add_argument("--skip-eval", action="store_true")
+    parser.add_argument("--output-dir", help="Save this verification separately from historical API reports")
     args = parser.parse_args()
-    verify(args.base_url, not args.skip_eval)
+    verify(args.base_url, not args.skip_eval, args.output_dir)

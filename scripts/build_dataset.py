@@ -52,7 +52,7 @@ def sha256(path: Path) -> str:
 def fetch_sources(raw_dir: Path, offline: bool = False) -> dict:
     raw_dir.mkdir(parents=True, exist_ok=True)
     previous = raw_dir / "sources.json"
-    recorded = json.loads(previous.read_text()) if previous.exists() else {}
+    recorded = json.loads(previous.read_text(encoding="utf-8")) if previous.exists() else {}
     manifest = {}
     for key, spec in SOURCES.items():
         path = raw_dir / spec["filename"]

@@ -18,15 +18,17 @@ from urllib.parse import urlparse
 import bcrypt
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
-from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
-from sqlalchemy import String, case, cast, func, select
+from fastapi.responses import FileResponse, Response
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from sqlalchemy import String, and_, case, cast, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.app.core.auth import _private_write, admin_user, create_token, current_user, user_dict
 from backend.app.core.config import ROOT, get_config, merge_dict, public_config, resolve_path, save_config, validate_config
 from backend.app.db.models import EvaluationJob, PolicyAudit, RequestLog, User, utcnow
 from backend.app.db.session import SessionLocal, get_db
+from backend.app.services.administration import account_dict, active_samples, audit, csv_text, rules_lock
 
 router = APIRouter(prefix="/api")
 _jobs = ThreadPoolExecutor(max_workers=1, thread_name_prefix="evaluation")
@@ -34,6 +36,7 @@ _comparisons = ThreadPoolExecutor(max_workers=2, thread_name_prefix="comparison"
 _inference_lock = threading.RLock()
 _evaluation_running = threading.Event()
 _login_lock = threading.Lock()
+_evaluation_queue_lock = threading.Lock()
 _login_attempts: dict[tuple[str, str], list[float]] = defaultdict(list)
 # Precomputed at the same bcrypt cost (12) used by account creation/change.
 _DUMMY_PASSWORD_HASH = b"$2b$12$S3Ok84K/0UBsIs/uBlNjlOfTXhZRaWA8VDSYkAMg9G7CxGL0crpwK"
@@ -47,6 +50,25 @@ class LoginBody(BaseModel):
 class PasswordBody(BaseModel):
     old_password: str = Field(min_length=1, max_length=128)
     new_password: str = Field(min_length=1, max_length=72)
+
+
+class CreateUserBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    username: str = Field(min_length=1, max_length=80, pattern=r"^[\w.-]+$")
+    password: str = Field(min_length=1, max_length=72)
+    role: Literal["user", "admin"] = "user"
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def normalize_username(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if not 8 <= len(value.encode()) <= 72:
+            raise ValueError("密码 UTF-8 长度必须为 8–72 字节")
+        return value
 
 
 class ChatBody(BaseModel):
@@ -101,6 +123,30 @@ def _local_target(config: dict):
 
 def _scope(statement, user: User):
     return statement if user.role == "admin" else statement.where(RequestLog.user_id == user.id)
+
+
+def _attack_interception_stats(db: Session, user: User, log_ids: list[int] | None = None):
+    """Count actual interceptions of declared attack tests, not all blocked traffic."""
+    evaluation = RequestLog.result["attack_evaluation"]
+    oracle_type = evaluation["oracle"]["type"].as_string()
+    marker = evaluation["oracle"]["marker"].as_string()
+    success = evaluation["success"].as_boolean()
+    reliable = RequestLog.result["detection"]["reliable"].as_boolean()
+    error = func.coalesce(RequestLog.result["error"].as_string(), "")
+    output_status = RequestLog.result["output_check"]["status"].as_string()
+    failed = or_(error != "", reliable.is_(False), output_status == "error")
+    supported = or_(oracle_type.in_(("canary", "guard_unsafe")), and_(oracle_type == "marker", func.length(func.trim(marker)) > 0))
+    valid = and_(error == "", reliable.is_(True), func.coalesce(output_status, "") != "error", supported, success.in_((True, False)), or_(RequestLog.blocked.is_(False), success.is_(False)))
+    statement = select(
+        func.count(RequestLog.id),
+        func.sum(case((valid, 1), else_=0)),
+        func.sum(case((and_(valid, RequestLog.blocked.is_(True)), 1), else_=0)),
+        func.sum(case((failed, 1), else_=0)),
+    ).where(RequestLog.kind == "attack", RequestLog.protected.is_(True), RequestLog.attack_type.not_in(("benign", "normal")))
+    if log_ids is not None:
+        statement = statement.where(RequestLog.id.in_(log_ids))
+    total, evaluated, intercepted, errors = (int(value or 0) for value in db.execute(_scope(statement, user)).one())
+    return {"total": total, "evaluated": evaluated, "intercepted": intercepted, "not_intercepted": evaluated - intercepted, "errors": errors, "unknown": total - evaluated - errors, "rate": intercepted / evaluated if evaluated else None}
 
 
 def _save_log(db: Session, user: User, text: str, protected: bool, result: dict, kind="chat", attack_type=None):
@@ -203,7 +249,7 @@ def login(body: LoginBody, request: Request, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.username == body.username))
     password = body.password.encode()
     checked = bcrypt.checkpw(password if len(password) <= 72 else b"", user.password_hash.encode() if user else _DUMMY_PASSWORD_HASH)
-    if not user or len(password) > 72 or not checked:
+    if not user or not user.is_active or len(password) > 72 or not checked:
         raise HTTPException(401, "用户名或密码错误")
     with _login_lock:
         _login_attempts.pop(key, None)
@@ -225,7 +271,9 @@ def change_password(body: PasswordBody, user: User = Depends(current_user), db: 
         if path.exists():
             credentials = json.loads(path.read_text(encoding="utf-8"))
             remaining = {key: value for key, value in credentials.items() if value.get("username") != user.username}
-            _private_write(path, json.dumps(remaining, ensure_ascii=False, indent=2))
+            if remaining != credentials:
+                _private_write(path, json.dumps(remaining, ensure_ascii=False, indent=2))
+        audit(db, user, "account.password_change", str(user.id))
         db.commit()
     return {"message": "密码已更新"}
 
@@ -233,6 +281,29 @@ def change_password(body: PasswordBody, user: User = Depends(current_user), db: 
 @router.get("/auth/me", tags=["auth"])
 def me(user: User = Depends(current_user)):
     return user_dict(user)
+
+
+@router.get("/users", tags=["accounts"])
+def list_users(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), user: User = Depends(admin_user), db: Session = Depends(get_db)):
+    total = db.scalar(select(func.count()).select_from(User))
+    users = db.scalars(select(User).order_by(User.id).offset((page - 1) * page_size).limit(page_size))
+    return {"items": [account_dict(account) for account in users], "total": total, "page": page, "page_size": page_size}
+
+
+@router.post("/users", status_code=201, tags=["accounts"])
+def create_user(body: CreateUserBody, user: User = Depends(admin_user), db: Session = Depends(get_db)):
+    if db.scalar(select(User.id).where(User.username == body.username)) is not None:
+        raise HTTPException(409, "用户名已存在，请更换用户名")
+    account = User(username=body.username, role=body.role, password_hash=bcrypt.hashpw(body.password.encode(), bcrypt.gensalt()).decode())
+    db.add(account)
+    try:
+        db.flush()
+        audit(db, user, "account.create", str(account.id), {"username": account.username, "role": account.role})
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "用户名已存在，请更换用户名")
+    return account_dict(account)
 
 
 @router.post("/detect", tags=["detection"])
@@ -277,8 +348,8 @@ def compare(body: ChatBody, user: User = Depends(current_user), db: Session = De
 
 
 @router.get("/attack/samples", tags=["attack"])
-def samples(attack_type: str | None = None, limit: int = Query(20, ge=1, le=200), user: User = Depends(current_user)):
-    data = _samples()
+def samples(attack_type: str | None = None, limit: int = Query(20, ge=1, le=200), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    data = active_samples(db) + _samples()
     if attack_type:
         data = [s for s in data if s.get("attack_type") == attack_type]
     # Return public attack criteria; canaries are generated only at runtime.
@@ -293,7 +364,7 @@ def attack(body: AttackBody, user: User = Depends(current_user), db: Session = D
         raise HTTPException(422, "请选择样本或输入测试文本")
     if len(body.texts) + len(body.sample_ids) > 25:
         raise HTTPException(422, "每次最多测试 25 条")
-    indexed = {str(s["id"]): s for s in _samples()}
+    indexed = {str(s["id"]): s for s in _samples() + active_samples(db)}
     missing = [key for key in body.sample_ids if key not in indexed]
     if missing:
         raise HTTPException(404, f"样本不存在：{missing[0]}")
@@ -321,7 +392,7 @@ def attack(body: AttackBody, user: User = Depends(current_user), db: Session = D
         result["attack_evaluation"] = {"success": success, "oracle": criterion.get("oracle"), "evidence": oracle_evidence}
         result["id"] = _save_log(db, user, entry["text"], body.protected, result, "attack", entry.get("attack_type"))
         items.append({"text": entry["text"], "attack_type": entry.get("attack_type", "manual"), "blocked": result.get("blocked", False), "success": success, "result": result})
-    return {"items": items, "total": len(items)}
+    return {"items": items, "total": len(items), "protected": body.protected, "attack_interception": _attack_interception_stats(db, user, [item["result"]["id"] for item in items])}
 
 
 @router.post("/document/summarize", tags=["document"])
@@ -401,9 +472,12 @@ def _log_summary(log: RequestLog, detail=False):
     return result
 
 
-@router.get("/logs", tags=["logs"])
-def logs(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), attack_type: str | None = None, layer: str | None = None, start: datetime | None = None, end: datetime | None = None, user: User = Depends(current_user), db: Session = Depends(get_db)):
+def _log_query(user, attack_type=None, layer=None, start=None, end=None, user_id=None):
     statement = _scope(select(RequestLog), user)
+    if user_id is not None:
+        if user.role != "admin" and user_id != user.id:
+            raise HTTPException(403, "只能查看自己的请求记录")
+        statement = statement.where(RequestLog.user_id == user_id)
     if attack_type:
         statement = statement.where(RequestLog.attack_type == attack_type)
     if layer:
@@ -414,10 +488,29 @@ def logs(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), a
         statement = statement.where(RequestLog.created_at >= start)
     if end:
         statement = statement.where(RequestLog.created_at <= end)
+    return statement
+
+
+@router.get("/logs", tags=["logs"])
+def logs(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), attack_type: str | None = None, layer: str | None = None, start: datetime | None = None, end: datetime | None = None, user_id: int | None = Query(None, ge=1), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    statement = _log_query(user, attack_type, layer, start, end, user_id)
     total = db.scalar(select(func.count()).select_from(statement.subquery()))
     rows = db.scalars(statement.order_by(RequestLog.id.desc()).offset((page - 1) * page_size).limit(page_size)).all()
     types = db.scalars(_scope(select(RequestLog.attack_type).distinct(), user).order_by(RequestLog.attack_type)).all()
-    return {"items": [_log_summary(row) for row in rows], "total": total, "page": page, "page_size": page_size, "attack_types": types}
+    usernames = dict(db.execute(select(User.id, User.username).where(User.id.in_({row.user_id for row in rows}))).all())
+    return {"items": [_log_summary(row) | {"username": usernames.get(row.user_id)} for row in rows], "total": total, "page": page, "page_size": page_size, "attack_types": types}
+
+
+@router.get("/logs/export.csv", tags=["logs"])
+def export_logs(attack_type: str | None = None, layer: str | None = None, start: datetime | None = None, end: datetime | None = None, user_id: int | None = Query(None, ge=1), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    statement = _log_query(user, attack_type, layer, start, end, user_id).order_by(RequestLog.id.desc()).limit(10000)
+    rows = db.scalars(statement).all()
+    usernames = dict(db.execute(select(User.id, User.username).where(User.id.in_({row.user_id for row in rows}))).all())
+    text = csv_text(["ID", "账号", "时间", "用途", "输入", "开启防护", "已拦截", "攻击类型", "命中层", "耗时毫秒"], [[row.id, usernames.get(row.user_id), row.created_at.isoformat(), row.kind, row.text, row.protected, row.blocked, row.attack_type, ",".join(row.hit_layers), row.latency_ms] for row in rows])
+    if user.role == "admin":
+        audit(db, user, "logs.export", "request_logs", {"count": len(rows), "user_id": user_id, "attack_type": attack_type, "layer": layer})
+        db.commit()
+    return Response(text, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": 'attachment; filename="request-logs.csv"'})
 
 
 @router.get("/logs/{log_id}", tags=["logs"])
@@ -447,7 +540,7 @@ def stats(user: User = Depends(current_user), db: Session = Depends(get_db)):
         for result in results:
             if result.get("enabled", True) and result.get("status") == "ok":
                 latency[result["layer"]].append(result.get("latency_ms", 0))
-    return {"total_requests": total, "blocked_requests": blocked, "block_rate": blocked / total if total else 0, "average_latency_ms": average or 0, "attack_types": [{"name": name, "value": count} for name, count in attacks], "daily": [{"date": date.isoformat() if hasattr(date, "isoformat") else str(date), "total": count, "blocked": int(hits)} for date, count, hits in daily], "layers": [{"name": name, "value": int(count or 0)} for name, count in zip(names, layer_counts)], "latencies": [{"name": k, "value": sum(v) / len(v)} for k, v in sorted(latency.items())]}
+    return {"total_requests": total, "blocked_requests": blocked, "block_rate": blocked / total if total else 0, "attack_interception": _attack_interception_stats(db, user), "average_latency_ms": average or 0, "attack_types": [{"name": name, "value": count} for name, count in attacks], "daily": [{"date": date.isoformat() if hasattr(date, "isoformat") else str(date), "total": count, "blocked": int(hits)} for date, count, hits in daily], "layers": [{"name": name, "value": int(count or 0)} for name, count in zip(names, layer_counts)], "latencies": [{"name": k, "value": sum(v) / len(v)} for k, v in sorted(latency.items())]}
 
 
 @router.get("/config", tags=["config"])
@@ -481,6 +574,7 @@ def config_save(body: dict, user: User = Depends(admin_user), db: Session = Depe
     except (ValueError, KeyError, TypeError) as exc:
         raise HTTPException(422, str(exc))
     db.add(PolicyAudit(user_id=user.id, before=before, after=after))
+    audit(db, user, "policy.update", "policy", {"sections": list(_policy_updates(body))})
     db.commit()
     return after
 
@@ -492,35 +586,51 @@ def datasets(user: User = Depends(current_user)):
     for key, title in (("detect", "中英文注入检测集"), ("asr", "攻击成功率测试集")):
         path = resolve_path(config["data"][key + "_path"])
         count = sum(1 for line in path.open(encoding="utf-8") if line.strip()) if path.is_file() else 0
-        items.append({"id": key, "name": title, "count": count, "path": str(path.relative_to(ROOT))})
+        items.append({"id": key, "name": title, "count": count, "path": str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else path.name})
     return {"items": items}
 
 
 def _job_dict(job):
-    return {"id": job.id, "experiment": job.experiment, "status": job.status, "progress": job.progress, "message": job.message, "result": job.result, "error": job.error, "created_at": job.created_at.isoformat(), "updated_at": job.updated_at.isoformat()}
+    return {"id": job.id, "experiment": job.experiment, "status": job.status, "progress": job.progress, "message": job.message, "result": job.result, "error": job.error, "archived": job.archived, "cancel_requested": job.cancel_requested, "created_at": job.created_at.isoformat(), "updated_at": job.updated_at.isoformat()}
 
 
 def _execute_job(job_id, config, body):
+    def cancelled():
+        with SessionLocal() as db:
+            job = db.get(EvaluationJob, job_id)
+            return job is None or job.cancel_requested
     def update(progress, message):
         with SessionLocal() as db:
             job = db.get(EvaluationJob, job_id)
-            job.status = "running"
-            job.progress = max(0, min(float(progress), 100))
-            job.message = str(message)
+            job.status = "cancelling" if job.cancel_requested else "running"
+            if not job.cancel_requested or progress < 100:
+                job.progress = max(0, min(float(progress), 100))
+            job.message = "正在取消，当前样本结束后保留结果" if job.cancel_requested else str(message)
             db.commit()
     try:
+        if cancelled():
+            return
         _evaluation_running.set()
         update(0, "正在加载本地模型")
         from scripts.run_eval import run_evaluation
-        result = run_evaluation(config=config, experiment=body.experiment, limit=body.limit, asr_limit=body.asr_limit, progress_callback=update, output_dir=ROOT / "results" / job_id)
+        directory = ROOT / "results" / job_id
+        directory.mkdir(parents=True, exist_ok=True)
+        with rules_lock:
+            snapshot = directory / "rules_snapshot.yaml"
+            snapshot.write_bytes(resolve_path(config.get("rules_path", "backend/rules.yaml")).read_bytes())
+        config = copy.deepcopy(config)
+        config["rules_path"] = str(snapshot.resolve())
+        result = run_evaluation(config=config, experiment=body.experiment, limit=body.limit, asr_limit=body.asr_limit, progress_callback=update, output_dir=directory, cancel_callback=cancelled)
         with SessionLocal() as db:
             job = db.get(EvaluationJob, job_id)
             complete = result.get("status") == "completed"
-            job.status = "completed" if complete else "failed"
-            job.progress = 100
-            job.message = "评测完成" if complete else "评测未完整完成，已保留实际结果和错误记录"
+            was_cancelled = result.get("status") == "cancelled"
+            job.status = "completed" if complete else ("cancelled" if was_cancelled else "failed")
+            if not was_cancelled:
+                job.progress = 100
+            job.message = "评测完成" if complete else ("任务已取消，已保留实际完成范围与结果" if was_cancelled else "评测未完整完成，已保留实际结果和错误记录")
             job.result = _json(result)
-            if not complete:
+            if not complete and not was_cancelled:
                 job.error = "EvaluationIncomplete: 请检查结果中的 errors、timed_out 与样本完成范围"
             db.commit()
     except Exception as exc:
@@ -548,18 +658,27 @@ def eval_create(body: EvalBody, user: User = Depends(admin_user), db: Session = 
     for key in needed:
         if not resolve_path(config["data"][key]).is_file():
             raise HTTPException(409, "数据集尚未构建，请先执行 scripts/build_dataset.py")
-    if db.scalar(select(func.count()).select_from(EvaluationJob).where(EvaluationJob.status.in_(["running", "queued"]))) >= 2:
-        raise HTTPException(409, "已有评测任务运行或排队，请等待完成")
-    job = EvaluationJob(id=uuid.uuid4().hex, user_id=user.id, experiment=body.experiment, status="queued", progress=0, message="等待执行", config=public_config(config))
-    db.add(job)
-    db.commit()
-    _jobs.submit(_execute_job, job.id, copy.deepcopy(config), body)
-    return _job_dict(job)
+        available = sum(1 for line in resolve_path(config["data"][key]).open(encoding="utf-8") if line.strip())
+        is_asr = key == "asr_path"
+        requested = (body.asr_limit if is_asr else body.limit) or config["evaluation"].get("asr_limit" if is_asr else "detection_limit", 0) or available
+        maximum = config["evaluation"].get("max_asr_samples" if is_asr else "max_detection_samples", 200 if is_asr else 5000)
+        if min(requested, available) > maximum:
+            raise HTTPException(422, f"请求样本数超过当前上限 {maximum}，请减少规模或在运行维护中调整")
+    with _evaluation_queue_lock:
+        if db.scalar(select(func.count()).select_from(EvaluationJob).where(EvaluationJob.status.in_(["running", "queued", "cancelling"]))) >= config["evaluation"].get("max_queued_jobs", 2):
+            raise HTTPException(409, "已有评测任务运行或排队，请等待完成")
+        job = EvaluationJob(id=uuid.uuid4().hex, user_id=user.id, experiment=body.experiment, status="queued", progress=0, message="等待执行", config=public_config(config))
+        db.add(job)
+        audit(db, user, "evaluation.create", job.id, {"experiment": body.experiment, "limit": body.limit, "asr_limit": body.asr_limit})
+        db.commit()
+        _jobs.submit(_execute_job, job.id, copy.deepcopy(config), body)
+        return _job_dict(job)
 
 
 @router.get("/eval/jobs", tags=["evaluation"])
-def eval_list(user: User = Depends(current_user), db: Session = Depends(get_db)):
+def eval_list(archived: bool = False, user: User = Depends(current_user), db: Session = Depends(get_db)):
     statement = select(EvaluationJob).order_by(EvaluationJob.created_at.desc()).limit(50)
+    statement = statement.where(EvaluationJob.archived.is_(archived))
     if user.role != "admin":
         statement = statement.where(EvaluationJob.user_id == user.id)
     return {"items": [_job_dict(job) for job in db.scalars(statement).all()]}
@@ -580,10 +699,17 @@ def eval_detail(job_id: str, user: User = Depends(current_user), db: Session = D
 @router.get("/eval/artifacts/{job_id}/{filename}", tags=["evaluation"])
 def eval_artifact(job_id: str, filename: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
     _get_job(job_id, user, db)
-    if not re.fullmatch(r"[a-f0-9]{32}", job_id) or Path(filename).name != filename or Path(filename).suffix not in (".csv", ".png", ".json", ".jsonl"):
+    if not re.fullmatch(r"[a-f0-9]{32}", job_id) or Path(filename).name != filename or (Path(filename).suffix not in (".csv", ".png", ".json", ".jsonl") and filename != "rules_snapshot.yaml"):
         raise HTTPException(404, "文件不存在")
     folder = (ROOT / "results" / job_id).resolve()
     path = (folder / filename).resolve()
     if not path.is_relative_to(folder) or not path.is_file():
         raise HTTPException(404, "文件不存在")
     return FileResponse(path, filename=filename)
+
+
+from backend.app.api.management import router as management_router
+from backend.app.api.operations import router as operations_router
+
+router.include_router(management_router)
+router.include_router(operations_router)

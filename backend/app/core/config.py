@@ -78,6 +78,9 @@ def validate_config(config: dict) -> dict:
     origins = config.get("app", {}).get("cors_origins")
     if not isinstance(origins, list) or any(not isinstance(origin, str) for origin in origins):
         raise ValueError("app.cors_origins 必须是字符串列表")
+    for key, high in {"max_detection_samples": 100000, "max_asr_samples": 1000, "max_queued_jobs": 4}.items():
+        if key in config.get("evaluation", {}):
+            _integer(config["evaluation"][key], key, 1, high)
     return config
 
 
@@ -101,7 +104,7 @@ def save_config(updates: dict) -> dict:
     with _lock:
         result = validate_config(merge_dict(get_config(), updates))
         temporary = CONFIG_PATH.with_suffix(".yaml.tmp")
-        with temporary.open("w", encoding="utf-8") as stream:
+        with temporary.open("w", encoding="utf-8", newline="\n") as stream:
             yaml.safe_dump(result, stream, allow_unicode=True, sort_keys=False)
             stream.flush()
             os.fsync(stream.fileno())

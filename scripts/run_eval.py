@@ -146,7 +146,7 @@ def _inference_fingerprint(config: dict) -> dict:
     for key in ("deberta", "qwen_guard"):
         path = resolve_path(config["models"][key]["path"])
         models[key] = {"path": str(path), "files": [{"name": str(p.relative_to(path)), "size": p.stat().st_size, "mtime_ns": p.stat().st_mtime_ns} for p in sorted(path.rglob("*")) if p.is_file() and p.suffix in (".json", ".safetensors", ".bin", ".model")]}
-    return dict(layers={key: config["layers"][key] for key in ("l1", "l2", "l3")}, models=models, runtime=config["models"], code=code, rules=file_hash(ROOT / "backend/rules.yaml"))
+    return dict(layers={key: config["layers"][key] for key in ("l1", "l2", "l3")}, models=models, runtime=config["models"], code=code, rules=file_hash(resolve_path(config.get("rules_path", "backend/rules.yaml"))))
 
 
 def _detection_object(record: dict, policy: dict):
@@ -165,7 +165,7 @@ def _detection_object(record: dict, policy: dict):
     return DetectionResult(is_attack=attack, layer_results=layers, latency_ms=latency, strategy=policy["fusion"]["strategy"], reliable=reliable)
 
 
-def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, progress_callback=None, output_dir=None) -> dict:
+def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, progress_callback=None, output_dir=None, cancel_callback=None) -> dict:
     config = copy.deepcopy(config or get_config())
     experiment = EXPERIMENTS.get(str(experiment), str(experiment))
     if experiment not in ("all", "detection", "defense", "ablation", "overhead"):
@@ -180,12 +180,19 @@ def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, pr
     seed = int(config["evaluation"]["seed"])
     random.seed(seed)
     start = time.monotonic()
+    start_ns = time.monotonic_ns()
     started_wall_ns = time.time_ns()
     budget = float(config["evaluation"].get("time_budget_seconds", 7000))
+    deadline_ns = start_ns + int(budget * 1_000_000_000) if budget > 0 else None
     directory = resolve_path(output_dir or config["evaluation"]["output_dir"])
     if any((directory / name).exists() for name in ("summary.json", "config_snapshot.json", "asr_responses.jsonl", "detection_predictions.jsonl", "human_review.csv", "ai_review.csv")):
         raise FileExistsError("输出目录已有实验或复核证据；请用 --output-dir 指定新目录，保留原始结果")
     directory.mkdir(parents=True, exist_ok=True)
+    from backend.app.services.administration import rules_lock
+    with rules_lock:
+        rules_snapshot = directory / "rules_snapshot.yaml"
+        rules_snapshot.write_bytes(resolve_path(config.get("rules_path", "backend/rules.yaml")).read_bytes())
+    config["rules_path"] = str(rules_snapshot.resolve())
     cache_dir = ROOT / "results" / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
     sources = load_samples("detect", config)
@@ -209,22 +216,32 @@ def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, pr
     errors = []
     cache_hits = 0
     timed_out = False
-    callback = progress_callback or (lambda percent, message: None)
+    cancelled = False
+    report_progress = progress_callback or (lambda percent, message: None)
+    last_progress = 0
+    def callback(percent, message):
+        nonlocal last_progress
+        last_progress = percent
+        report_progress(percent, message)
     callback(0, "正在检查数据与本地模型；不会调用第三方攻击目标")
 
     def remaining():
-        return budget <= 0 or time.monotonic() - start < budget
+        nonlocal cancelled
+        if cancel_callback and cancel_callback():
+            cancelled = True
+            return False
+        return deadline_ns is None or time.monotonic_ns() < deadline_ns
 
     for number, (identifier, sample) in enumerate(work.items()):
         if not remaining():
-            timed_out = True
+            timed_out = not cancelled
             break
         key = fingerprint({"identity": identity_hash, "text": sample["text"]})
         cache_path = cache_dir / (key + ".json")
         record = None
         if cache_path.exists():
             try:
-                record = json.loads(cache_path.read_text())
+                record = json.loads(cache_path.read_text(encoding="utf-8"))
                 if not record.get("reliable"):
                     record = None
                 else:
@@ -277,7 +294,7 @@ def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, pr
         pipeline = PipelineService(policy)
         for sample in asr:
             if not remaining():
-                timed_out = True
+                timed_out = not cancelled
                 break
             record = predictions.get(sample["id"])
             session_id = f"eval_{fingerprint([seed, name, sample['id']])[:24]}"
@@ -306,7 +323,7 @@ def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, pr
             with (directory / "asr_responses.jsonl").open("a" if completed_asr > 1 else "w", encoding="utf-8") as handle:
                 handle.write(json.dumps(item, ensure_ascii=False) + "\n")
             callback(45 + 45 * completed_asr / max(total_asr, 1), f"策略测试 {completed_asr}/{total_asr}：{name} / {sample['attack_type']}")
-        if timed_out:
+        if timed_out or cancelled:
             break
     asr_metrics = _asr_metrics(asr_records, requested_policies, asr)
     if experiment in ("all", "defense"):
@@ -338,7 +355,7 @@ def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, pr
             if len(probes) >= probe_count:
                 break
             if not remaining():
-                timed_out = True
+                timed_out = not cancelled
                 break
             result = as_dict(probe_pipeline.process(sample["text"], protected=True, session_id=f"overhead_{seed}_{sample['id']}"))
             probes.append(dict(id=sample["id"], configuration="full", blocked=result.get("blocked"), error=result.get("error"), result=result, latency_ms=result.get("latency_ms", 0)))
@@ -358,13 +375,13 @@ def run_evaluation(config=None, experiment="all", limit=None, asr_limit=None, pr
     elapsed = time.monotonic() - start
     incomplete_detections = len(work) - len(predictions)
     unreliable = sum(not row.get("reliable", False) for row in predictions.values())
-    complete = not timed_out and not errors and not incomplete_detections and not unreliable and completed_asr == total_asr
-    summary = dict(schema_version=1, status="completed" if complete else "incomplete", experiment=experiment, seed=seed, elapsed_seconds=elapsed, time_budget_seconds=budget, within_two_hours=elapsed < 7200, timed_out=timed_out, data_scope=dict(detect_available=len(sources), detect_requested=len(detect) if experiment != "defense" else 0, asr_available=len(attacks), asr_requested=len(asr), full_detection_corpus=not detect_limit or detect_limit >= len(sources), full_asr_corpus=not attack_limit or attack_limit >= len(attacks), detection_ids=[row["id"] for row in detect] if experiment != "defense" else [], asr_ids=[row["id"] for row in asr]), inference=dict(requested=len(work), completed=len(predictions), unreliable=unreliable, persistent_cache_hits=cache_hits, fingerprint=identity_hash, asr_requested=total_asr, asr_completed=completed_asr), environment=dict(python=platform.python_version(), platform=platform.platform(), configured_device=config["models"]["device"], observed_detector_devices=sorted({str(layer["details"]["device"]) for record in predictions.values() for layer in record.get("layer_results", []) if layer.get("details", {}).get("device")}), cpu_threads=config["models"].get("cpu_threads"), total_memory_bytes=psutil.virtual_memory().total, target_provider=config["target"]["provider"], target_effective_model=config["target"].get("small_model", "qwen3:0.6b") if config["target"]["provider"] == "ollama" and psutil.virtual_memory().total < 16 * 1024**3 else config["target"]["model"], target_gpu_disabled=config["models"]["device"] == "cpu" and config["target"]["provider"] == "ollama"), dataset_hashes={key: file_hash(resolve_path(config["data"][key])) for key in ("detect_path", "asr_path")}, tables=tables, errors=errors, notes=["All target responses are from actual local inference; no simulated or fabricated metrics.", "Unknown outcomes are excluded from rate denominators and counted separately.", "Persistent detector caches preserve original per-layer inference latency; overhead probes additionally disable inference caching and measure the full pipeline.", "Canary ASR uses the raw-generation leakage boolean before public redaction; protected interceptions are counted as unsuccessful attacks.", "L4/L5 do not change input detection F1; their impact is measured by ASR and response-layer latency.", "human_review.csv is an unannotated worksheet, not completed human review.", "Dataset sampling and model seeds are fixed; cryptographic canaries and spotlighting nonces intentionally remain random, so byte-identical generations across processes are not guaranteed."])
+    complete = not cancelled and not timed_out and not errors and not incomplete_detections and not unreliable and completed_asr == total_asr
+    summary = dict(schema_version=1, status="completed" if complete else ("cancelled" if cancelled else "incomplete"), experiment=experiment, seed=seed, elapsed_seconds=elapsed, time_budget_seconds=budget, within_two_hours=elapsed < 7200, timed_out=timed_out, cancelled=cancelled, data_scope=dict(detect_available=len(sources), detect_requested=len(detect) if experiment != "defense" else 0, asr_available=len(attacks), asr_requested=len(asr), full_detection_corpus=not detect_limit or detect_limit >= len(sources), full_asr_corpus=not attack_limit or attack_limit >= len(attacks), detection_ids=[row["id"] for row in detect] if experiment != "defense" else [], asr_ids=[row["id"] for row in asr]), inference=dict(requested=len(work), completed=len(predictions), unreliable=unreliable, persistent_cache_hits=cache_hits, fingerprint=identity_hash, asr_requested=total_asr, asr_completed=completed_asr), environment=dict(python=platform.python_version(), platform=platform.platform(), configured_device=config["models"]["device"], observed_detector_devices=sorted({str(layer["details"]["device"]) for record in predictions.values() for layer in record.get("layer_results", []) if layer.get("details", {}).get("device")}), cpu_threads=config["models"].get("cpu_threads"), total_memory_bytes=psutil.virtual_memory().total, target_provider=config["target"]["provider"], target_effective_model=config["target"].get("small_model", "qwen3:0.6b") if config["target"]["provider"] == "ollama" and psutil.virtual_memory().total < 16 * 1024**3 else config["target"]["model"], target_gpu_disabled=config["models"]["device"] == "cpu" and config["target"]["provider"] == "ollama"), dataset_hashes={key: file_hash(resolve_path(config["data"][key])) for key in ("detect_path", "asr_path")}, tables=tables, errors=errors, notes=["All target responses are from actual local inference; no simulated or fabricated metrics.", "Unknown outcomes are excluded from rate denominators and counted separately.", "Persistent detector caches preserve original per-layer inference latency; overhead probes additionally disable inference caching and measure the full pipeline.", "Canary ASR uses the raw-generation leakage boolean before public redaction; protected interceptions are counted as unsuccessful attacks.", "L4/L5 do not change input detection F1; their impact is measured by ASR and response-layer latency.", "human_review.csv is an unannotated worksheet, not completed human review.", "Dataset sampling and model seeds are fixed; cryptographic canaries and spotlighting nonces intentionally remain random, so byte-identical generations across processes are not guaranteed."])
     _json_write(directory / "summary.json", summary)
     _json_write(directory / "inference_identity.json", identity)
-    summary["artifacts"] = sorted(path.name for path in directory.iterdir() if path.is_file() and path.stat().st_mtime_ns >= started_wall_ns and path.suffix in (".csv", ".png", ".json", ".jsonl"))
+    summary["artifacts"] = sorted(path.name for path in directory.iterdir() if path.is_file() and path.stat().st_mtime_ns >= started_wall_ns and (path.suffix in (".csv", ".png", ".json", ".jsonl") or path.name == "rules_snapshot.yaml"))
     _json_write(directory / "summary.json", summary)
-    callback(100, "评测完成" if complete else "评测保留了部分结果；请查看错误、样本范围与超时说明")
+    callback(last_progress if cancelled else 100, "评测完成" if complete else ("任务已取消，保留实际完成的结果" if cancelled else "评测保留了部分结果；请查看错误、样本范围与超时说明"))
     return summary
 
 

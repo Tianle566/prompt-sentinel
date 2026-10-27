@@ -1,0 +1,78 @@
+{
+  "status": "passed",
+  "date": "2026-10-27",
+  "scope": "Administrator feature validation; isolated QA database, not thesis performance results",
+  "automated_tests": {
+    "passed": 311,
+    "deselected_integration": 1,
+    "command": ".venv/Scripts/python.exe -X utf8 -m pytest -q -m \"not integration\""
+  },
+  "frontend_build": "passed",
+  "prettier": "passed",
+  "management_browser_checks": {
+    "accounts_disable_enable_role_reset": "passed",
+    "rule_and_policy_history_restore": "passed",
+    "custom_samples_create_edit_console": "passed",
+    "runtime_settings_backup_download_logs": "passed",
+    "audit_records_export_no_passwords": "passed",
+    "request_logs_export": "passed",
+    "mobile_pages": "passed",
+    "ordinary_user_ui_isolation": "passed"
+  },
+  "real_cpu_evaluation": {
+    "status": "passed",
+    "scope": "isolated QA database, actual local CPU detection",
+    "cancelled": {
+      "id": "bad7190f17b24c999b5ea62c2c506fd1",
+      "status": "cancelled",
+      "progress": 7,
+      "inference": {
+        "requested": 40,
+        "completed": 2,
+        "unreliable": 0,
+        "persistent_cache_hits": 0,
+        "fingerprint": "42892ef5e0d44221c1ae38bad983a29dc9e0a4c746718c9d93a4d85b0c347336",
+        "asr_requested": 0,
+        "asr_completed": 0
+      },
+      "timed_out": false
+    },
+    "completed": {
+      "id": "6aa2cc1eb8d24fd5afd70da65d9b900a",
+      "status": "completed",
+      "inference": {
+        "requested": 2,
+        "completed": 2,
+        "unreliable": 0,
+        "persistent_cache_hits": 2,
+        "fingerprint": "42892ef5e0d44221c1ae38bad983a29dc9e0a4c746718c9d93a4d85b0c347336",
+        "asr_requested": 0,
+        "asr_completed": 0
+      }
+    },
+    "comparison_protocol_difference": "passed",
+    "archive_unarchive_without_deletion": "passed",
+    "javascript_errors": []
+  },
+  "production_preservation": {
+    "status": "passed",
+    "original_database_rows_unchanged": {
+      "users": 3,
+      "request_logs": 70,
+      "evaluation_jobs": 7,
+      "policy_audits": 7
+    },
+    "all_three_original_accounts_active": true,
+    "original_login_credentials_unchanged": true,
+    "sqlite_integrity": "ok",
+    "original_thesis_and_experiment_files_unchanged": 2980,
+    "original_model_files_sha256_verified": 26,
+    "migration_backup_count": 1
+  },
+  "raw_qa_state": "Retained locally in ignored .runtime/admin_upgrade_20261027; databases, credentials and backups are excluded from Git",
+  "notes": [
+    "The 2/2 completion reused two real detections cached by the preceding 2/40 cancelled run; it is not a cold-start performance benchmark.",
+    "Original thesis data and experiment artifacts are unchanged.",
+    "Signed-in sessions issued before the credential-version update require a new login; passwords remain unchanged."
+  ]
+}

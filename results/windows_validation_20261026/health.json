@@ -1,0 +1,26 @@
+{
+  "app": "Prompt Sentinel",
+  "project_id": "43aa7f6c143f0125",
+  "status": "ok",
+  "models": {
+    "deberta": {
+      "ready": true,
+      "path": "models\\deberta-v3-base-prompt-injection-v2"
+    },
+    "qwen_guard": {
+      "ready": true,
+      "path": "models\\Qwen3Guard-Gen-0.6B"
+    },
+    "target": {
+      "ready": true,
+      "model": "qwen3:1.7b",
+      "provider": "ollama"
+    }
+  },
+  "target": {
+    "ready": true,
+    "model": "qwen3:1.7b",
+    "provider": "ollama"
+  },
+  "device": "cpu"
+}

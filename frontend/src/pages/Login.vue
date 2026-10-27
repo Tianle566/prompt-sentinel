@@ -72,6 +72,14 @@ async function submit() {
         <h2>登录研究工作台</h2>
         <p class="login-subtitle">使用你的账号，开始安全研究。</p>
         <el-alert
+          v-if="route.query.password_changed"
+          title="密码已更新，请使用新密码登录。"
+          type="success"
+          :closable="false"
+          show-icon
+          class="mb20"
+        />
+        <el-alert
           v-if="route.query.expired"
           title="登录已过期，请重新登录。"
           type="warning"

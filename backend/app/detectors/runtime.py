@@ -53,21 +53,23 @@ class ModelBundle:
 
 
 _bundles: dict[tuple[str, str, str], ModelBundle] = {}
-_load_lock = threading.RLock()
+# Shared with the target tokenizer: Transformers initializes lazy imports and
+# registries while loading, even when the models themselves are different.
+model_load_lock = threading.RLock()
 
 
 def get_bundle(config: dict, name: str) -> ModelBundle:
     import torch
-    from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification, AutoTokenizer
 
     path = resolve_path(config["models"][name]["path"])
     if not path.is_dir() or not (path / "config.json").is_file():
         raise ModelUnavailable(f"本地模型未安装：{name}；请运行 python scripts/download_models.py")
     device = select_device(config["models"].get("device", "auto"))
     key = (name, str(path.resolve()), device)
-    with _load_lock:
+    with model_load_lock:
         if key in _bundles:
             return _bundles[key]
+        from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification, AutoTokenizer
         torch.set_num_threads(max(1, int(config["models"].get("cpu_threads", 4))))
         try:
             tokenizer = AutoTokenizer.from_pretrained(str(path), local_files_only=True, trust_remote_code=False)
@@ -92,7 +94,7 @@ def get_bundle(config: dict, name: str) -> ModelBundle:
 
 def clear_model_caches() -> None:
     """Clear memoized inference, e.g. before a cold latency experiment."""
-    with _load_lock:
+    with model_load_lock:
         for bundle in _bundles.values():
             with bundle.lock:
                 bundle.cache.clear()

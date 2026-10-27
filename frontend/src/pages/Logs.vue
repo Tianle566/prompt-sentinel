@@ -1,12 +1,13 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { api, errorText, attackTypes, attackName, duration, dateTime } from '../api'
+import { api, errorText, attackTypes, attackName, duration, dateTime, downloadFile } from '../api'
+import { auth } from '../auth'
 import Icon from '../components/Icon.vue'
 import EmptyState from '../components/EmptyState.vue'
 import PipelineResult from '../components/PipelineResult.vue'
 import LayerResults from '../components/LayerResults.vue'
 const availableTypes = ref(Object.keys(attackTypes))
-const filters = reactive({ attack_type: '', layer: '', dates: null }),
+const filters = reactive({ attack_type: '', layer: '', dates: null, user_id: null }),
   rows = ref([]),
   total = ref(0),
   page = ref(1),
@@ -17,12 +18,35 @@ const filters = reactive({ attack_type: '', layer: '', dates: null }),
   detail = ref(null),
   detailLoading = ref(false),
   detailError = ref('')
+const users = ref([]),
+  exporting = ref(false)
+function filterParams() {
+  const params = {}
+  if (filters.attack_type) params.attack_type = filters.attack_type
+  if (filters.layer) params.layer = filters.layer
+  if (filters.user_id) params.user_id = filters.user_id
+  if (filters.dates?.length === 2) {
+    params.start = new Date(filters.dates[0]).toISOString()
+    params.end = new Date(filters.dates[1]).toISOString()
+  }
+  return params
+}
+async function exportLogs() {
+  exporting.value = true
+  try {
+    await downloadFile('/logs/export.csv', 'request-logs.csv', filterParams())
+  } catch (e) {
+    error.value = errorText(e)
+  } finally {
+    exporting.value = false
+  }
+}
 async function load(reset = false) {
   if (reset) page.value = 1
   loading.value = true
   error.value = ''
   try {
-    const params = { page: page.value, page_size: pageSize.value }
+    const params = { page: page.value, page_size: pageSize.value, ...filterParams() }
     if (filters.attack_type) params.attack_type = filters.attack_type
     if (filters.layer) params.layer = filters.layer
     if (filters.dates?.length === 2) {
@@ -48,6 +72,7 @@ function clear() {
   filters.attack_type = ''
   filters.layer = ''
   filters.dates = null
+  filters.user_id = null
   load(true)
 }
 async function openDetail(row) {
@@ -63,7 +88,16 @@ async function openDetail(row) {
     detailLoading.value = false
   }
 }
-onMounted(() => load())
+onMounted(async () => {
+  await load()
+  if (auth.isAdmin.value) {
+    try {
+      users.value = (await api.get('/users', { params: { page_size: 100 } })).data.items
+    } catch (e) {
+      error.value = errorText(e)
+    }
+  }
+})
 </script>
 <template>
   <section class="panel logs-panel">
@@ -72,13 +106,25 @@ onMounted(() => load())
         <h2>
           全部请求记录 <span class="count-pill">{{ total }}</span>
         </h2>
-        <p>按账号权限展示记录，点击详情查看完整检测依据</p>
+        <p>按账号权限展示记录，点击详情查看完整检测依据；导出当前筛选下最近最多 10000 条。</p>
       </div>
-      <el-button :loading="loading" @click="load()"
-        ><Icon name="refresh" :size="15" />刷新</el-button
-      >
+      <div>
+        <el-button :loading="exporting" @click="exportLogs">导出日志 CSV</el-button
+        ><el-button :loading="loading" @click="load()"
+          ><Icon name="refresh" :size="15" />刷新</el-button
+        >
+      </div>
     </div>
     <div class="log-filters">
+      <el-select
+        v-if="auth.isAdmin.value"
+        v-model="filters.user_id"
+        placeholder="全部用户"
+        clearable
+        filterable
+        aria-label="筛选日志用户"
+        ><el-option v-for="user in users" :key="user.id" :value="user.id" :label="user.username"
+      /></el-select>
       <el-date-picker
         v-model="filters.dates"
         type="datetimerange"
@@ -141,7 +187,14 @@ onMounted(() => load())
             }}</small
           ></template
         ></el-table-column
-      ><el-table-column label="输入内容" min-width="225"
+      ><el-table-column
+        v-if="auth.isAdmin.value"
+        prop="username"
+        label="账号"
+        min-width="140"
+        show-overflow-tooltip
+      />
+      <el-table-column label="输入内容" min-width="225"
         ><template #default="{ row }"
           ><p class="log-text">{{ row.text }}</p>
           <small class="table-subtitle">{{

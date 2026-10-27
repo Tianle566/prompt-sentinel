@@ -10,6 +10,7 @@ import ollama
 import psutil
 
 from backend.app.core.config import get_config, resolve_path
+from backend.app.detectors.runtime import model_load_lock
 
 _tokenizers = {}
 _tokenizer_lock = threading.RLock()
@@ -36,7 +37,7 @@ class TargetLLM:
         if not (path / "tokenizer_config.json").is_file():
             raise TargetError("目标模型本地 tokenizer 未安装；请运行 python scripts/download_models.py")
         key = str(path.resolve())
-        with _tokenizer_lock:
+        with _tokenizer_lock, model_load_lock:
             if key not in _tokenizers:
                 try:
                     from transformers import AutoTokenizer

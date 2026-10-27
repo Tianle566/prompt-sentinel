@@ -17,7 +17,7 @@ auth:
   user_password_env: SENTINEL_USER_PASSWORD
   jwt_secret_env: SENTINEL_JWT_SECRET
 models:
-  device: auto
+  device: cpu
   cpu_threads: 4
   deberta:
     repo_id: protectai/deberta-v3-base-prompt-injection-v2

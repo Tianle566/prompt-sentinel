@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import secrets
@@ -58,7 +60,7 @@ def bootstrap_users(db: Session) -> None:
     db.commit()
     if credentials:
         path = ROOT / ".runtime" / "credentials.json"
-        existing = json.loads(path.read_text()) if path.exists() else {}
+        existing = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         _private_write(path, json.dumps(existing | credentials, indent=2, ensure_ascii=False))
 
 
@@ -66,18 +68,24 @@ def user_dict(user: User) -> dict:
     return {"id": user.id, "username": user.username, "role": user.role}
 
 
+def _credential_version(user: User) -> str:
+    # Bind sessions to the stored password without exposing its bcrypt hash.
+    value = f"{user.password_hash}:{user.role}:{user.session_version}"
+    return hmac.new(jwt_secret().encode(), value.encode(), hashlib.sha256).hexdigest()
+
+
 def create_token(user: User) -> str:
     now = datetime.now(timezone.utc)
-    return jwt.encode({"sub": str(user.id), "iat": now, "exp": now + timedelta(minutes=get_config()["auth"]["token_minutes"])}, jwt_secret(), algorithm="HS256")
+    return jwt.encode({"sub": str(user.id), "iat": now, "exp": now + timedelta(minutes=get_config()["auth"]["token_minutes"]), "ver": _credential_version(user)}, jwt_secret(), algorithm="HS256")
 
 
 def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer), db: Session = Depends(get_db)) -> User:
     if credentials is None:
         raise HTTPException(401, "请先登录", headers={"WWW-Authenticate": "Bearer"})
     try:
-        payload = jwt.decode(credentials.credentials, jwt_secret(), algorithms=["HS256"], options={"require": ["exp", "sub"]})
+        payload = jwt.decode(credentials.credentials, jwt_secret(), algorithms=["HS256"], options={"require": ["exp", "sub", "ver"]})
         user = db.get(User, int(payload["sub"]))
-        if not user:
+        if not user or not user.is_active or not isinstance(payload["ver"], str) or not hmac.compare_digest(payload["ver"], _credential_version(user)):
             raise ValueError("unknown user")
         return user
     except (jwt.PyJWTError, ValueError, TypeError):

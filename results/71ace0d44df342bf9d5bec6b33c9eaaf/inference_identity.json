@@ -1,0 +1,131 @@
+{
+  "layers": {
+    "l1": {
+      "enabled": true
+    },
+    "l2": {
+      "enabled": true,
+      "threshold": 0.5,
+      "max_tokens": 512,
+      "stride": 128,
+      "batch_size": 8
+    },
+    "l3": {
+      "enabled": true,
+      "block_controversial": false,
+      "max_new_tokens": 64,
+      "max_tokens": 4096
+    }
+  },
+  "models": {
+    "deberta": {
+      "path": "D:\\毕设\\models\\deberta-v3-base-prompt-injection-v2",
+      "files": [
+        {
+          "name": "added_tokens.json",
+          "size": 23,
+          "mtime_ns": 1792640361116670100
+        },
+        {
+          "name": "config.json",
+          "size": 994,
+          "mtime_ns": 1792640361660493400
+        },
+        {
+          "name": "model.safetensors",
+          "size": 737719272,
+          "mtime_ns": 1792640440809705500
+        },
+        {
+          "name": "special_tokens_map.json",
+          "size": 286,
+          "mtime_ns": 1792640362002457300
+        },
+        {
+          "name": "spm.model",
+          "size": 2464616,
+          "mtime_ns": 1792640375714044200
+        },
+        {
+          "name": "tokenizer.json",
+          "size": 8656744,
+          "mtime_ns": 1792640365118146600
+        },
+        {
+          "name": "tokenizer_config.json",
+          "size": 1284,
+          "mtime_ns": 1792640362743251900
+        }
+      ]
+    },
+    "qwen_guard": {
+      "path": "D:\\毕设\\models\\Qwen3Guard-Gen-0.6B",
+      "files": [
+        {
+          "name": "config.json",
+          "size": 727,
+          "mtime_ns": 1792640444038643600
+        },
+        {
+          "name": "generation_config.json",
+          "size": 161,
+          "mtime_ns": 1792640444079764700
+        },
+        {
+          "name": "model.safetensors",
+          "size": 1503300328,
+          "mtime_ns": 1792641332033055200
+        },
+        {
+          "name": "tokenizer.json",
+          "size": 11422654,
+          "mtime_ns": 1792640459361882200
+        },
+        {
+          "name": "tokenizer_config.json",
+          "size": 9601,
+          "mtime_ns": 1792640445236356900
+        },
+        {
+          "name": "vocab.json",
+          "size": 2776833,
+          "mtime_ns": 1792640448345293900
+        }
+      ]
+    }
+  },
+  "runtime": {
+    "device": "cpu",
+    "cpu_threads": 4,
+    "deberta": {
+      "repo_id": "protectai/deberta-v3-base-prompt-injection-v2",
+      "path": "models/deberta-v3-base-prompt-injection-v2"
+    },
+    "qwen_guard": {
+      "repo_id": "Qwen/Qwen3Guard-Gen-0.6B",
+      "path": "models/Qwen3Guard-Gen-0.6B"
+    },
+    "target": {
+      "repo_id": "Qwen/Qwen3-1.7B-GGUF",
+      "tokenizer_repo_id": "Qwen/Qwen3-1.7B",
+      "path": "models/Qwen3-1.7B-GGUF",
+      "filename": "Qwen3-1.7B-Q8_0.gguf",
+      "small_repo_id": "Qwen/Qwen3-0.6B-GGUF",
+      "small_tokenizer_repo_id": "Qwen/Qwen3-0.6B",
+      "small_path": "models/Qwen3-0.6B-GGUF",
+      "small_filename": "Qwen3-0.6B-Q8_0.gguf"
+    }
+  },
+  "code": {
+    "backend\\app\\detectors\\__init__.py": "1c2c0ccf2e996a35796c43c97e6a1163709670b6f96f61e82a6f68c77015abca",
+    "backend\\app\\detectors\\deberta.py": "d994b80afd8bc323600f5b0809cc1a0d1b892c94959ff82908055e4ffef5a364",
+    "backend\\app\\detectors\\fusion.py": "c9338ed2fe30f6947c8420f39149f40025146210994fc827843f0df6c28f705c",
+    "backend\\app\\detectors\\qwen_guard.py": "7b4f4106296efacb5607af5f97f3b4b479cae8b30a2284dc464d49acac1d3ba8",
+    "backend\\app\\detectors\\rules.py": "d738dffe99f75a3399765baa536d9095ff783357b50dee044a0d58bf8d873e40",
+    "backend\\app\\detectors\\runtime.py": "6a7cdabf4def3bc341b90326a382916c66d256bef6b633852adc3d53bc7a4b56",
+    "backend\\app\\services\\__init__.py": "115a8c9c82c2884e723f64c3d07080f3febc77a1ee40064b03283019d6e1a4c9",
+    "backend\\app\\services\\detection.py": "5d6092b17389b9a60b7198c2b68980c000225aac6ba0c86aae165aee3871c219",
+    "backend\\app\\services\\pipeline.py": "816c3674822fd585e9fa1c593ea391ec245d82b1ebc9a4da3f7c6bc015570b72"
+  },
+  "rules": "15e7a13063d1fe61fc2f5f39682e0acd9304dc67218293f7983b793e86c9d236"
+}

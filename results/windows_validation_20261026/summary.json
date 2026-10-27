@@ -1,0 +1,42 @@
+{
+  "status": "passed",
+  "verified_at": "2026-10-26T06:58:11.354530+00:00",
+  "application_url": "http://127.0.0.1:5173",
+  "api_docs": "http://127.0.0.1:8000/docs",
+  "python": "3.11.9",
+  "device": "cpu",
+  "administrator": "admin_windows",
+  "credentials_file": ".runtime/credentials.json",
+  "frontend_build": "passed",
+  "regression_tests": {
+    "passed": 249,
+    "failed": 0
+  },
+  "real_model_inference": "passed",
+  "http_checks": 52,
+  "browser_pages": 8,
+  "browser_steps": 9,
+  "browser_javascript_errors": [],
+  "cold_start_comparison": "passed",
+  "small_evaluation_job_id": "0fa7b61e64a140738c4d46c2ad77f9c7",
+  "historical_v2_audit_checks": 3427,
+  "original_artifacts_preserved": 2980,
+  "model_manifest_files_preserved": 26,
+  "backup_directory": ".runtime/windows_migration_20261026/backup",
+  "source_sha256": {
+    "README.md": "7724783be93f604a9b4f15e2ecc675f9a7b311a8434344f054f1741274707944",
+    "backend/app/core/config.py": "ff3d9730a29b5d54eeac787932f71d4ffb37228c29f037a70397b0c23e4e2ff5",
+    "backend/app/detectors/runtime.py": "f923268c5ef85c581528d9f983ae408bb9049e4afc78ac449184309e78ae2266",
+    "backend/app/llm/target.py": "0747e4e310898d8460e9be4e0d96cbe7324f2a392e86775a12e8d043892dee82",
+    "backend/config.yaml": "afa52899bfe813ab42c681aaf13e4a605a339c71fd353b74446ada3355df06d2",
+    "backend/tests/test_api_audit_regressions.py": "9edcd0a70a1355c72ab42c9bb66525ae9b35f37ac5162df0e107612beb8aa683",
+    "scripts/audit_results.py": "29ce53e9be6a8db30ce72b306e2480d33b753731b6a7f66854f66889e1498e3c",
+    "scripts/build_dataset.py": "24b59efe64964cbb2aa1e43374f50e4186ebc9457a72ac4d8fadd682bfbc8150",
+    "scripts/download_models.py": "2b5289960f60665374aa67324aa0ba8dac9e5be253bc8ac5c07781357efc9b61",
+    "scripts/run_eval.py": "02e5d066c1fe5579c2f2d214797863fe553cd8d06f46ff9e5cfe54c276cf3bc0",
+    "scripts/smoke_test.py": "988be2ba0ebf397abe0f0f1b62513de2dc44b5b19e94628decf56f519973895c",
+    "scripts/verify_system.py": "fbd9e072efc09578eb7f69229d3c99666378a30e797dbd541ed1b43270688fc9",
+    "start.bat": "f602850d4b9a8b30757c29629de6c7bdaadcd66982bef40ac0f6d3dbbe0cf967",
+    "backend/tests/test_model_initialization.py": "b8600de9197865ca5e966952c678a5215ce6c352885410582a18667fb0a1aaa2"
+  }
+}

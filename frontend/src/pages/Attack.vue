@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { api, errorText, attackName, duration } from '../api'
+import { api, errorText, attackName, duration, percentage } from '../api'
 import Icon from '../components/Icon.vue'
 import EmptyState from '../components/EmptyState.vue'
 import PipelineResult from '../components/PipelineResult.vue'
@@ -16,6 +16,8 @@ const samples = ref([]),
   running = ref(false),
   error = ref(''),
   results = ref([]),
+  interception = ref(null),
+  resultProtected = ref(null),
   drawer = ref(false),
   current = ref(null)
 const count = computed(() =>
@@ -56,6 +58,8 @@ async function run() {
   running.value = true
   error.value = ''
   results.value = []
+  interception.value = null
+  resultProtected.value = null
   try {
     const body = {
       protected: protectedMode.value,
@@ -72,7 +76,10 @@ async function run() {
               .filter(Boolean),
           }),
     }
-    results.value = (await api.post('/attack/run', body)).data.items
+    const { data } = await api.post('/attack/run', body)
+    results.value = data.items
+    interception.value = data.attack_interception
+    resultProtected.value = data.protected
   } catch (e) {
     error.value = errorText(e)
   } finally {
@@ -234,6 +241,20 @@ function detail(item) {
             }}</strong
             ><span>攻击成功</span>
           </div>
+        </div>
+        <div v-if="results.length && interception" class="batch-interception">
+          <div class="section-title">
+            <span>本轮攻击拦截成功率</span>
+            <strong class="text-teal">{{ percentage(interception.rate) }}</strong>
+          </div>
+          <p v-if="!resultProtected" class="helper">本轮未开启防护，不统计拦截成功率。</p>
+          <p v-else class="helper">
+            成功拦截 {{ interception.intercepted }} / {{ interception.evaluated }} 条有效攻击测试。
+            错误 {{ interception.errors }} 条、未判定 {{ interception.unknown }} 条不计入分母。
+            <span v-if="!interception.evaluated">
+              暂无有效样本。请选择本地攻击样本，或为手动测试补充预期输出标记等判据。
+            </span>
+          </p>
         </div>
         <div v-if="running" class="processing-state">
           <span class="loading-orbit"></span>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { api, errorText, number, percentage, dateTime, artifact, attackName } from '../api'
 import { auth } from '../auth'
 import Icon from '../components/Icon.vue'
@@ -18,6 +18,50 @@ const datasets = ref([]),
   config = ref(null),
   pollError = ref('')
 const form = reactive({ dataset: 'detect', experiment: 'detection', limit: 100, asr_limit: 20 })
+const archived = ref(false),
+  managing = ref(false),
+  compareIds = ref([]),
+  comparison = ref(null)
+async function manageJob(action) {
+  try {
+    if (action === 'cancel')
+      await ElMessageBox.confirm('取消后保留已经完成的结果；当前样本处理结束后停止。', '取消评测', {
+        confirmButtonText: '确认取消评测',
+        cancelButtonText: '返回',
+        type: 'warning',
+      })
+    managing.value = true
+    const id = active.value.id
+    await api.post(
+      `/eval/jobs/${id}/${action}`,
+      action === 'archive' ? { archived: !active.value.archived } : {}
+    )
+    if (action === 'archive') active.value = null
+    await refresh()
+  } catch (e) {
+    if (!['cancel', 'close'].includes(e)) error.value = errorText(e)
+  } finally {
+    managing.value = false
+  }
+}
+async function compare() {
+  managing.value = true
+  try {
+    comparison.value = (
+      await api.get('/eval/compare', { params: { job_ids: compareIds.value.join(',') } })
+    ).data
+  } catch (e) {
+    error.value = errorText(e)
+  } finally {
+    managing.value = false
+  }
+}
+async function toggleArchive() {
+  active.value = null
+  comparison.value = null
+  compareIds.value = []
+  await refresh()
+}
 const experiments = {
   all: '全部四组实验',
   detection: '实验 1 · 检测性能',
@@ -25,7 +69,14 @@ const experiments = {
   ablation: '实验 3 · 消融实验',
   overhead: '实验 4 · 运行开销',
 }
-const statusLabels = { queued: '排队中', running: '运行中', completed: '已完成', failed: '失败' }
+const statusLabels = {
+  queued: '排队中',
+  running: '运行中',
+  cancelling: '正在取消',
+  cancelled: '已取消',
+  completed: '已完成',
+  failed: '失败',
+}
 const tables = computed(() => active.value?.result?.tables || {})
 const artifacts = computed(() =>
   (active.value?.result?.artifacts || [])
@@ -92,7 +143,7 @@ async function initialize() {
   try {
     const [ds, js, cfg] = await Promise.all([
       api.get('/eval/datasets'),
-      api.get('/eval/jobs'),
+      api.get('/eval/jobs', { params: { archived: archived.value } }),
       api.get('/config'),
     ])
     if (!alive) return
@@ -114,13 +165,13 @@ function syncTab() {
 async function refresh(silent = false) {
   if (!silent) loading.value = true
   try {
-    const { data } = await api.get('/eval/jobs')
+    const { data } = await api.get('/eval/jobs', { params: { archived: archived.value } })
     if (!alive) return
     jobs.value = data.items
     if (active.value) {
       const next = data.items.find((v) => v.id === active.value.id)
       if (next) {
-        const wasRunning = ['running', 'queued'].includes(active.value.status)
+        const wasRunning = ['running', 'queued', 'cancelling'].includes(active.value.status)
         active.value = next
         if (wasRunning && next.status === 'completed') {
           syncTab()
@@ -214,7 +265,8 @@ onMounted(async () => {
   await initialize()
   if (alive)
     timer = setInterval(() => {
-      if (jobs.value.some((v) => ['queued', 'running'].includes(v.status))) refresh(true)
+      if (jobs.value.some((v) => ['queued', 'running', 'cancelling'].includes(v.status)))
+        refresh(true)
     }, 4000)
 })
 onBeforeUnmount(() => {
@@ -360,6 +412,12 @@ onBeforeUnmount(() => {
           <div>
             <h2>后台任务</h2>
             <p>进度每 4 秒自动更新</p>
+            <el-switch
+              v-model="archived"
+              active-text="查看已归档"
+              aria-label="查看已归档评测"
+              @change="toggleArchive"
+            />
           </div>
           <el-button :loading="loading" @click="refresh()"
             ><Icon name="refresh" :size="15" />刷新</el-button
@@ -412,7 +470,83 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </div>
+    <section v-if="jobs.filter((job) => job.result).length >= 2" class="panel">
+      <div class="section-title">
+        <div>
+          <h2>实验结果对比</h2>
+          <p>选择当前列表中 2–4 个已结束且有结果的任务。</p>
+        </div>
+      </div>
+      <div class="admin-toolbar">
+        <el-select
+          v-model="compareIds"
+          multiple
+          :multiple-limit="4"
+          placeholder="选择对比任务"
+          aria-label="选择对比任务"
+          ><el-option
+            v-for="job in jobs.filter(
+              (item) => item.result && !['queued', 'running', 'cancelling'].includes(item.status)
+            )"
+            :key="job.id"
+            :value="job.id"
+            :label="`${experiments[job.experiment]} · ${job.id.slice(0, 8)}`" /></el-select
+        ><el-button :disabled="compareIds.length < 2" :loading="managing" @click="compare"
+          >对比所选实验</el-button
+        >
+      </div>
+      <template v-if="comparison"
+        ><el-alert
+          :title="comparison.same_protocol ? '任务协议与配置一致' : '任务协议或配置存在差异'"
+          :description="comparison.note"
+          type="info"
+          :closable="false"
+          class="mb20"
+        /><el-table :data="comparison.items"
+          ><el-table-column
+            prop="id"
+            label="任务 ID"
+            min-width="160"
+            show-overflow-tooltip
+          /><el-table-column label="状态" width="100"
+            ><template #default="{ row }">{{ statusLabels[row.status] }}</template></el-table-column
+          ><el-table-column label="检测 F1（any / 全语言）" min-width="170"
+            ><template #default="{ row }"
+              >{{ percentage(row.f1)
+              }}<small class="table-subtitle"
+                >有效样本 {{ number(row.detection_evaluated) }}</small
+              ></template
+            ></el-table-column
+          ><el-table-column label="ASR（full / 全类别）" min-width="170"
+            ><template #default="{ row }"
+              >{{ percentage(row.asr)
+              }}<small class="table-subtitle"
+                >有效判定 {{ number(row.asr_evaluated) }}</small
+              ></template
+            ></el-table-column
+          ><el-table-column label="流程平均耗时 ms" min-width="150"
+            ><template #default="{ row }">{{ number(row.latency_ms) }}</template></el-table-column
+          ></el-table
+        ></template
+      >
+    </section>
     <section v-if="active" class="panel eval-output-panel">
+      <div v-if="auth.isAdmin.value" class="admin-toolbar">
+        <el-button
+          v-if="['queued', 'running'].includes(active.status)"
+          type="danger"
+          :loading="managing"
+          @click="manageJob('cancel')"
+          >取消此评测</el-button
+        ><el-button
+          v-if="!['queued', 'running', 'cancelling'].includes(active.status)"
+          :loading="managing"
+          @click="manageJob('archive')"
+          >{{ active.archived ? '取消归档' : '归档此评测' }}</el-button
+        ><span v-if="active.status === 'cancelling'" class="helper"
+          >正在取消，当前样本完成后停止。</span
+        >
+      </div>
       <div class="section-title">
         <div>
           <h2>
@@ -428,13 +562,23 @@ onBeforeUnmount(() => {
         >
       </div>
       <el-alert
+        v-if="active.status === 'cancelled'"
+        title="任务已取消，已完成的数据与文件继续保留，结果仅代表实际完成范围。"
+        type="warning"
+        :closable="false"
+        class="mb20"
+      />
+      <el-alert
         v-if="active.status === 'failed'"
         :title="active.error || '任务失败，请检查模型、数据集和后端日志。'"
         type="error"
         :closable="false"
         show-icon
       />
-      <div v-if="!active.result && active.status !== 'failed'" class="evaluation-wait">
+      <div
+        v-if="!active.result && ['queued', 'running', 'cancelling'].includes(active.status)"
+        class="evaluation-wait"
+      >
         <el-progress :percentage="Math.round(active.progress || 0)" :stroke-width="8" />
         <p>{{ active.message }}</p>
         <p class="helper">任务完成后将展示实际计算的指标、图表和可下载产物。</p>

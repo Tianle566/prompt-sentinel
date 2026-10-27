@@ -29,12 +29,12 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def audit(directory="results", allow_sampled=False):
+def audit(directory="results", allow_sampled=False, data_dir=None, report_path=None):
     folder = Path(directory)
     if not folder.is_absolute():
         folder = ROOT / folder
-    summary = json.loads((folder / "summary.json").read_text())
-    snapshot = json.loads((folder / "config_snapshot.json").read_text())
+    summary = json.loads((folder / "summary.json").read_text(encoding="utf-8"))
+    snapshot = json.loads((folder / "config_snapshot.json").read_text(encoding="utf-8"))
     checks = []
     def check(condition, title):
         if not condition:
@@ -44,9 +44,17 @@ def audit(directory="results", allow_sampled=False):
     check(summary["elapsed_seconds"] < 7200, "Measured end-to-end experiment runtime below two hours")
     if not allow_sampled:
         check(summary["data_scope"]["full_detection_corpus"] and summary["data_scope"]["full_asr_corpus"], "Full configured detection and ASR corpora were used")
-    available = {kind: lines(ROOT / snapshot["data"][f"{kind}_path"]) for kind in ("detect", "asr")}
+    corpus_paths = {
+        kind: Path(data_dir) / f"{kind}_set.jsonl" if data_dir is not None else Path(snapshot["data"][f"{kind}_path"])
+        for kind in ("detect", "asr")
+    }
+    corpus_paths = {kind: path if path.is_absolute() else ROOT / path for kind, path in corpus_paths.items()}
+    for path in corpus_paths.values():
+        if not path.is_file():
+            raise FileNotFoundError(f"Frozen dataset not found: {path}. Use --data-dir to locate the original corpus on this computer.")
+    available = {kind: lines(path) for kind, path in corpus_paths.items()}
     for kind in ("detect", "asr"):
-        check(digest(ROOT / snapshot["data"][f"{kind}_path"]) == summary["dataset_hashes"][kind + "_path"], f"{kind} source corpus hash matches experiment")
+        check(digest(corpus_paths[kind]) == summary["dataset_hashes"][kind + "_path"], f"{kind} source corpus hash matches experiment")
     records = lines(folder / "detection_predictions.jsonl")
     predictions = {item["id"]: item["result"] for item in records}
     check(len(records) == len(predictions) == summary["inference"]["requested"] == summary["inference"]["completed"], "Every requested input has exactly one saved prediction")
@@ -134,7 +142,7 @@ def audit(directory="results", allow_sampled=False):
         check(all(equal(row[key], value) for key, value in expected.items() if key in row) and equal(row["asr"], rate) and equal(row["delta_f1"], expected["f1"] - full_f1) and equal(row["delta_asr"], rate - full_asr), f"Ablation F1, ASR and deltas independently recomputed: {row['configuration']}")
     overhead = table(folder / "experiment4_overhead.csv")
     check(all(int(row["n"]) > 0 and float(row["mean_ms"]) >= 0 for row in overhead), "Every layer and total overhead has real measured samples")
-    probes = json.loads((folder / "overhead_probes.json").read_text())
+    probes = json.loads((folder / "overhead_probes.json").read_text(encoding="utf-8"))
     check(any(not row["blocked"] and not row["error"] and all(not layer.get("details", {}).get("cached", False) for layer in row["result"]["detection"]["layer_results"]) for row in probes), "Uncached end-to-end probes actually reached generation and output checking")
     from PIL import Image
     figures = list(folder.glob("experiment*.png"))
@@ -151,7 +159,11 @@ def audit(directory="results", allow_sampled=False):
     if not allow_sampled:
         check(all(row["oracle"] == "guard_unsafe" for row in review), "50 manual checks target the actual model-based unsafe-response oracle")
     report = {"status": "passed", "directory": str(folder), "checks_passed": len(checks), "checks": checks, "detection_count": len(detect), "asr_cells": len(asr), "cpu_only": summary["environment"]["configured_device"] == "cpu" and summary["environment"].get("target_gpu_disabled") and summary["environment"].get("observed_detector_devices") == ["cpu"], "human_review_completed": review_state == "annotated", "human_review_state": review_state, "human_annotated_rows": len(annotated), "file_sha256": {path.name: digest(path) for path in folder.iterdir() if path.is_file() and path.suffix in (".csv", ".png")}}
-    (folder / "independent_audit.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    destination = Path(report_path) if report_path is not None else folder / "independent_audit.json"
+    if not destination.is_absolute():
+        destination = ROOT / destination
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({key: report[key] for key in ("status", "checks_passed", "detection_count", "asr_cells", "cpu_only")}, indent=2))
     return report
 
@@ -160,5 +172,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", nargs="?", default="results")
     parser.add_argument("--allow-sampled", action="store_true")
+    parser.add_argument("--data-dir", help="Directory containing the frozen detect_set.jsonl and asr_set.jsonl")
+    parser.add_argument("--report", help="Write the audit report elsewhere without replacing historical evidence")
     args = parser.parse_args()
-    audit(args.directory, args.allow_sampled)
+    audit(args.directory, args.allow_sampled, args.data_dir, args.report)

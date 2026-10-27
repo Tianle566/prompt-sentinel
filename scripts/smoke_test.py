@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
-def run(device=None):
+def run(device=None, output_dir=None):
     from backend.app.core.config import ROOT, get_config
     from backend.app.services.detection import DetectionService
     from backend.app.llm.target import TargetLLM
@@ -31,9 +31,12 @@ def run(device=None):
     reply = TargetLLM(config).generate([{"role": "user", "content": "请只回复：本地模型运行正常 /no_think"}])
     assert isinstance(reply, str) and reply.strip(), "Ollama 未生成回复"
     report = {"status": "passed", "device": config["models"]["device"], "checks": items, "target_reply": reply, "latency_seconds": time.perf_counter() - start}
-    (ROOT / "results").mkdir(exist_ok=True)
+    destination = Path(output_dir) if output_dir is not None else ROOT / "results"
+    if not destination.is_absolute():
+        destination = ROOT / destination
+    destination.mkdir(parents=True, exist_ok=True)
     filename = "smoke_cpu.json" if device == "cpu" else "smoke.json"
-    (ROOT / "results" / filename).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (destination / filename).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return report
 
@@ -41,4 +44,6 @@ def run(device=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device", choices=["cpu", "auto", "cuda", "mps"])
-    run(parser.parse_args().device)
+    parser.add_argument("--output-dir", help="Save this verification separately from historical smoke reports")
+    args = parser.parse_args()
+    run(args.device, args.output_dir)

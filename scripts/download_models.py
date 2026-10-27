@@ -27,7 +27,7 @@ def download(which="all", import_ollama=False, refresh=False):
     config = get_config()
     api = HfApi(endpoint="https://huggingface.co")
     manifest_path = ROOT / "models" / "manifest.json"
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"models": {}}
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {"models": {}}
     names = ["deberta", "qwen_guard", "target"] if which == "all" else [which]
     target_path = None
     for name in names:
@@ -66,13 +66,13 @@ def download(which="all", import_ollama=False, refresh=False):
         from filelock import FileLock
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         with FileLock(str(manifest_path.with_suffix(".lock"))):
-            manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"models": {}}
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {"models": {}}
             manifest["models"][name] = {"repo_id": repo, "revision": revision, "source": "https://huggingface.co", "files": files}
             if tokenizer_info:
                 manifest["models"][name]["tokenizer"] = tokenizer_info
             manifest["updated_at"] = datetime.now(timezone.utc).isoformat()
             temporary = manifest_path.with_suffix(".tmp")
-            temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+            temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
             temporary.replace(manifest_path)
         print(f"已完成 {name}: {len(files)} 个文件", flush=True)
     if import_ollama:
@@ -97,8 +97,10 @@ def import_local_target(config=None, ollama_path=None):
     address = urlparse(config["target"]["base_url"])
     if address.hostname not in ("localhost", "127.0.0.1", "::1"):
         raise ValueError("本地模型仅导入本机 Ollama")
-    modelfile = target_path.parent / "Modelfile"
-    modelfile.write_text(f'FROM "{target_path}"\nPARAMETER num_ctx {config["target"]["context_length"]}\nPARAMETER temperature {config["target"]["temperature"]}\n', encoding="utf-8")
+    # Runtime paths vary by computer; keep the downloaded model manifest intact.
+    modelfile = ROOT / ".runtime" / "ollama-target.Modelfile"
+    modelfile.parent.mkdir(parents=True, exist_ok=True)
+    modelfile.write_text(f'FROM "{target_path.resolve().as_posix()}"\nPARAMETER num_ctx {config["target"]["context_length"]}\nPARAMETER temperature {config["target"]["temperature"]}\n', encoding="utf-8")
     model = config["target"]["small_model"] if small else config["target"]["model"]
     env = {**os.environ, "OLLAMA_MODELS": str(ROOT / "models" / "ollama"), "OLLAMA_HOST": config["target"]["base_url"]}
     subprocess.run([ollama, "create", model, "-f", str(modelfile)], check=True, env=env)

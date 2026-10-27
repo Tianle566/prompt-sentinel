@@ -74,6 +74,15 @@ export const dateTime = (value) =>
         hour12: false,
       })
     : '—'
+export async function downloadFile(url, filename, params) {
+  const { data } = await api.get(url, { params, responseType: 'blob' })
+  const objectUrl = URL.createObjectURL(data)
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = filename
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+}
 export async function artifact(jobId, filename, download = false) {
   const { data } = await api.get(
     `/eval/artifacts/${encodeURIComponent(jobId)}/${encodeURIComponent(filename)}`,

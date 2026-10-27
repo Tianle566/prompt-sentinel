@@ -26,6 +26,11 @@ const nav = [
       { path: '/logs', label: '请求与拦截日志', icon: 'logs' },
       { path: '/evaluation', label: '评测中心', icon: 'chart' },
       { path: '/policy', label: '防护策略', icon: 'settings', admin: true },
+      { path: '/accounts', label: '账号管理', icon: 'user' },
+      { path: '/rules', label: '规则与策略历史', icon: 'shield', admin: true },
+      { path: '/samples', label: '攻击样本管理', icon: 'attack', admin: true },
+      { path: '/audits', label: '管理操作审计', icon: 'logs', admin: true },
+      { path: '/runtime', label: '运行维护', icon: 'settings', admin: true },
     ],
   },
 ]

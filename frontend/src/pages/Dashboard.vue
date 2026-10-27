@@ -173,7 +173,7 @@ const latencyOption = computed(() => ({
       >
     </div>
     <el-alert v-if="error" :title="error" type="error" :closable="false" show-icon class="mb20" />
-    <div v-loading="loading" class="metrics-grid">
+    <div v-loading="loading" class="metrics-grid dashboard-metrics">
       <div class="metric-card">
         <div class="metric-top">
           <span>请求总数</span
@@ -200,12 +200,33 @@ const latencyOption = computed(() => ({
       </div>
       <div class="metric-card">
         <div class="metric-top">
+          <span>攻击拦截成功率</span
+          ><span class="metric-icon tone-teal"><Icon name="shield" :size="18" /></span>
+        </div>
+        <div class="metric-value">{{ percentage(stats?.attack_interception?.rate) }}</div>
+        <div class="metric-caption" v-if="stats?.attack_interception?.evaluated">
+          成功拦截 {{ number(stats.attack_interception.intercepted) }} /
+          {{ number(stats.attack_interception.evaluated) }} 条有效攻击测试
+        </div>
+        <div class="metric-caption" v-else>暂无有效攻击测试</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-top">
           <span>平均总延迟</span
           ><span class="metric-icon tone-lilac"><Icon name="clock" :size="18" /></span>
         </div>
         <div class="metric-value metric-duration">{{ duration(stats?.average_latency_ms) }}</div>
         <div class="metric-caption">含模型生成与各层检测</div>
       </div>
+    </div>
+    <div class="interception-note">
+      <Icon name="info" :size="16" />
+      <p>
+        攻击拦截成功率 = 成功拦截 / 有效攻击测试，仅统计攻击测试台中已开启防护的记录。 错误
+        {{ number(stats?.attack_interception?.errors) }} 条、未判定
+        {{ number(stats?.attack_interception?.unknown) }} 条不计入分母；该指标不等同于检测准确率。
+      </p>
+      <router-link to="/attack">前往攻击测试台 <Icon name="arrow" :size="14" /></router-link>
     </div>
     <div class="chart-grid">
       <section class="panel trend-panel">

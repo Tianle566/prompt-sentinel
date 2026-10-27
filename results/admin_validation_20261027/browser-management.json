@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "checks": {
+    "accounts_disable_enable_role_reset": "passed",
+    "rule_and_policy_history_restore": "passed",
+    "custom_samples_create_edit_console": "passed",
+    "runtime_settings_backup_download_logs": "passed",
+    "audit_records_export_no_passwords": "passed",
+    "request_logs_export": "passed",
+    "mobile_pages": "passed",
+    "ordinary_user_ui_isolation": "passed"
+  },
+  "javascript_errors": []
+}

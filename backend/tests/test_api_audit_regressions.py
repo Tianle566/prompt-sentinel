@@ -1,5 +1,6 @@
 """Isolated regressions for review items 2, 7, 8, 10 and 12; no model calls."""
 import json
+import os
 import shutil
 import subprocess
 import threading
@@ -138,7 +139,9 @@ def test_password_change_invalidates_old_password_and_removes_bootstrap_entry(is
     response = client.post("/api/auth/password", headers=headers, json={"old_password": "user-test-password", "new_password": password})
     assert response.status_code == 200
     assert json.loads(path.read_text()) == {"admin": other}
-    assert path.stat().st_mode & 0o777 == 0o600
+    # Windows uses ACLs; chmod does not expose POSIX owner/group mode bits.
+    if os.name == "posix":
+        assert path.stat().st_mode & 0o777 == 0o600
     with sessions() as db:
         user = db.scalar(select(User).where(User.username == "test-user"))
         assert bcrypt.checkpw(password.encode(), user.password_hash.encode())

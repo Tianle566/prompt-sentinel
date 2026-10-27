@@ -71,6 +71,15 @@ const router = createRouter({
           },
         },
         {
+          path: 'accounts',
+          component: () => import('./pages/Accounts.vue'),
+          meta: {
+            title: '账号管理',
+            subtitle: '管理登录账号，更新个人密码。',
+            group: '分析与管理',
+          },
+        },
+        {
           path: 'evaluation',
           component: () => import('./pages/Evaluation.vue'),
           meta: {
@@ -79,6 +88,36 @@ const router = createRouter({
             group: '分析与管理',
           },
         },
+        ...[
+          [
+            'rules',
+            '规则与策略历史',
+            '维护检测规则，查看并恢复已保存的配置。',
+            () => import('./pages/Rules.vue'),
+          ],
+          [
+            'samples',
+            '攻击样本管理',
+            '维护自定义测试样本，保留论文数据的原始版本。',
+            () => import('./pages/Samples.vue'),
+          ],
+          [
+            'audits',
+            '管理操作审计',
+            '查看账号、策略、样本与评测管理的操作记录。',
+            () => import('./pages/Audits.vue'),
+          ],
+          [
+            'runtime',
+            '运行维护',
+            '查看本机状态，管理模型参数、评测规模和数据库备份。',
+            () => import('./pages/Runtime.vue'),
+          ],
+        ].map(([path, title, subtitle, component]) => ({
+          path,
+          component,
+          meta: { title, subtitle, group: '分析与管理', admin: true },
+        })),
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },

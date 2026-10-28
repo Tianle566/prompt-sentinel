@@ -198,23 +198,25 @@ onMounted(load)
             >建立数据库备份</el-button
           >
         </div>
-        <el-table :data="backups" empty-text="暂无数据库备份"
-          ><el-table-column
-            prop="filename"
-            label="备份文件"
-            min-width="270"
-            show-overflow-tooltip
-          /><el-table-column label="大小" width="120"
-            ><template #default="{ row }"
-              >{{ number(row.bytes / 1024) }} KB</template
-            ></el-table-column
-          ><el-table-column label="操作" width="100"
-            ><template #default="{ row }"
-              ><el-button size="small" @click="download(row.filename)"
-                >下载备份</el-button
-              ></template
-            ></el-table-column
-          ></el-table
+        <TableScroll
+          ><el-table :data="backups" empty-text="暂无数据库备份"
+            ><el-table-column
+              prop="filename"
+              label="备份文件"
+              min-width="270"
+              show-overflow-tooltip
+            /><el-table-column label="大小" width="120"
+              ><template #default="{ row }"
+                >{{ number(row.bytes / 1024) }} KB</template
+              ></el-table-column
+            ><el-table-column label="操作" width="100"
+              ><template #default="{ row }"
+                ><el-button size="small" @click="download(row.filename)"
+                  >下载备份</el-button
+                ></template
+              ></el-table-column
+            ></el-table
+          ></TableScroll
         >
       </section>
       <section class="panel">

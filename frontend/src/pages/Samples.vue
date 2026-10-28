@@ -122,42 +122,44 @@ onMounted(() => load())
       class="mb20"
       role="alert"
     />
-    <el-table :data="items" v-loading="loading" empty-text="暂无符合条件的样本">
-      <el-table-column label="样本内容" min-width="280" show-overflow-tooltip
-        ><template #default="{ row }">{{ row.text }}</template></el-table-column
-      >
-      <el-table-column label="类别 / 标签" min-width="150"
-        ><template #default="{ row }"
-          >{{ attackName(row.attack_type)
-          }}<small class="table-subtitle"
-            >{{ row.label ? '攻击' : '正常' }} · {{ row.lang }}</small
-          ></template
-        ></el-table-column
-      >
-      <el-table-column label="来源" min-width="180" show-overflow-tooltip
-        ><template #default="{ row }"
-          >{{ row.source
-          }}<small class="table-subtitle">{{
-            row.origin === 'builtin' ? '论文样本 · 只读' : '自定义样本'
-          }}</small></template
-        ></el-table-column
-      >
-      <el-table-column label="状态" width="90"
-        ><template #default="{ row }"
-          ><el-tag :type="row.enabled ? 'success' : 'info'" size="small">{{
-            row.enabled ? '启用' : '停用'
-          }}</el-tag></template
-        ></el-table-column
-      >
-      <el-table-column label="操作" min-width="160"
-        ><template #default="{ row }"
-          ><template v-if="row.origin === 'custom'"
-            ><el-button size="small" @click="edit(row)">编辑</el-button
-            ><el-button size="small" type="danger" @click="remove(row)">移除</el-button></template
-          ><span v-else class="helper">只读</span></template
-        ></el-table-column
-      >
-    </el-table>
+    <TableScroll
+      ><el-table :data="items" v-loading="loading" empty-text="暂无符合条件的样本">
+        <el-table-column label="样本内容" min-width="280" show-overflow-tooltip
+          ><template #default="{ row }">{{ row.text }}</template></el-table-column
+        >
+        <el-table-column label="类别 / 标签" min-width="150"
+          ><template #default="{ row }"
+            >{{ attackName(row.attack_type)
+            }}<small class="table-subtitle"
+              >{{ row.label ? '攻击' : '正常' }} · {{ row.lang }}</small
+            ></template
+          ></el-table-column
+        >
+        <el-table-column label="来源" min-width="180" show-overflow-tooltip
+          ><template #default="{ row }"
+            >{{ row.source
+            }}<small class="table-subtitle">{{
+              row.origin === 'builtin' ? '论文样本 · 只读' : '自定义样本'
+            }}</small></template
+          ></el-table-column
+        >
+        <el-table-column label="状态" width="90"
+          ><template #default="{ row }"
+            ><el-tag :type="row.enabled ? 'success' : 'info'" size="small">{{
+              row.enabled ? '启用' : '停用'
+            }}</el-tag></template
+          ></el-table-column
+        >
+        <el-table-column label="操作" min-width="160"
+          ><template #default="{ row }"
+            ><template v-if="row.origin === 'custom'"
+              ><el-button size="small" @click="edit(row)">编辑</el-button
+              ><el-button size="small" type="danger" @click="remove(row)">移除</el-button></template
+            ><span v-else class="helper">只读</span></template
+          ></el-table-column
+        >
+      </el-table></TableScroll
+    >
     <el-pagination
       v-if="total > 20"
       v-model:current-page="page"

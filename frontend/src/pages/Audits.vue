@@ -103,23 +103,25 @@ onMounted(async () => {
       class="mb20"
       role="alert"
     />
-    <el-table :data="items" v-loading="loading" empty-text="暂无管理操作记录">
-      <el-table-column label="时间" min-width="185"
-        ><template #default="{ row }">{{ dateTime(row.created_at) }}</template></el-table-column
-      >
-      <el-table-column prop="username" label="操作人" min-width="130" />
-      <el-table-column label="操作" min-width="180"
-        ><template #default="{ row }">{{
-          labels[row.action] || row.action
-        }}</template></el-table-column
-      >
-      <el-table-column prop="target" label="对象" min-width="180" show-overflow-tooltip />
-      <el-table-column label="详情" width="85"
-        ><template #default="{ row }"
-          ><el-button size="small" @click="detail = row">查看</el-button></template
-        ></el-table-column
-      >
-    </el-table>
+    <TableScroll
+      ><el-table :data="items" v-loading="loading" empty-text="暂无管理操作记录">
+        <el-table-column label="时间" min-width="185"
+          ><template #default="{ row }">{{ dateTime(row.created_at) }}</template></el-table-column
+        >
+        <el-table-column prop="username" label="操作人" min-width="130" />
+        <el-table-column label="操作" min-width="180"
+          ><template #default="{ row }">{{
+            labels[row.action] || row.action
+          }}</template></el-table-column
+        >
+        <el-table-column prop="target" label="对象" min-width="180" show-overflow-tooltip />
+        <el-table-column label="详情" width="85"
+          ><template #default="{ row }"
+            ><el-button size="small" @click="detail = row">查看</el-button></template
+          ></el-table-column
+        >
+      </el-table></TableScroll
+    >
     <el-pagination
       v-if="total > 20"
       v-model:current-page="page"

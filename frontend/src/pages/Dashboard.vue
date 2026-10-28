@@ -7,6 +7,7 @@ import EmptyState from '../components/EmptyState.vue'
 const stats = ref(null),
   loading = ref(true),
   error = ref('')
+const defenseLayers = ['规则过滤', '语义分类', '输入审核', '提示加固', '输出检查']
 async function load() {
   loading.value = true
   error.value = ''
@@ -19,10 +20,14 @@ async function load() {
   }
 }
 onMounted(load)
-const palette = ['#187a70', '#91b9ad', '#bfcba4', '#ca9e78', '#637c90', '#c5d8d3']
+const palette = ['#147d68', '#6ca990', '#c0cba0', '#bf965d', '#648897', '#c5d8d3']
 const chartBase = {
   color: palette,
-  textStyle: { fontFamily: 'inherit', color: '#667573' },
+  textStyle: {
+    fontFamily: 'Segoe UI, Microsoft YaHei, sans-serif',
+    fontSize: 12,
+    color: '#61756b',
+  },
   tooltip: {
     trigger: 'item',
     backgroundColor: '#fff',
@@ -33,7 +38,7 @@ const chartBase = {
 const attackOption = computed(() => ({
   ...chartBase,
   tooltip: { ...chartBase.tooltip, formatter: '{b}<br/>{c} 次 · {d}%' },
-  legend: { bottom: 0, icon: 'circle', textStyle: { color: '#667573', fontSize: 11 } },
+  legend: { bottom: 0, icon: 'circle', textStyle: { color: '#61756b', fontSize: 12 } },
   series: [
     {
       type: 'pie',
@@ -154,13 +159,24 @@ const latencyOption = computed(() => ({
     <div class="overview-banner">
       <div class="banner-icon"><Icon name="shield" :size="31" /></div>
       <div>
-        <div class="eyebrow">DEFENSE IN DEPTH</div>
-        <h2>每一层防护，都让信任更进一步。</h2>
-        <p>规则、语义与大模型审核协同工作，完整记录防护决策。</p>
+        <div class="eyebrow">LOCAL SECURITY WORKSPACE</div>
+        <h2>从注入检测，到防护结果追溯</h2>
+        <p>对照模型响应，检查可疑输入，复核每一次防护决策。</p>
       </div>
-      <router-link class="banner-link" to="/chat"
-        >开始对照实验 <Icon name="arrow" :size="18"
-      /></router-link>
+      <div class="banner-actions">
+        <router-link class="banner-link" to="/chat"
+          >开始对照实验 <Icon name="arrow" :size="18" /></router-link
+        ><router-link class="banner-secondary" to="/logs"
+          >查看请求日志 <Icon name="logs" :size="15"
+        /></router-link>
+      </div>
+      <ol class="defense-pipeline" aria-label="五层防护架构流程">
+        <li v-for="(layer, index) in defenseLayers" :key="layer">
+          <b>L{{ index + 1 }}</b
+          ><span>{{ layer }}</span
+          ><Icon v-if="index < 4" name="chevron" :size="13" />
+        </li>
+      </ol>
       <div class="banner-decoration" aria-hidden="true"></div>
     </div>
     <div class="section-title overview-toolbar">
@@ -198,7 +214,7 @@ const latencyOption = computed(() => ({
         <div class="metric-value">{{ percentage(stats?.block_rate) }}</div>
         <div class="metric-caption">拦截次数 / 全部请求</div>
       </div>
-      <div class="metric-card">
+      <div class="metric-card featured-metric">
         <div class="metric-top">
           <span>攻击拦截成功率</span
           ><span class="metric-icon tone-teal"><Icon name="shield" :size="18" /></span>

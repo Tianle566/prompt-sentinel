@@ -2046,9 +2046,9 @@ code {
   color: #fff;
 }
 .login-brand .brand-mark {
-  background: #527b56;
-  color: #d6e9c9;
-  border: 1px solid #61865f;
+  background: var(--teal);
+  color: #e9fff4;
+  border: 1px solid #56a88a;
 }
 .login-brand strong {
   font-size: 18px;
@@ -2261,13 +2261,13 @@ code {
   height: 47px !important;
   justify-content: space-between;
   padding: 12px 17px !important;
-  background: #527b45 !important;
-  border-color: #527b45 !important;
+  background: var(--teal) !important;
+  border-color: var(--teal) !important;
   color: #f5f8ed !important;
   font-size: 13px !important;
 }
 .login-submit:hover {
-  background: #426a36 !important;
+  background: var(--teal-dark) !important;
 }
 .login-submit > span {
   justify-content: space-between;

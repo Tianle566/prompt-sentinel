@@ -20,6 +20,8 @@ const paths = {
   chevron: 'm9 5 7 7-7 7',
   chevrondown: 'm6 9 6 6 6-6',
   close: 'm6 6 12 12 M6 18 18 6',
+  copy: 'M9 9h12v12H9z M15 9V3H3v12h6',
+  arrows: 'M3 8h18 M7 4 3 8l4 4 M21 16H3 M17 12l4 4-4 4',
   check: 'm5 12 4 4L19 6',
   warning: 'm12 3 10 18H2L12 3Z M12 9v5 M12 17h.01',
   clock: 'M12 3a9 9 0 1 0 .01 0Z M12 7v5l3 2',

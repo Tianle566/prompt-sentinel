@@ -149,37 +149,41 @@ onMounted(() => {
         class="mb20"
         role="alert"
       />
-      <el-table v-loading="loading" :data="accounts" empty-text="暂无账号">
-        <el-table-column prop="username" label="用户名" min-width="170" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.username }}
-            <el-tag v-if="row.id === auth.state.user?.id" size="small" type="info">当前账号</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="角色" min-width="120">
-          <template #default="{ row }">
-            <el-tag :type="row.role === 'admin' ? 'success' : 'info'" size="small">
-              {{ row.role === 'admin' ? '管理员' : '普通用户' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" min-width="95">
-          <template #default="{ row }"
-            ><el-tag :type="row.is_active ? 'success' : 'danger'" size="small">{{
-              row.is_active ? '已启用' : '已停用'
-            }}</el-tag></template
-          >
-        </el-table-column>
-        <el-table-column label="创建时间" min-width="190">
-          <template #default="{ row }">{{ dateTime(row.created_at) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" min-width="185">
-          <template #default="{ row }">
-            <el-button size="small" @click="editAccount(row)">权限与状态</el-button>
-            <el-button size="small" @click="openReset(row)">重置密码</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <TableScroll
+        ><el-table v-loading="loading" :data="accounts" empty-text="暂无账号">
+          <el-table-column prop="username" label="用户名" min-width="170" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ row.username }}
+              <el-tag v-if="row.id === auth.state.user?.id" size="small" type="info"
+                >当前账号</el-tag
+              >
+            </template>
+          </el-table-column>
+          <el-table-column label="角色" min-width="120">
+            <template #default="{ row }">
+              <el-tag :type="row.role === 'admin' ? 'success' : 'info'" size="small">
+                {{ row.role === 'admin' ? '管理员' : '普通用户' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" min-width="95">
+            <template #default="{ row }"
+              ><el-tag :type="row.is_active ? 'success' : 'danger'" size="small">{{
+                row.is_active ? '已启用' : '已停用'
+              }}</el-tag></template
+            >
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="190">
+            <template #default="{ row }">{{ dateTime(row.created_at) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="185">
+            <template #default="{ row }">
+              <el-button size="small" @click="editAccount(row)">权限与状态</el-button>
+              <el-button size="small" @click="openReset(row)">重置密码</el-button>
+            </template>
+          </el-table-column>
+        </el-table></TableScroll
+      >
       <el-pagination
         v-if="total > 10"
         v-model:current-page="page"

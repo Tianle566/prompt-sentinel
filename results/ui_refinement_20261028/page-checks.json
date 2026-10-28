@@ -1,0 +1,20 @@
+{
+  "routes": [
+    "dashboard",
+    "chat",
+    "attack",
+    "documents",
+    "logs",
+    "evaluation",
+    "accounts",
+    "policy",
+    "rules",
+    "samples",
+    "audits",
+    "runtime"
+  ],
+  "errors": [],
+  "warnings": [],
+  "overflows": [],
+  "fixture_scope": "isolated database with synthetic UI records"
+}

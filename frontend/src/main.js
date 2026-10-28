@@ -30,9 +30,12 @@ import {
 } from 'element-plus'
 import 'element-plus/dist/index.css'
 import './styles.css'
+import './console.css'
 import App from './App.vue'
 import router from './router'
+import TableScroll from './components/TableScroll.vue'
 const app = createApp(App).use(router)
+app.component('TableScroll', TableScroll)
 for (const component of [
   ElAlert,
   ElButton,

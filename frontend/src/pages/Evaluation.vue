@@ -588,31 +588,35 @@ onBeforeUnmount(() => {
           type="info"
           :closable="false"
           class="mb20"
-        /><el-table :data="comparison.items"
-          ><el-table-column
-            prop="id"
-            label="任务 ID"
-            min-width="160"
-            show-overflow-tooltip
-          /><el-table-column label="状态" width="100"
-            ><template #default="{ row }">{{ statusLabels[row.status] }}</template></el-table-column
-          ><el-table-column label="检测 F1（any / 全语言）" min-width="170"
-            ><template #default="{ row }"
-              >{{ percentage(row.f1)
-              }}<small class="table-subtitle"
-                >有效样本 {{ number(row.detection_evaluated) }}</small
-              ></template
-            ></el-table-column
-          ><el-table-column label="ASR（full / 全类别）" min-width="170"
-            ><template #default="{ row }"
-              >{{ percentage(row.asr)
-              }}<small class="table-subtitle"
-                >有效判定 {{ number(row.asr_evaluated) }}</small
-              ></template
-            ></el-table-column
-          ><el-table-column label="流程平均耗时 ms" min-width="150"
-            ><template #default="{ row }">{{ number(row.latency_ms) }}</template></el-table-column
-          ></el-table
+        /><TableScroll
+          ><el-table :data="comparison.items"
+            ><el-table-column
+              prop="id"
+              label="任务 ID"
+              min-width="160"
+              show-overflow-tooltip
+            /><el-table-column label="状态" width="100"
+              ><template #default="{ row }">{{
+                statusLabels[row.status]
+              }}</template></el-table-column
+            ><el-table-column label="检测 F1（any / 全语言）" min-width="170"
+              ><template #default="{ row }"
+                >{{ percentage(row.f1)
+                }}<small class="table-subtitle"
+                  >有效样本 {{ number(row.detection_evaluated) }}</small
+                ></template
+              ></el-table-column
+            ><el-table-column label="ASR（full / 全类别）" min-width="170"
+              ><template #default="{ row }"
+                >{{ percentage(row.asr)
+                }}<small class="table-subtitle"
+                  >有效判定 {{ number(row.asr_evaluated) }}</small
+                ></template
+              ></el-table-column
+            ><el-table-column label="流程平均耗时 ms" min-width="150"
+              ><template #default="{ row }">{{ number(row.latency_ms) }}</template></el-table-column
+            ></el-table
+          ></TableScroll
         ></template
       >
     </section>
@@ -696,14 +700,16 @@ onBeforeUnmount(() => {
             :key="spec.id"
             :name="spec.id"
             :label="spec.title"
-            ><el-table v-if="tables[spec.id]?.length" :data="tables[spec.id]" max-height="500"
-              ><el-table-column
-                v-for="col in spec.cols"
-                :key="col.key"
-                :label="col.title"
-                :min-width="col.key === 'configuration' || col.key === 'source' ? 150 : 105"
-                ><template #default="{ row }">{{ value(row, col) }}</template></el-table-column
-              ></el-table
+            ><TableScroll v-if="tables[spec.id]?.length"
+              ><el-table :data="tables[spec.id]" max-height="500"
+                ><el-table-column
+                  v-for="col in spec.cols"
+                  :key="col.key"
+                  :label="col.title"
+                  :min-width="col.key === 'configuration' || col.key === 'source' ? 150 : 105"
+                  ><template #default="{ row }">{{ value(row, col) }}</template></el-table-column
+                ></el-table
+              ></TableScroll
             ><EmptyState
               v-else
               title="本次任务没有该组实验结果"

@@ -1,0 +1,259 @@
+{
+  "date": "2026-10-28",
+  "baseline_commit": "f9e402247ae9cc1e1fcef507298100c04681e442",
+  "scope": "Frontend appearance and interactions; screenshots use an isolated synthetic dataset, not model performance results.",
+  "build": {
+    "passed": true,
+    "existing_large_chunk_warning": true
+  },
+  "pytest": {
+    "passed": 343,
+    "integration_deselected": 1
+  },
+  "formatting": {
+    "prettier_changed_files": true,
+    "git_diff_check": true
+  },
+  "page_checks": {
+    "routes": [
+      "dashboard",
+      "chat",
+      "attack",
+      "documents",
+      "logs",
+      "evaluation",
+      "accounts",
+      "policy",
+      "rules",
+      "samples",
+      "audits",
+      "runtime"
+    ],
+    "errors": [],
+    "warnings": [],
+    "overflows": [],
+    "fixture_scope": "isolated database with synthetic UI records"
+  },
+  "interactions": {
+    "checks": {
+      "desktop_collapse_persists_and_charts_resize": true,
+      "skip_link_reaches_main": true,
+      "mobile_focus_trap_escape_scroll_restore": true,
+      "upload_remove_and_reselect_same_file": true,
+      "overflow_table_hint_and_keyboard_scroll": true,
+      "copy_output_matches_delivered_text": true,
+      "clipboard_denial_has_recovery_message": true,
+      "responsive_layout_cases": 28,
+      "sampled_text_contrast": [
+        {
+          "selector": ".page-heading p",
+          "ratio": 4.53
+        },
+        {
+          "selector": ".section-title p",
+          "ratio": 4.53
+        },
+        {
+          "selector": ".metric-top",
+          "ratio": 4.92
+        },
+        {
+          "selector": ".metric-caption",
+          "ratio": 4.92
+        },
+        {
+          "selector": ".nav-label",
+          "ratio": 6.89
+        },
+        {
+          "selector": ".nav-link:not(.router-link-active)",
+          "ratio": 9.1
+        },
+        {
+          "selector": ".eyebrow > span",
+          "ratio": 4.86
+        },
+        {
+          "selector": ".main-footer",
+          "ratio": 4.68
+        }
+      ],
+      "regular_user_has_personal_account_and_no_admin_navigation": true,
+      "empty_state_without_fabricated_activity": true
+    },
+    "responsive": [
+      {
+        "route": "dashboard",
+        "width": 360,
+        "overflow": false
+      },
+      {
+        "route": "chat",
+        "width": 360,
+        "overflow": false
+      },
+      {
+        "route": "evaluation",
+        "width": 360,
+        "overflow": false
+      },
+      {
+        "route": "runtime",
+        "width": 360,
+        "overflow": false
+      },
+      {
+        "route": "dashboard",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "route": "chat",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "route": "evaluation",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "route": "runtime",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "route": "dashboard",
+        "width": 768,
+        "overflow": false
+      },
+      {
+        "route": "chat",
+        "width": 768,
+        "overflow": false
+      },
+      {
+        "route": "evaluation",
+        "width": 768,
+        "overflow": false
+      },
+      {
+        "route": "runtime",
+        "width": 768,
+        "overflow": false
+      },
+      {
+        "route": "dashboard",
+        "width": 820,
+        "overflow": false
+      },
+      {
+        "route": "chat",
+        "width": 820,
+        "overflow": false
+      },
+      {
+        "route": "evaluation",
+        "width": 820,
+        "overflow": false
+      },
+      {
+        "route": "runtime",
+        "width": 820,
+        "overflow": false
+      },
+      {
+        "route": "dashboard",
+        "width": 1024,
+        "overflow": false
+      },
+      {
+        "route": "chat",
+        "width": 1024,
+        "overflow": false
+      },
+      {
+        "route": "evaluation",
+        "width": 1024,
+        "overflow": false
+      },
+      {
+        "route": "runtime",
+        "width": 1024,
+        "overflow": false
+      },
+      {
+        "route": "dashboard",
+        "width": 1280,
+        "overflow": false
+      },
+      {
+        "route": "chat",
+        "width": 1280,
+        "overflow": false
+      },
+      {
+        "route": "evaluation",
+        "width": 1280,
+        "overflow": false
+      },
+      {
+        "route": "runtime",
+        "width": 1280,
+        "overflow": false
+      },
+      {
+        "route": "dashboard",
+        "width": 1440,
+        "overflow": false
+      },
+      {
+        "route": "chat",
+        "width": 1440,
+        "overflow": false
+      },
+      {
+        "route": "evaluation",
+        "width": 1440,
+        "overflow": false
+      },
+      {
+        "route": "runtime",
+        "width": 1440,
+        "overflow": false
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "scope": "Headless browser UI verification with synthetic data in an isolated database; model inference was not rerun."
+  },
+  "preservation": {
+    "files": 3193,
+    "all_unchanged": true,
+    "changed": []
+  },
+  "validation_services_stopped": true,
+  "source_sha256": {
+    "frontend/src/main.js": "da9d62f0f0f0ad2ddde90723b2909907268cd554b0575bd3641779e600365d88",
+    "frontend/src/styles.css": "989ed9aa91a27a6a09debe0a779c0004084d58ea924ba134917da3f18bd795ae",
+    "frontend/src/console.css": "cd89f18a4aae93742adb3277c87359a10c9e3b795e61c822ceab0df0a372aaf6",
+    "frontend/src/components/Icon.vue": "6a74645400f8315e448cd4b56a749c70e1ca67c6724cba9a15594a3d4de899fb",
+    "frontend/src/components/Layout.vue": "fcdd217c7c6227c35cdde1160eeb60bbcb587a2423bdfcb8c5109666b9a2b037",
+    "frontend/src/components/PipelineResult.vue": "8b231a62ead580f2703fb204974ae28c7e432d553307e684957e02e289db585c",
+    "frontend/src/components/TableScroll.vue": "50a3aa9886fa09501df27525d9ac4dd64f7417231a8347c8ece871f8de398bff",
+    "frontend/src/pages/Accounts.vue": "f39df87b38d267c7dcfa6e9c3191e5f993257c413e8e296ec60eafc53d0bc705",
+    "frontend/src/pages/Audits.vue": "b6f6cdb542da4b1b24200fe0b793ad6755293b132ad65bb91d955195d70142e5",
+    "frontend/src/pages/Dashboard.vue": "bc2be959048ac06d9689c58c33996b463ae8b4904027349d1e94d19d26f3e881",
+    "frontend/src/pages/Documents.vue": "adf94c9b1cd5532a2e761f5ff72658bb2fd1e5e7eeb8fda0554d174f51c55db3",
+    "frontend/src/pages/Evaluation.vue": "29ef2c4a74f93c880dcf25d0e06cb227b1fb0c064acda9c55ecefef69c338529",
+    "frontend/src/pages/Logs.vue": "9e96514b8cea67a1d0044e22a4159055ebf9d3ff944f4a1128f85f98949cc32d",
+    "frontend/src/pages/Rules.vue": "7b4d88f622a26f833a52d86517cda4540493fd122ed8bbce22ad2dbea0c99bc5",
+    "frontend/src/pages/Runtime.vue": "1a25660c5907b022890f10dd8615407e7c915af4792762a8d9b56f274298c0a4",
+    "frontend/src/pages/Samples.vue": "03cd5965125abec76042f23974114db1a2b86be2c9a7fd0d276046bab5a9e3f3"
+  },
+  "limitations": [
+    "Not a full accessibility certification.",
+    "Model inference and ASR were not rerun for frontend-only changes.",
+    "UI metrics and response screenshots contain synthetic test data."
+  ]
+}

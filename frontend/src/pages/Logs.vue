@@ -160,69 +160,73 @@ onMounted(async () => {
       show-icon
       class="mb20"
       role="alert"
-    /><el-table
-      :data="rows"
-      v-loading="loading"
-      class="log-table"
-      :row-key="(row) => row.id"
-      @row-click="openDetail"
-      ><template #empty
-        ><EmptyState
-          title="没有符合条件的记录"
-          text="尝试调整筛选条件，或前往对话演示产生一条请求。"
-          icon="logs" /></template
-      ><el-table-column label="时间" width="175"
-        ><template #default="{ row }"
-          ><span class="table-date">{{ dateTime(row.created_at) }}</span
-          ><small class="table-subtitle"
-            >#{{ row.id }} ·
-            {{
-              {
-                chat: '对话',
-                compare: '对照实验',
-                attack: '攻击测试',
-                document: '文档摘要',
-                detect: '检测',
-              }[row.kind] || row.kind
-            }}</small
-          ></template
-        ></el-table-column
-      ><el-table-column
-        v-if="auth.isAdmin.value"
-        prop="username"
-        label="账号"
-        min-width="140"
-        show-overflow-tooltip
-      />
-      <el-table-column label="输入内容" min-width="225"
-        ><template #default="{ row }"
-          ><p class="log-text">{{ row.text }}</p>
-          <small class="table-subtitle">{{
-            row.protected ? '已启用防护' : '无防护通道'
-          }}</small></template
-        ></el-table-column
-      ><el-table-column label="攻击类型" width="140"
-        ><template #default="{ row }">{{ attackName(row.attack_type) }}</template></el-table-column
-      ><el-table-column label="决策" width="95"
-        ><template #default="{ row }"
-          ><el-tag :type="row.blocked ? 'danger' : 'success'" size="small">{{
-            row.blocked ? '已拦截' : '已放行'
-          }}</el-tag></template
-        ></el-table-column
-      ><el-table-column label="命中层" width="125"
-        ><template #default="{ row }"
-          ><div class="hit-tags">
-            <span v-for="layer in row.hit_layers" :key="layer">{{ layer }}</span
-            ><span v-if="!row.hit_layers?.length" class="muted">—</span>
-          </div></template
-        ></el-table-column
-      ><el-table-column label="总延迟" width="100"
-        ><template #default="{ row }">{{ duration(row.latency_ms) }}</template></el-table-column
-      ><el-table-column label="操作" width="75" fixed="right"
-        ><template #default="{ row }"
-          ><el-button text type="primary" @click.stop="openDetail(row)">详情</el-button></template
-        ></el-table-column
-      ></el-table
+    /><TableScroll
+      ><el-table
+        :data="rows"
+        v-loading="loading"
+        class="log-table"
+        :row-key="(row) => row.id"
+        @row-click="openDetail"
+        ><template #empty
+          ><EmptyState
+            title="没有符合条件的记录"
+            text="尝试调整筛选条件，或前往对话演示产生一条请求。"
+            icon="logs" /></template
+        ><el-table-column label="时间" width="175"
+          ><template #default="{ row }"
+            ><span class="table-date">{{ dateTime(row.created_at) }}</span
+            ><small class="table-subtitle"
+              >#{{ row.id }} ·
+              {{
+                {
+                  chat: '对话',
+                  compare: '对照实验',
+                  attack: '攻击测试',
+                  document: '文档摘要',
+                  detect: '检测',
+                }[row.kind] || row.kind
+              }}</small
+            ></template
+          ></el-table-column
+        ><el-table-column
+          v-if="auth.isAdmin.value"
+          prop="username"
+          label="账号"
+          min-width="140"
+          show-overflow-tooltip
+        />
+        <el-table-column label="输入内容" min-width="225"
+          ><template #default="{ row }"
+            ><p class="log-text">{{ row.text }}</p>
+            <small class="table-subtitle">{{
+              row.protected ? '已启用防护' : '无防护通道'
+            }}</small></template
+          ></el-table-column
+        ><el-table-column label="攻击类型" width="140"
+          ><template #default="{ row }">{{
+            attackName(row.attack_type)
+          }}</template></el-table-column
+        ><el-table-column label="决策" width="95"
+          ><template #default="{ row }"
+            ><el-tag :type="row.blocked ? 'danger' : 'success'" size="small">{{
+              row.blocked ? '已拦截' : '已放行'
+            }}</el-tag></template
+          ></el-table-column
+        ><el-table-column label="命中层" width="125"
+          ><template #default="{ row }"
+            ><div class="hit-tags">
+              <span v-for="layer in row.hit_layers" :key="layer">{{ layer }}</span
+              ><span v-if="!row.hit_layers?.length" class="muted">—</span>
+            </div></template
+          ></el-table-column
+        ><el-table-column label="总延迟" width="100"
+          ><template #default="{ row }">{{ duration(row.latency_ms) }}</template></el-table-column
+        ><el-table-column label="操作" width="75" fixed="right"
+          ><template #default="{ row }"
+            ><el-button text type="primary" @click.stop="openDetail(row)">详情</el-button></template
+          ></el-table-column
+        ></el-table
+      ></TableScroll
     >
     <div class="pagination-wrap">
       <span>共 {{ total }} 条记录</span

@@ -38,6 +38,13 @@ function dropped(event) {
   drag.value = false
   if (!loading.value) select(event.dataTransfer.files[0])
 }
+function removeFile() {
+  file.value = null
+  fileInput.value.value = ''
+  result.value = null
+  error.value = ''
+  activeParagraph.value = null
+}
 async function summarize() {
   if (!file.value || loading.value) return
   loading.value = true
@@ -102,9 +109,14 @@ async function summarize() {
             }}
           </p>
         </div>
-        <el-button :disabled="loading" @click="fileInput.click()">{{
-          file ? '更换文件' : '选择 .txt 文件'
-        }}</el-button>
+        <div class="upload-file-actions">
+          <el-button :disabled="loading" @click="fileInput.click()">{{
+            file ? '更换文件' : '选择 .txt 文件'
+          }}</el-button
+          ><el-button v-if="file" :disabled="loading" aria-label="移除已选文件" @click="removeFile"
+            ><Icon name="close" :size="16" />移除</el-button
+          >
+        </div>
       </div>
       <div class="upload-action">
         <span class="helper">文档内容作为待分析数据处理，不能覆盖系统任务。</span

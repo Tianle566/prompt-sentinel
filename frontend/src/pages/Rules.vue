@@ -94,86 +94,101 @@ onMounted(load)
             ><el-button type="primary" :loading="saving" @click="save">保存规则</el-button>
           </div>
         </div>
-        <el-table :data="document.items">
-          <el-table-column label="规则 ID" min-width="160"
-            ><template #default="{ row, $index }"
-              ><el-input
-                v-model="row.id"
-                :aria-label="`规则 ID ${$index + 1}`"
-                maxlength="80" /></template
-          ></el-table-column>
-          <el-table-column label="类别" min-width="175"
-            ><template #default="{ row, $index }"
-              ><el-input
-                v-model="row.category"
-                :aria-label="`规则类别 ${$index + 1}`"
-                maxlength="80" /></template
-          ></el-table-column>
-          <el-table-column label="正则表达式" min-width="300"
-            ><template #default="{ row, $index }"
-              ><el-input
-                v-model="row.pattern"
-                type="textarea"
-                :rows="2"
-                :aria-label="`规则表达式 ${$index + 1}`"
-                maxlength="2000" /></template
-          ></el-table-column>
-          <el-table-column label="启用" width="80"
-            ><template #default="{ row, $index }"
-              ><el-switch v-model="row.enabled" :aria-label="`启用规则 ${$index + 1}`" /></template
-          ></el-table-column>
-          <el-table-column label="操作" width="80"
-            ><template #default="{ $index }"
-              ><el-button
-                type="danger"
-                link
-                @click="document.items.splice($index, 1)"
-                :disabled="saving"
-                >移除</el-button
-              ></template
-            ></el-table-column
-          >
-        </el-table>
+        <TableScroll
+          ><el-table :data="document.items">
+            <el-table-column label="规则 ID" min-width="160"
+              ><template #default="{ row, $index }"
+                ><el-input
+                  v-model="row.id"
+                  :aria-label="`规则 ID ${$index + 1}`"
+                  maxlength="80" /></template
+            ></el-table-column>
+            <el-table-column label="类别" min-width="175"
+              ><template #default="{ row, $index }"
+                ><el-input
+                  v-model="row.category"
+                  :aria-label="`规则类别 ${$index + 1}`"
+                  maxlength="80" /></template
+            ></el-table-column>
+            <el-table-column label="正则表达式" min-width="300"
+              ><template #default="{ row, $index }"
+                ><el-input
+                  v-model="row.pattern"
+                  type="textarea"
+                  :rows="2"
+                  :aria-label="`规则表达式 ${$index + 1}`"
+                  maxlength="2000" /></template
+            ></el-table-column>
+            <el-table-column label="启用" width="80"
+              ><template #default="{ row, $index }"
+                ><el-switch
+                  v-model="row.enabled"
+                  :aria-label="`启用规则 ${$index + 1}`" /></template
+            ></el-table-column>
+            <el-table-column label="操作" width="80"
+              ><template #default="{ $index }"
+                ><el-button
+                  type="danger"
+                  link
+                  @click="document.items.splice($index, 1)"
+                  :disabled="saving"
+                  >移除</el-button
+                ></template
+              ></el-table-column
+            >
+          </el-table></TableScroll
+        >
       </el-tab-pane>
       <el-tab-pane label="规则历史" name="rules-history">
-        <el-table :data="ruleHistory" empty-text="保存规则后会在此记录历史版本">
-          <el-table-column label="时间" min-width="180"
-            ><template #default="{ row }">{{ dateTime(row.created_at) }}</template></el-table-column
-          >
-          <el-table-column label="版本变更" min-width="130"
-            ><template #default="{ row }"
-              >{{ row.before.version }} → {{ row.after.version }}</template
-            ></el-table-column
-          >
-          <el-table-column label="操作" min-width="300"
-            ><template #default="{ row }"
-              ><el-button size="small" @click="detail = row">查看变化</el-button
-              ><el-button size="small" :disabled="saving" @click="restore('rules', row, 'before')"
-                >恢复修改前</el-button
-              ><el-button size="small" :disabled="saving" @click="restore('rules', row, 'after')"
-                >恢复修改后</el-button
-              ></template
-            ></el-table-column
-          >
-        </el-table>
+        <TableScroll
+          ><el-table :data="ruleHistory" empty-text="保存规则后会在此记录历史版本">
+            <el-table-column label="时间" min-width="180"
+              ><template #default="{ row }">{{
+                dateTime(row.created_at)
+              }}</template></el-table-column
+            >
+            <el-table-column label="版本变更" min-width="130"
+              ><template #default="{ row }"
+                >{{ row.before.version }} → {{ row.after.version }}</template
+              ></el-table-column
+            >
+            <el-table-column label="操作" min-width="300"
+              ><template #default="{ row }"
+                ><el-button size="small" @click="detail = row">查看变化</el-button
+                ><el-button size="small" :disabled="saving" @click="restore('rules', row, 'before')"
+                  >恢复修改前</el-button
+                ><el-button size="small" :disabled="saving" @click="restore('rules', row, 'after')"
+                  >恢复修改后</el-button
+                ></template
+              ></el-table-column
+            >
+          </el-table></TableScroll
+        >
       </el-tab-pane>
       <el-tab-pane label="策略历史" name="policy-history">
-        <el-table :data="policyHistory" empty-text="保存防护策略后会在此记录历史配置">
-          <el-table-column label="时间" min-width="180"
-            ><template #default="{ row }">{{ dateTime(row.created_at) }}</template></el-table-column
-          >
-          <el-table-column prop="username" label="操作人" min-width="140" />
-          <el-table-column label="操作" min-width="300"
-            ><template #default="{ row }"
-              ><el-button size="small" @click="detail = row">查看变化</el-button
-              ><el-button size="small" :disabled="saving" @click="restore('policy', row, 'before')"
-                >恢复修改前</el-button
-              ><el-button size="small" :disabled="saving" @click="restore('policy', row, 'after')"
-                >恢复修改后</el-button
-              ></template
-            ></el-table-column
-          >
-        </el-table>
+        <TableScroll
+          ><el-table :data="policyHistory" empty-text="保存防护策略后会在此记录历史配置">
+            <el-table-column label="时间" min-width="180"
+              ><template #default="{ row }">{{
+                dateTime(row.created_at)
+              }}</template></el-table-column
+            >
+            <el-table-column prop="username" label="操作人" min-width="140" />
+            <el-table-column label="操作" min-width="300"
+              ><template #default="{ row }"
+                ><el-button size="small" @click="detail = row">查看变化</el-button
+                ><el-button
+                  size="small"
+                  :disabled="saving"
+                  @click="restore('policy', row, 'before')"
+                  >恢复修改前</el-button
+                ><el-button size="small" :disabled="saving" @click="restore('policy', row, 'after')"
+                  >恢复修改后</el-button
+                ></template
+              ></el-table-column
+            >
+          </el-table></TableScroll
+        >
       </el-tab-pane>
     </el-tabs>
     <el-dialog :model-value="!!detail" title="配置变更详情" width="900px" @close="detail = null"

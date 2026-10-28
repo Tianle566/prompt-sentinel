@@ -1,8 +1,45 @@
 <script setup>
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { duration } from '../api'
 import Icon from './Icon.vue'
 import LayerResults from './LayerResults.vue'
-defineProps({ result: Object, showLayers: { type: Boolean, default: true } })
+const props = defineProps({ result: Object, showLayers: { type: Boolean, default: true } })
+const copied = ref(false),
+  copying = ref(false),
+  copyError = ref('')
+let copiedTimer,
+  alive = true
+watch(
+  () => props.result,
+  () => {
+    copied.value = false
+    copyError.value = ''
+  }
+)
+async function copyOutput() {
+  const result = props.result
+  copied.value = false
+  copying.value = true
+  copyError.value = ''
+  try {
+    await navigator.clipboard.writeText(result.output)
+    if (!alive || props.result !== result) return
+    copied.value = true
+    clearTimeout(copiedTimer)
+    copiedTimer = setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  } catch {
+    if (alive && props.result === result)
+      copyError.value = '无法访问剪贴板，请手动选择回复文字复制。'
+  } finally {
+    copying.value = false
+  }
+}
+onBeforeUnmount(() => {
+  alive = false
+  clearTimeout(copiedTimer)
+})
 </script>
 <template>
   <div v-if="result">
@@ -22,9 +59,26 @@ defineProps({ result: Object, showLayers: { type: Boolean, default: true } })
       ><span>{{ duration(result.latency_ms) }}</span>
     </div>
     <div v-if="result.error" class="inline-error" role="alert">{{ result.error }}</div>
-    <div v-if="result.output" class="model-output" :class="{ 'blocked-output': result.blocked }">
-      {{ result.output }}
-    </div>
+    <template v-if="result.output">
+      <div class="model-output-heading">
+        <span>{{ result.blocked ? '拦截说明' : '模型回复' }}</span
+        ><button
+          type="button"
+          class="copy-output"
+          :disabled="copying"
+          :aria-label="result.blocked ? '复制拦截说明' : '复制模型回复'"
+          @click="copyOutput"
+        >
+          <Icon :name="copied ? 'check' : 'copy'" :size="14" />{{ copied ? '已复制' : '复制' }}
+        </button>
+      </div>
+      <div class="model-output" :class="{ 'blocked-output': result.blocked }">
+        {{ result.output }}
+      </div>
+      <p v-if="copied || copyError" class="copy-feedback" role="status">
+        {{ copyError || '内容已复制到剪贴板。' }}
+      </p>
+    </template>
     <div v-else-if="!result.error" class="muted output-empty">此请求没有返回模型输出。</div>
     <div v-if="result.attack_evaluation" class="fusion-note">
       <span

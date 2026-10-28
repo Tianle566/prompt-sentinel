@@ -1,0 +1,193 @@
+{
+  "checks": {
+    "desktop_collapse_persists_and_charts_resize": true,
+    "skip_link_reaches_main": true,
+    "mobile_focus_trap_escape_scroll_restore": true,
+    "upload_remove_and_reselect_same_file": true,
+    "overflow_table_hint_and_keyboard_scroll": true,
+    "copy_output_matches_delivered_text": true,
+    "clipboard_denial_has_recovery_message": true,
+    "responsive_layout_cases": 28,
+    "sampled_text_contrast": [
+      {
+        "selector": ".page-heading p",
+        "ratio": 4.53
+      },
+      {
+        "selector": ".section-title p",
+        "ratio": 4.53
+      },
+      {
+        "selector": ".metric-top",
+        "ratio": 4.92
+      },
+      {
+        "selector": ".metric-caption",
+        "ratio": 4.92
+      },
+      {
+        "selector": ".nav-label",
+        "ratio": 6.89
+      },
+      {
+        "selector": ".nav-link:not(.router-link-active)",
+        "ratio": 9.1
+      },
+      {
+        "selector": ".eyebrow > span",
+        "ratio": 4.86
+      },
+      {
+        "selector": ".main-footer",
+        "ratio": 4.68
+      }
+    ],
+    "regular_user_has_personal_account_and_no_admin_navigation": true,
+    "empty_state_without_fabricated_activity": true
+  },
+  "responsive": [
+    {
+      "route": "dashboard",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "route": "chat",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "route": "evaluation",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "route": "runtime",
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "chat",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "evaluation",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "runtime",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "chat",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "evaluation",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "runtime",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 820,
+      "overflow": false
+    },
+    {
+      "route": "chat",
+      "width": 820,
+      "overflow": false
+    },
+    {
+      "route": "evaluation",
+      "width": 820,
+      "overflow": false
+    },
+    {
+      "route": "runtime",
+      "width": 820,
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "route": "chat",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "route": "evaluation",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "route": "runtime",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "route": "chat",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "route": "evaluation",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "route": "runtime",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "chat",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "evaluation",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "route": "runtime",
+      "width": 1440,
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "scope": "Headless browser UI verification with synthetic data in an isolated database; model inference was not rerun."
+}

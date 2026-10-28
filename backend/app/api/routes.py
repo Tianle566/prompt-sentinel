@@ -22,7 +22,7 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import String, and_, case, cast, func, or_, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 
 from backend.app.core.auth import _private_write, admin_user, create_token, current_user, user_dict
 from backend.app.core.config import ROOT, get_config, merge_dict, public_config, resolve_path, save_config, validate_config
@@ -590,8 +590,9 @@ def datasets(user: User = Depends(current_user)):
     return {"items": items}
 
 
-def _job_dict(job):
-    return {"id": job.id, "experiment": job.experiment, "status": job.status, "progress": job.progress, "message": job.message, "result": job.result, "error": job.error, "archived": job.archived, "cancel_requested": job.cancel_requested, "created_at": job.created_at.isoformat(), "updated_at": job.updated_at.isoformat()}
+def _job_dict(job, include_result=True, has_result=None):
+    result = job.result if include_result else None
+    return {"id": job.id, "experiment": job.experiment, "status": job.status, "progress": job.progress, "message": job.message, "result": result, "has_result": result is not None if include_result else bool(has_result), "error": job.error, "archived": job.archived, "cancel_requested": job.cancel_requested, "created_at": job.created_at.isoformat(), "updated_at": job.updated_at.isoformat()}
 
 
 def _execute_job(job_id, config, body):
@@ -676,12 +677,26 @@ def eval_create(body: EvalBody, user: User = Depends(admin_user), db: Session = 
 
 
 @router.get("/eval/jobs", tags=["evaluation"])
-def eval_list(archived: bool = False, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    statement = select(EvaluationJob).order_by(EvaluationJob.created_at.desc()).limit(50)
-    statement = statement.where(EvaluationJob.archived.is_(archived))
+def eval_list(archived: bool = False, page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=100), summary: bool = False, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    statement = select(EvaluationJob).where(EvaluationJob.archived.is_(archived))
     if user.role != "admin":
         statement = statement.where(EvaluationJob.user_id == user.id)
-    return {"items": [_job_dict(job) for job in db.scalars(statement).all()]}
+    total = db.scalar(select(func.count()).select_from(statement.subquery()))
+    statement = statement.order_by(EvaluationJob.created_at.desc(), EvaluationJob.id.desc()).offset((page - 1) * page_size).limit(page_size)
+    if summary:
+        # Keep large configuration and result JSON out of list polling. A JSON
+        # column may contain JSON null rather than SQL NULL on existing rows.
+        has_result = and_(EvaluationJob.result.is_not(None), cast(EvaluationJob.result, String) != "null")
+        statement = statement.options(load_only(
+            EvaluationJob.id, EvaluationJob.experiment, EvaluationJob.status,
+            EvaluationJob.progress, EvaluationJob.message, EvaluationJob.error,
+            EvaluationJob.archived, EvaluationJob.cancel_requested,
+            EvaluationJob.created_at, EvaluationJob.updated_at, raiseload=True,
+        )).add_columns(has_result.label("has_result"))
+        items = [_job_dict(job, include_result=False, has_result=available) for job, available in db.execute(statement).all()]
+    else:
+        items = [_job_dict(job) for job in db.scalars(statement).all()]
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 def _get_job(job_id, user, db):

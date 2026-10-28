@@ -1,0 +1,35 @@
+{
+  "checks": {
+    "history_payload_bytes": {
+      "summaries": 6089,
+      "full_results": 958331,
+      "same_page_size": 20,
+      "fixture_scope": "synthetic UI records"
+    },
+    "real_cpu_detection": {
+      "reliable": true,
+      "layer_statuses": {
+        "L1": "ok",
+        "L2": "ok",
+        "L3": "ok"
+      }
+    },
+    "real_local_target_generation": true,
+    "real_compare_attack_block": {
+      "blocked": true,
+      "reliable": true,
+      "hit_layers": [
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    "real_document_flow": {
+      "completed_without_error": true,
+      "blocked": false,
+      "paragraphs": 1
+    }
+  },
+  "elapsed_seconds": 32.31,
+  "scope": "CPU smoke checks on the existing three pretrained models with an isolated database; not a full ASR experiment or performance benchmark"
+}

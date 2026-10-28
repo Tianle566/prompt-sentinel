@@ -38,8 +38,8 @@ def validate_config(config: dict) -> dict:
         if not isinstance(layers.get(layer), dict) or not isinstance(layers[layer].get("enabled"), bool):
             raise ValueError(f"{layer}.enabled 必须是布尔值")
     _number(layers["l2"]["threshold"], "L2 阈值", 0, 1)
-    _number(layers["l2"]["max_tokens"], "L2 窗口", 16, 512)
-    _number(layers["l2"]["stride"], "L2 重叠", 0, layers["l2"]["max_tokens"] - 3)
+    _integer(layers["l2"]["max_tokens"], "L2 窗口", 16, 512)
+    _integer(layers["l2"]["stride"], "L2 重叠", 0, layers["l2"]["max_tokens"] - 3)
     _integer(layers["l2"].get("batch_size"), "L2 批大小", 1, 64)
     _integer(layers["l3"].get("max_tokens"), "L3 上下文窗口", 256, 32768)
     _integer(layers["l3"].get("max_new_tokens"), "L3 最大生成 token", 8, 512)
@@ -65,7 +65,7 @@ def validate_config(config: dict) -> dict:
     url = urlparse(target.get("base_url", ""))
     if url.scheme not in ("http", "https") or not url.hostname or url.username or url.password:
         raise ValueError("模型地址必须是有效的 HTTP(S) URL，密钥请通过环境变量传入")
-    _number(target["max_tokens"], "最大生成 token", 1, 8192)
+    _integer(target["max_tokens"], "最大生成 token", 1, 8192)
     _integer(target.get("context_length"), "目标模型上下文窗口", 512, 131072)
     for name in ("model", "small_model"):
         model = target.get(name)
@@ -73,8 +73,12 @@ def validate_config(config: dict) -> dict:
             raise ValueError(f"target.{name} 必须是非空字符串且不超过 200 字符")
     _number(target["timeout_seconds"], "模型超时", 1, 600)
     _number(target["temperature"], "生成温度", 0, 2)
-    if len(str(target["system_prompt"])) > 8000:
-        raise ValueError("系统提示词不能超过 8000 字符")
+    if not isinstance(target["system_prompt"], str) or len(target["system_prompt"]) > 8000:
+        raise ValueError("系统提示词必须是字符串且不能超过 8000 字符")
+    _integer(config["models"]["cpu_threads"], "CPU 线程数", 1, 256)
+    for name in ("port", "frontend_port"):
+        if name in config["app"]:
+            _integer(config["app"][name], f"app.{name}", 1, 65535)
     origins = config.get("app", {}).get("cors_origins")
     if not isinstance(origins, list) or any(not isinstance(origin, str) for origin in origins):
         raise ValueError("app.cors_origins 必须是字符串列表")

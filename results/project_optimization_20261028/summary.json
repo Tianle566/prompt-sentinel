@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-28",
+  "baseline_commit": "0967fee91d47011de4178a5cc1874af89281dd98",
+  "baseline_pytest": {
+    "passed": 311,
+    "integration_deselected": 1
+  },
+  "pytest": {
+    "passed": 343,
+    "integration_deselected": 1,
+    "new_regressions": 32
+  },
+  "build": {
+    "passed": true,
+    "existing_large_chunk_warning": true
+  },
+  "formatting": {
+    "prettier_changed_files": true,
+    "git_diff_check": true,
+    "bash_syntax": true
+  },
+  "offline_doctor": true,
+  "browser": {
+    "checks": {
+      "management_pages": 10,
+      "document_log_collapse": true,
+      "pagination_first_page": true,
+      "history_beyond_original_50": true,
+      "stale_detail_does_not_replace_selection": true,
+      "slow_polling_max_concurrency": 1,
+      "hidden_page_pauses_polling": true,
+      "mobile_no_horizontal_overflow": true,
+      "runtime_errors": 0,
+      "unresolved_component_warnings": 0,
+      "list_requests_use_summaries": true
+    },
+    "fixture_scope": "65 synthetic history jobs in an isolated SQLite database; not model-effect measurements"
+  },
+  "real_models": {
+    "checks": {
+      "history_payload_bytes": {
+        "summaries": 6089,
+        "full_results": 958331,
+        "same_page_size": 20,
+        "fixture_scope": "synthetic UI records"
+      },
+      "real_cpu_detection": {
+        "reliable": true,
+        "layer_statuses": {
+          "L1": "ok",
+          "L2": "ok",
+          "L3": "ok"
+        }
+      },
+      "real_local_target_generation": true,
+      "real_compare_attack_block": {
+        "blocked": true,
+        "reliable": true,
+        "hit_layers": [
+          "L1",
+          "L2",
+          "L3"
+        ]
+      },
+      "real_document_flow": {
+        "completed_without_error": true,
+        "blocked": false,
+        "paragraphs": 1
+      }
+    },
+    "elapsed_seconds": 32.31,
+    "scope": "CPU smoke checks on the existing three pretrained models with an isolated database; not a full ASR experiment or performance benchmark"
+  },
+  "preservation": {
+    "files": 3175,
+    "all_unchanged": true,
+    "changed": []
+  },
+  "validation_services_stopped": true,
+  "isolation": {
+    "production_database_untouched": true,
+    "synthetic_history_jobs": 65,
+    "qa_ports": [
+      8015,
+      5185,
+      11445
+    ]
+  },
+  "limitations": [
+    "Real-model smoke checks do not replace full ASR evaluation.",
+    "macOS/Linux were syntax checked, not exercised on those platforms.",
+    "Fresh-machine online installation was not repeated; recovery used isolated mocks plus native Windows batch execution.",
+    "Dependency deprecation and large bundle warnings remain."
+  ],
+  "source_sha256": {
+    "scripts/bootstrap.py": "01762195f9d2132e551f2ff6241e054e10e9e369c7eb03c4019f01f1caec1a20",
+    "scripts/doctor.py": "2f7c5e88ef485df148276f80ad555326b1e54a243597dfe3e1bd569ab5b3e2ea",
+    "scripts/serve.py": "e175c923a3cfae9a8209dedbaddbd93e630d98bcab2b1104df2910732826458b",
+    "start.bat": "e98b3fbcf87ae9694bb7daec0cb2e9d9ec0f519ecb7a2cb6761a7093605c15ba",
+    "start.sh": "319f64fd74b4870589a810be1f7cef47b762fec6d8ddc829978db46e9b6b2d46",
+    "backend/app/core/config.py": "ad03559d7e39dbfb6a6de8d6be8376299f558c15513f3f299fc223ca502e905d",
+    "backend/app/api/routes.py": "da9a4b8d573b4cafe1c358af40bd80aef40d136a40339fce2430aedbeeb2801a",
+    "frontend/src/api.js": "5496181cf1d7f3f7f5db0f485ac2ce2b13d0efd858dfcc1df5ae2b5c343c8ded",
+    "frontend/src/main.js": "78bfc989e78f3993aa4cbec5d88b72b022e21d697ae7742c9837df6bd58256f0",
+    "frontend/src/pages/Evaluation.vue": "6f74f876831d377841ab5c34aff2b6f4177bdd23f086831cb85bb8b5af5a5318",
+    "backend/tests/test_startup_recovery.py": "4fd994847ef3a11d21fd9128fcd1eb02c7da1d729d44f988821b5deb359d265f",
+    "backend/tests/test_project_reliability.py": "cc8db295843223ae45d8f1b33c562965de942383ce047e3b86d2cd1c70d63961",
+    "backend/tests/test_api.py": "d355df36336f78b7f6da21a8856b99fb89f33d6d3b3b78809f8b89a58a49f40a"
+  }
+}

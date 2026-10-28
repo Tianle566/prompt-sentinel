@@ -1,0 +1,78 @@
+{
+  "ok": true,
+  "checks": [
+    {
+      "name": "Python",
+      "ok": true,
+      "detail": "3.11.9",
+      "remedy": ""
+    },
+    {
+      "name": "Python依赖",
+      "ok": true,
+      "detail": "依赖版本满足要求",
+      "remedy": ""
+    },
+    {
+      "name": "Node.js",
+      "ok": true,
+      "detail": "v24.22.1",
+      "remedy": ""
+    },
+    {
+      "name": "npm",
+      "ok": true,
+      "detail": "已找到",
+      "remedy": ""
+    },
+    {
+      "name": "前端依赖",
+      "ok": true,
+      "detail": "已安装",
+      "remedy": ""
+    },
+    {
+      "name": "配置",
+      "ok": true,
+      "detail": "格式与参数有效",
+      "remedy": ""
+    },
+    {
+      "name": "deberta",
+      "ok": true,
+      "detail": "本地文件齐全",
+      "remedy": ""
+    },
+    {
+      "name": "qwen_guard",
+      "ok": true,
+      "detail": "本地文件齐全",
+      "remedy": ""
+    },
+    {
+      "name": "目标模型",
+      "ok": true,
+      "detail": "GGUF与分词器文件齐全",
+      "remedy": ""
+    },
+    {
+      "name": "Ollama",
+      "ok": true,
+      "detail": "已安装",
+      "remedy": ""
+    },
+    {
+      "name": "detect_path",
+      "ok": true,
+      "detail": "数据集存在",
+      "remedy": ""
+    },
+    {
+      "name": "asr_path",
+      "ok": true,
+      "detail": "数据集存在",
+      "remedy": ""
+    }
+  ],
+  "scope": "离线静态检查；不代表真实推理或完整功能验证"
+}

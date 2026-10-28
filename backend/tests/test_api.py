@@ -108,7 +108,7 @@ def test_missing_job_and_role_protection(api):
     assert client.post("/api/eval/jobs", headers=user, json={}).status_code == 403
     assert client.get("/api/eval/jobs/missing", headers=user).status_code == 404
     assert client.get("/api/eval/artifacts/missing/secret.json", headers=admin).status_code == 404
-    assert client.get("/api/eval/jobs", headers=user).json() == {"items": []}
+    assert client.get("/api/eval/jobs", headers=user).json() == {"items": [], "total": 0, "page": 1, "page_size": 50}
 
 
 def test_document_scans_long_paragraph_tail_and_never_calls_target_on_attack(api, monkeypatch):

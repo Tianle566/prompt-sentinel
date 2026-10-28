@@ -1,0 +1,16 @@
+{
+  "checks": {
+    "management_pages": 10,
+    "document_log_collapse": true,
+    "pagination_first_page": true,
+    "history_beyond_original_50": true,
+    "stale_detail_does_not_replace_selection": true,
+    "slow_polling_max_concurrency": 1,
+    "hidden_page_pauses_polling": true,
+    "mobile_no_horizontal_overflow": true,
+    "runtime_errors": 0,
+    "unresolved_component_warnings": 0,
+    "list_requests_use_summaries": true
+  },
+  "fixture_scope": "65 synthetic history jobs in an isolated SQLite database; not model-effect measurements"
+}

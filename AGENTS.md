@@ -14,7 +14,7 @@ Prompt Sentinel detects prompt injection through a FastAPI backend and Vue 3 con
 Use Python 3.11 and Node.js 20.19+ or 22.12+. Run commands from the repository root unless specified.
 
 - `.\start.bat --setup`: install dependencies, prepare models/data, and start services.
-- `.\start.bat --check`: validate configuration without starting services.
+- `.\start.bat --check`: check Python/dependency versions, Node.js, configuration, and local model/data files without installing or starting services. This is an offline readiness check, not real inference validation.
 - `.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000`: start the API with one worker; in-memory sessions and queues require this.
 - Inside `frontend/`, run `npm ci`, then `npm run dev` for development or `npm run build` for production validation.
 

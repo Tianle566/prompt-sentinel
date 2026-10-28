@@ -1,6 +1,8 @@
 import axios from 'axios'
-export const api = axios.create({ baseURL: '/api', timeout: 900000 })
+export const api = axios.create({ baseURL: '/api', timeout: 20000 })
 api.interceptors.request.use((config) => {
+  if (/^\/(?:detect|chat(?:\/compare)?|attack\/run|document\/summarize)$/.test(config.url || ''))
+    config.timeout = 900000
   const token = sessionStorage.getItem('sentinel_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
@@ -21,8 +23,10 @@ export function errorText(error) {
   if (Array.isArray(detail))
     return detail.map((v) => `${v.loc?.slice(1).join('.') || '请求'}：${v.msg}`).join('；')
   if (error?.code === 'ECONNABORTED')
-    return '请求等待超时。模型可能仍在处理，请到拦截日志查看结果。'
-  if (!error?.response) return '无法连接后端服务，请确认后端已在本机 8000 端口启动。'
+    return /^\/(?:detect|chat|attack\/run|document\/summarize)/.test(error.config?.url || '')
+      ? '请求等待超时。模型可能仍在处理，请到拦截日志查看结果。'
+      : '服务响应超时，请稍后重试或查看启动窗口。'
+  if (!error?.response) return '无法连接后端服务，请确认项目已启动，并查看启动窗口。'
   return `请求失败（${error.response.status}），请稍后重试。`
 }
 export const attackTypes = {

@@ -14,11 +14,15 @@ const datasets = ref([]),
   tab = ref('detection'),
   images = ref({}),
   imageLoading = ref(false),
+  detailLoading = ref(false),
   custom = ref(false),
   config = ref(null),
   pollError = ref('')
 const form = reactive({ dataset: 'detect', experiment: 'detection', limit: 100, asr_limit: 20 })
 const archived = ref(false),
+  page = ref(1),
+  pageSize = ref(20),
+  total = ref(0),
   managing = ref(false),
   compareIds = ref([]),
   comparison = ref(null)
@@ -36,7 +40,11 @@ async function manageJob(action) {
       `/eval/jobs/${id}/${action}`,
       action === 'archive' ? { archived: !active.value.archived } : {}
     )
-    if (action === 'archive') active.value = null
+    if (action === 'archive') {
+      clearSelection()
+      compareIds.value = []
+      comparison.value = null
+    }
     await refresh()
   } catch (e) {
     if (!['cancel', 'close'].includes(e)) error.value = errorText(e)
@@ -57,7 +65,8 @@ async function compare() {
   }
 }
 async function toggleArchive() {
-  active.value = null
+  page.value = 1
+  clearSelection()
   comparison.value = null
   compareIds.value = []
   await refresh()
@@ -137,21 +146,45 @@ const tableSpecs = [
   },
 ]
 let timer,
-  alive = true
+  alive = true,
+  listSequence = 0,
+  detailSequence = 0,
+  listPending = false,
+  detailStamp = ''
+const running = (job) => ['queued', 'running', 'cancelling'].includes(job.status)
+const listParams = () => ({
+  archived: archived.value,
+  page: page.value,
+  page_size: pageSize.value,
+  summary: true,
+})
+function clearSelection() {
+  detailSequence++
+  active.value = null
+  detailStamp = ''
+  detailLoading.value = false
+  clearImages()
+}
+async function changePage() {
+  clearSelection()
+  compareIds.value = []
+  comparison.value = null
+  await refresh()
+}
 async function initialize() {
   loading.value = true
   try {
     const [ds, js, cfg] = await Promise.all([
       api.get('/eval/datasets'),
-      api.get('/eval/jobs', { params: { archived: archived.value } }),
+      api.get('/eval/jobs', { params: listParams() }),
       api.get('/config'),
     ])
     if (!alive) return
     datasets.value = ds.data.items
     jobs.value = js.data.items
+    total.value = js.data.total
     config.value = cfg.data
-    active.value = jobs.value[0] || null
-    syncTab()
+    if (jobs.value.length) await selectJob(jobs.value[0])
   } catch (e) {
     if (alive) error.value = errorText(e)
   } finally {
@@ -163,31 +196,45 @@ function syncTab() {
   tab.value = keys.find((key) => active.value?.result?.tables[key]?.length) || 'detection'
 }
 async function refresh(silent = false) {
-  if (!silent) loading.value = true
+  if (silent && listPending) return
+  const sequence = ++listSequence
+  const params = listParams()
+  listPending = true
+  if (!silent) {
+    loading.value = true
+    error.value = ''
+  }
   try {
-    const { data } = await api.get('/eval/jobs', { params: { archived: archived.value } })
-    if (!alive) return
+    const { data } = await api.get('/eval/jobs', { params })
+    if (!alive || sequence !== listSequence) return
+    total.value = data.total
+    const lastPage = Math.max(1, Math.ceil(data.total / pageSize.value))
+    if (page.value > lastPage) {
+      page.value = lastPage
+      return await refresh()
+    }
     jobs.value = data.items
-    if (active.value) {
-      const next = data.items.find((v) => v.id === active.value.id)
-      if (next) {
-        const wasRunning = ['running', 'queued', 'cancelling'].includes(active.value.status)
-        active.value = next
-        if (wasRunning && next.status === 'completed') {
-          syncTab()
-          ElMessage.success('评测任务已结束，可查看实际完成的指标与图表。')
-        }
+    const next = data.items.find((v) => v.id === active.value?.id) || data.items[0]
+    if (next) {
+      const completed =
+        active.value?.id === next.id && running(active.value) && next.status === 'completed'
+      await selectJob(next)
+      if (alive && sequence === listSequence && completed) {
+        ElMessage.success('评测任务已结束，可查看实际完成的指标与图表。')
       }
-    } else active.value = data.items[0] || null
+    } else clearSelection()
+    if (!alive || sequence !== listSequence) return
     pollError.value = ''
-    if (!silent) error.value = ''
   } catch (e) {
-    if (alive) {
+    if (alive && sequence === listSequence) {
       if (silent) pollError.value = errorText(e)
       else error.value = errorText(e)
     }
   } finally {
-    if (alive && !silent) loading.value = false
+    if (sequence === listSequence) {
+      listPending = false
+      if (alive) loading.value = false
+    }
   }
 }
 async function create() {
@@ -202,8 +249,11 @@ async function create() {
     if (custom.value && config.value)
       body.config = { layers: config.value.layers, fusion: config.value.fusion }
     const { data } = await api.post('/eval/jobs', body)
+    archived.value = false
+    page.value = 1
+    clearSelection()
     active.value = data
-    await refresh(true)
+    await refresh()
     ElMessage.success('评测已加入后台队列，可以离开当前页面。')
   } catch (e) {
     error.value = errorText(e)
@@ -221,10 +271,28 @@ function setExperiment() {
       ? 'asr'
       : 'detect'
 }
-function selectJob(job) {
-  active.value = job
-  syncTab()
-  clearImages()
+async function selectJob(job) {
+  const same = active.value?.id === job.id
+  const stamp = `${job.id}:${job.updated_at}`
+  active.value = { ...job, result: same ? active.value.result : null }
+  if (!same) {
+    clearImages()
+    syncTab()
+  }
+  if (same && detailStamp === stamp) return
+  const sequence = ++detailSequence
+  detailLoading.value = true
+  try {
+    const { data } = await api.get(`/eval/jobs/${job.id}`)
+    if (!alive || sequence !== detailSequence) return
+    active.value = data
+    detailStamp = `${data.id}:${data.updated_at}`
+    syncTab()
+  } catch (e) {
+    if (alive && sequence === detailSequence) error.value = errorText(e)
+  } finally {
+    if (alive && sequence === detailSequence) detailLoading.value = false
+  }
 }
 function clearImages() {
   Object.values(images.value).forEach(URL.revokeObjectURL)
@@ -236,6 +304,7 @@ async function loadImages() {
   const id = active.value.id
   try {
     for (const filename of artifacts.value.filter((v) => v.endsWith('.png'))) {
+      if (!alive || active.value?.id !== id) break
       if (images.value[filename]) continue
       const url = await artifact(id, filename)
       if (alive && active.value?.id === id) images.value[filename] = url
@@ -261,17 +330,27 @@ function value(row, col) {
   if (col.rate) return percentage(value)
   return typeof value === 'number' ? number(value) : value
 }
+function visibleRefresh() {
+  if (!document.hidden && jobs.value.some(running)) refresh(true)
+}
+async function poll() {
+  if (!alive) return
+  if (!document.hidden && jobs.value.some(running)) await refresh(true)
+  if (alive) timer = setTimeout(poll, 4000)
+}
 onMounted(async () => {
   await initialize()
-  if (alive)
-    timer = setInterval(() => {
-      if (jobs.value.some((v) => ['queued', 'running', 'cancelling'].includes(v.status)))
-        refresh(true)
-    }, 4000)
+  if (alive) {
+    document.addEventListener('visibilitychange', visibleRefresh)
+    timer = setTimeout(poll, 4000)
+  }
 })
 onBeforeUnmount(() => {
   alive = false
-  clearInterval(timer)
+  listSequence++
+  detailSequence++
+  clearTimeout(timer)
+  document.removeEventListener('visibilitychange', visibleRefresh)
   clearImages()
 })
 </script>
@@ -411,7 +490,7 @@ onBeforeUnmount(() => {
         <div class="section-title">
           <div>
             <h2>后台任务</h2>
-            <p>进度每 4 秒自动更新</p>
+            <p>每页 20 个任务，运行进度每 4 秒自动更新</p>
             <el-switch
               v-model="archived"
               active-text="查看已归档"
@@ -468,9 +547,18 @@ onBeforeUnmount(() => {
             <p class="job-message">{{ job.error || job.message }}</p>
           </button>
         </div>
+        <el-pagination
+          v-if="total > pageSize"
+          v-model:current-page="page"
+          :page-size="pageSize"
+          :total="total"
+          layout="prev, pager, next"
+          class="mt16"
+          @current-change="changePage"
+        />
       </section>
     </div>
-    <section v-if="jobs.filter((job) => job.result).length >= 2" class="panel">
+    <section v-if="jobs.filter((job) => job.has_result).length >= 2" class="panel">
       <div class="section-title">
         <div>
           <h2>实验结果对比</h2>
@@ -485,9 +573,7 @@ onBeforeUnmount(() => {
           placeholder="选择对比任务"
           aria-label="选择对比任务"
           ><el-option
-            v-for="job in jobs.filter(
-              (item) => item.result && !['queued', 'running', 'cancelling'].includes(item.status)
-            )"
+            v-for="job in jobs.filter((item) => item.has_result && !running(item))"
             :key="job.id"
             :value="job.id"
             :label="`${experiments[job.experiment]} · ${job.id.slice(0, 8)}`" /></el-select
@@ -530,7 +616,7 @@ onBeforeUnmount(() => {
         ></template
       >
     </section>
-    <section v-if="active" class="panel eval-output-panel">
+    <section v-if="active" v-loading="detailLoading" class="panel eval-output-panel">
       <div v-if="auth.isAdmin.value" class="admin-toolbar">
         <el-button
           v-if="['queued', 'running'].includes(active.status)"

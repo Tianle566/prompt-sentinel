@@ -1,0 +1,78 @@
+{
+  "status": "passed",
+  "checks": [
+    "admin_login",
+    "12_authenticated_routes",
+    "12_mobile_widths",
+    "real_document_summary",
+    "real_document_interception",
+    "real_browser_chat_comparison",
+    "user_login",
+    "ordinary_user_personal_scope"
+  ],
+  "sizes": [
+    {
+      "route": "dashboard",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "chat",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "attack",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "documents",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "logs",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "evaluation",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "accounts",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "policy",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "rules",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "samples",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "audits",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "runtime",
+      "width": 390,
+      "scrollWidth": 390
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "scope": "real current application; isolated database; no mocked requests or model replies"
+}

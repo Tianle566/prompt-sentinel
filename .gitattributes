@@ -1,3 +1,4 @@
 # Preserve recorded experiment bytes, including Windows CSV/JSON line endings.
 results/** -text whitespace=cr-at-eol
 deliverables/** -text
+data/frozen/** -text

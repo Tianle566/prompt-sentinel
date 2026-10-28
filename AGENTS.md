@@ -34,6 +34,8 @@ No established commit convention is documented; use concise imperative subjects,
 
 Keep policy settings in `backend/config.yaml` and rules in `backend/rules.yaml`. Keep secrets in environment variables or ignored local state. Preserve existing experiment evidence; use a new `results/<run-name>/` directory.
 
+The original thesis corpus is frozen in `data/frozen/thesis_v2_20261022/`; never rebuild it in place. Audit saved thesis results with `scripts/audit_results.py --data-dir data/frozen/thesis_v2_20261022 --report <new-report-path>`. Model smoke and HTTP verification create separate reports by default and reject existing report files.
+
 ## Agent Instructions
 
 Use `C:\Program Files\PowerShell\7\pwsh.exe` for Windows commands. If substituted, explicitly invoke it with `& 'C:\Program Files\PowerShell\7\pwsh.exe' -NoLogo -NoProfile -Command { ... }`. Verify `$PSVersionTable.PSVersion` and `(Get-Process -Id $PID).Path` inside that session.

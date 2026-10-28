@@ -1,0 +1,354 @@
+{
+  "entries": 58,
+  "all_match": true,
+  "details": [
+    {
+      "title": "1  绪论",
+      "cached_page": "1",
+      "actual_page": 1,
+      "matches": true
+    },
+    {
+      "title": "1.1  研究背景与应用场景",
+      "cached_page": "1",
+      "actual_page": 1,
+      "matches": true
+    },
+    {
+      "title": "1.2  国内外研究现状",
+      "cached_page": "2",
+      "actual_page": 2,
+      "matches": true
+    },
+    {
+      "title": "1.3  研究内容与研究意义",
+      "cached_page": "3",
+      "actual_page": 3,
+      "matches": true
+    },
+    {
+      "title": "1.4  论文组织结构",
+      "cached_page": "4",
+      "actual_page": 4,
+      "matches": true
+    },
+    {
+      "title": "2  提示词注入攻击原理与相关技术",
+      "cached_page": "5",
+      "actual_page": 5,
+      "matches": true
+    },
+    {
+      "title": "2.1  任务指令与外部数据的信任边界",
+      "cached_page": "5",
+      "actual_page": 5,
+      "matches": true
+    },
+    {
+      "title": "2.2  规则检测与编码处理",
+      "cached_page": "5",
+      "actual_page": 5,
+      "matches": true
+    },
+    {
+      "title": "2.3  DeBERTa 与预训练注入分类器",
+      "cached_page": "6",
+      "actual_page": 6,
+      "matches": true
+    },
+    {
+      "title": "2.4  Qwen3Guard 与多语言安全审核",
+      "cached_page": "6",
+      "actual_page": 6,
+      "matches": true
+    },
+    {
+      "title": "2.5  提示加固、输出检查与融合",
+      "cached_page": "7",
+      "actual_page": 7,
+      "matches": true
+    },
+    {
+      "title": "2.6  目标模型与实验数据基础",
+      "cached_page": "7",
+      "actual_page": 7,
+      "matches": true
+    },
+    {
+      "title": "2.7  本章小结",
+      "cached_page": "8",
+      "actual_page": 8,
+      "matches": true
+    },
+    {
+      "title": "3  需求分析",
+      "cached_page": "9",
+      "actual_page": 9,
+      "matches": true
+    },
+    {
+      "title": "3.1  应用场景与系统边界",
+      "cached_page": "9",
+      "actual_page": 9,
+      "matches": true
+    },
+    {
+      "title": "3.2  角色与功能需求",
+      "cached_page": "9",
+      "actual_page": 9,
+      "matches": true
+    },
+    {
+      "title": "3.3  非功能需求",
+      "cached_page": "11",
+      "actual_page": 11,
+      "matches": true
+    },
+    {
+      "title": "3.4  本章小结",
+      "cached_page": "12",
+      "actual_page": 12,
+      "matches": true
+    },
+    {
+      "title": "4  系统设计",
+      "cached_page": "13",
+      "actual_page": 13,
+      "matches": true
+    },
+    {
+      "title": "4.1  总体架构",
+      "cached_page": "13",
+      "actual_page": 13,
+      "matches": true
+    },
+    {
+      "title": "4.2  输入检测与融合设计",
+      "cached_page": "14",
+      "actual_page": 14,
+      "matches": true
+    },
+    {
+      "title": "4.3  提示加固与输出检查",
+      "cached_page": "16",
+      "actual_page": 16,
+      "matches": true
+    },
+    {
+      "title": "4.4  文档处理与上下文控制",
+      "cached_page": "17",
+      "actual_page": 17,
+      "matches": true
+    },
+    {
+      "title": "4.5  数据库与后台任务设计",
+      "cached_page": "19",
+      "actual_page": 19,
+      "matches": true
+    },
+    {
+      "title": "4.6  本章小结",
+      "cached_page": "20",
+      "actual_page": 20,
+      "matches": true
+    },
+    {
+      "title": "5  系统实现",
+      "cached_page": "21",
+      "actual_page": 21,
+      "matches": true
+    },
+    {
+      "title": "5.1  开发环境与模块组织",
+      "cached_page": "21",
+      "actual_page": 21,
+      "matches": true
+    },
+    {
+      "title": "5.2  鉴权与访问隔离实现",
+      "cached_page": "21",
+      "actual_page": 21,
+      "matches": true
+    },
+    {
+      "title": "5.3  核心接口与交互实现",
+      "cached_page": "22",
+      "actual_page": 22,
+      "matches": true
+    },
+    {
+      "title": "5.4  策略校验与异常处理",
+      "cached_page": "23",
+      "actual_page": 23,
+      "matches": true
+    },
+    {
+      "title": "5.5  实验与本地部署实现",
+      "cached_page": "24",
+      "actual_page": 24,
+      "matches": true
+    },
+    {
+      "title": "5.6  需求与实现验证的对应关系",
+      "cached_page": "25",
+      "actual_page": 25,
+      "matches": true
+    },
+    {
+      "title": "5.7  管理后台实现",
+      "cached_page": "25",
+      "actual_page": 25,
+      "matches": true
+    },
+    {
+      "title": "5.8  拦截成功率与统计口径",
+      "cached_page": "27",
+      "actual_page": 27,
+      "matches": true
+    },
+    {
+      "title": "5.9  界面组织与响应式交互",
+      "cached_page": "28",
+      "actual_page": 28,
+      "matches": true
+    },
+    {
+      "title": "5.10  本章小结",
+      "cached_page": "29",
+      "actual_page": 29,
+      "matches": true
+    },
+    {
+      "title": "6  实验设计与结果分析",
+      "cached_page": "30",
+      "actual_page": 30,
+      "matches": true
+    },
+    {
+      "title": "6.1  研究问题与验证思路",
+      "cached_page": "30",
+      "actual_page": 30,
+      "matches": true
+    },
+    {
+      "title": "6.2  实验环境与参数",
+      "cached_page": "30",
+      "actual_page": 30,
+      "matches": true
+    },
+    {
+      "title": "6.3  数据构建与标签口径",
+      "cached_page": "32",
+      "actual_page": 32,
+      "matches": true
+    },
+    {
+      "title": "6.4  指标与实验分组",
+      "cached_page": "33",
+      "actual_page": 33,
+      "matches": true
+    },
+    {
+      "title": "6.5  功能与回归验证",
+      "cached_page": "34",
+      "actual_page": 34,
+      "matches": true
+    },
+    {
+      "title": "6.6  检测性能分析",
+      "cached_page": "35",
+      "actual_page": 35,
+      "matches": true
+    },
+    {
+      "title": "6.7  防护对照与消融分析",
+      "cached_page": "39",
+      "actual_page": 39,
+      "matches": true
+    },
+    {
+      "title": "6.8  推理开销与复核",
+      "cached_page": "42",
+      "actual_page": 42,
+      "matches": true
+    },
+    {
+      "title": "6.9  面向办公摘要的补充验证",
+      "cached_page": "45",
+      "actual_page": 45,
+      "matches": true
+    },
+    {
+      "title": "6.10  Windows部署与管理功能验证",
+      "cached_page": "49",
+      "actual_page": 49,
+      "matches": true
+    },
+    {
+      "title": "6.11  有效性威胁与应用边界",
+      "cached_page": "51",
+      "actual_page": 51,
+      "matches": true
+    },
+    {
+      "title": "6.12  本章小结",
+      "cached_page": "52",
+      "actual_page": 52,
+      "matches": true
+    },
+    {
+      "title": "7  总结与展望",
+      "cached_page": "53",
+      "actual_page": 53,
+      "matches": true
+    },
+    {
+      "title": "7.1  研究工作总结",
+      "cached_page": "53",
+      "actual_page": 53,
+      "matches": true
+    },
+    {
+      "title": "7.2  不足与后续研究方向",
+      "cached_page": "54",
+      "actual_page": 54,
+      "matches": true
+    },
+    {
+      "title": "致谢",
+      "cached_page": "55",
+      "actual_page": 55,
+      "matches": true
+    },
+    {
+      "title": "参考文献",
+      "cached_page": "56",
+      "actual_page": 56,
+      "matches": true
+    },
+    {
+      "title": "附录A  复现材料与记录说明",
+      "cached_page": "58",
+      "actual_page": 58,
+      "matches": true
+    },
+    {
+      "title": "A.1  主实验与工程验证的版本定位",
+      "cached_page": "58",
+      "actual_page": 58,
+      "matches": true
+    },
+    {
+      "title": "A.2  Windows复现入口",
+      "cached_page": "58",
+      "actual_page": 58,
+      "matches": true
+    },
+    {
+      "title": "A.3  交付版本的材料核对",
+      "cached_page": "58",
+      "actual_page": 58,
+      "matches": true
+    }
+  ]
+}

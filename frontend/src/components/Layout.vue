@@ -175,7 +175,10 @@ onBeforeUnmount(() => {
 })
 </script>
 <template>
-  <div class="app-shell" :class="{ 'nav-collapsed': collapsed }">
+  <div
+    class="app-shell"
+    :class="{ 'nav-collapsed': collapsed, 'chat-shell': route.path === '/chat' }"
+  >
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <button
       v-if="mobileOpen"
@@ -314,7 +317,7 @@ onBeforeUnmount(() => {
         </div>
       </header>
       <main id="main-content" class="main-content" tabindex="-1">
-        <div class="page-heading">
+        <div v-if="route.path !== '/chat'" class="page-heading">
           <div>
             <h1>{{ pageTitle }}</h1>
           </div>

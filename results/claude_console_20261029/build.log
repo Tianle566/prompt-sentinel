@@ -1,0 +1,40 @@
+npm notice run prompt-sentinel-console@1.0.0 build
+npm notice run vite build
+vite v6.4.5 building for production...
+transforming...
+✓ 2286 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      0.84 kB │ gzip:   0.43 kB
+dist/assets/Accounts-BV9Z5AZJ.css                    0.53 kB │ gzip:   0.27 kB
+dist/assets/Runtime-CD-3t0XG.css                     0.56 kB │ gzip:   0.27 kB
+dist/assets/index-IyW2KVma.css                      80.24 kB │ gzip:  16.76 kB
+dist/assets/ui-CM6NoYC6.css                        361.29 kB │ gzip:  48.18 kB
+dist/assets/_plugin-vue_export-helper-DlAUqK2U.js    0.09 kB │ gzip:   0.10 kB
+dist/assets/useUnsavedChanges-CPuSm8cs.js            0.52 kB │ gzip:   0.41 kB
+dist/assets/EmptyState-CW2tcIXJ.js                   0.54 kB │ gzip:   0.38 kB
+dist/assets/console-2IepNvXp.js                      0.72 kB │ gzip:   0.50 kB
+dist/assets/Login-CsPmTipS.js                        2.75 kB │ gzip:   1.43 kB
+dist/assets/Audits-w-yD-QID.js                       4.73 kB │ gzip:   2.18 kB
+dist/assets/PipelineResult-CK1UF5m4.js               5.55 kB │ gzip:   2.47 kB
+dist/assets/Documents-RmxHBTsu.js                    5.92 kB │ gzip:   2.71 kB
+dist/assets/Chat-B8RcYGPC.js                         7.67 kB │ gzip:   3.33 kB
+dist/assets/Runtime-BpB3hMeH.js                      7.71 kB │ gzip:   3.10 kB
+dist/assets/Attack-DIrhtGpZ.js                       8.50 kB │ gzip:   3.66 kB
+dist/assets/Rules-BDt1sdei.js                        8.89 kB │ gzip:   3.13 kB
+dist/assets/Samples-wvr5FC0H.js                      9.34 kB │ gzip:   3.71 kB
+dist/assets/Dashboard-BJsu6RXJ.js                   10.12 kB │ gzip:   4.20 kB
+dist/assets/Policy-C-iImv3v.js                      10.92 kB │ gzip:   3.74 kB
+dist/assets/Accounts-OZIeJsMm.js                    12.49 kB │ gzip:   4.07 kB
+dist/assets/Logs-BgthV1Sv.js                        12.93 kB │ gzip:   5.02 kB
+dist/assets/Evaluation-ByXKfoxH.js                  20.50 kB │ gzip:   7.62 kB
+dist/assets/index-BLoypXCq.js                       25.68 kB │ gzip:  11.28 kB
+dist/assets/framework-Dfu76AkI.js                  162.03 kB │ gzip:  61.92 kB
+dist/assets/charts-CF_DuwGe.js                     559.06 kB │ gzip: 191.46 kB
+dist/assets/ui-Bj7jumjz.js                         943.70 kB │ gzip: 304.13 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.51s

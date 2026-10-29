@@ -19,7 +19,8 @@ const mode = ref('protected'),
 const recent = ref([]),
   historyError = ref(''),
   source = ref(null),
-  loadingSource = ref(false)
+  loadingSource = ref(false),
+  historyOpen = ref(false)
 const modes = [
   { label: '安全对话', value: 'protected' },
   { label: '对照测试', value: 'compare' },
@@ -92,6 +93,8 @@ async function submit() {
         { text: sentText.value, protected: true, session_id: session.value }
       )
     ).data
+    text.value = ''
+    source.value = null
     await history()
   } catch (e) {
     error.value = errorText(e)
@@ -112,16 +115,17 @@ onMounted(history)
 </script>
 <template>
   <div class="playground-workspace">
-    <section class="panel playground-main">
+    <section class="playground-main">
       <div class="playground-toolbar">
-        <el-segmented
-          v-model="mode"
-          :options="modes"
-          aria-label="运行模式"
-          :disabled="loading"
-        /><el-button text :disabled="loading" @click="reset"
-          ><Icon name="chat" :size="15" />新建</el-button
-        >
+        <el-segmented v-model="mode" :options="modes" aria-label="运行模式" :disabled="loading" />
+        <div class="toolbar-actions">
+          <el-button text class="history-trigger" aria-label="最近记录" @click="historyOpen = true">
+            <Icon name="clock" :size="16" /><span>最近记录</span>
+          </el-button>
+          <el-button text :disabled="loading" @click="reset"
+            ><Icon name="chat" :size="15" />新建</el-button
+          >
+        </div>
       </div>
       <div class="playground-output" :class="{ 'has-response': result || loading }">
         <div v-if="loading" class="processing-state" role="status">
@@ -165,22 +169,12 @@ onMounted(history)
           <h2>
             {{
               mode === 'compare'
-                ? '对比同一输入的两种响应'
+                ? '看看防护前后的差异'
                 : mode === 'detect'
-                  ? '检测一段输入'
-                  : '开始一段安全对话'
+                  ? '检查一段输入'
+                  : '今天，想聊些什么？'
             }}
           </h2>
-          <div class="suggestions">
-            <button
-              v-for="item in suggestions"
-              :key="item.label"
-              class="suggestion-chip"
-              @click="text = item.text"
-            >
-              {{ item.label }}<Icon name="arrow" :size="13" />
-            </button>
-          </div>
         </div>
       </div>
       <el-alert
@@ -205,7 +199,7 @@ onMounted(history)
           :rows="3"
           :autosize="{ minRows: 3, maxRows: 8 }"
           maxlength="30000"
-          placeholder="输入消息…"
+          placeholder="向 Prompt Sentinel 发送消息…"
           aria-label="消息输入"
           :disabled="loading || loadingSource"
           @keydown.ctrl.enter.prevent="submit"
@@ -231,35 +225,52 @@ onMounted(history)
           </div>
         </div>
       </div>
-    </section>
-    <aside class="panel recent-requests">
-      <div class="section-title">
-        <h2>最近记录</h2>
-        <router-link to="/logs" aria-label="全部请求记录"
-          ><Icon name="arrow" :size="15"
-        /></router-link>
+      <div v-if="!result && !loading" class="chat-suggestions">
+        <button
+          v-for="item in suggestions"
+          :key="item.label"
+          class="suggestion-chip"
+          @click="text = item.text"
+        >
+          {{ item.label }}<Icon name="arrow" :size="13" />
+        </button>
       </div>
-      <p v-if="historyError" class="inline-error" role="alert">{{ historyError }}</p>
-      <EmptyState v-else-if="!recent.length" title="暂无记录" text="" icon="logs" />
-      <button
-        v-for="row in recent"
-        :key="row.id"
-        class="recent-request"
-        :disabled="loading || loadingSource"
-        @click="router.push({ path: '/logs', query: { request: row.id } })"
-      >
-        <span class="recent-request-label"
-          ><span class="mono">#{{ row.id }}</span
-          ><span
-            class="status-dot"
-            :class="requestStatus(row)"
-            role="img"
-            :aria-label="statusLabels[requestStatus(row)]"
-            :title="statusLabels[requestStatus(row)]"
-          ></span></span
-        ><strong>{{ row.text }}</strong
-        ><small>{{ requestKinds[row.kind] }} · {{ dateTime(row.created_at) }}</small>
-      </button>
-    </aside>
+    </section>
+    <el-drawer
+      v-model="historyOpen"
+      title="最近记录"
+      size="min(400px, 100%)"
+      class="history-drawer"
+    >
+      <div class="recent-requests">
+        <div class="section-title">
+          <span class="subtle-label">全部对话与检测</span>
+          <router-link to="/logs" aria-label="全部请求记录"
+            ><Icon name="arrow" :size="15"
+          /></router-link>
+        </div>
+        <p v-if="historyError" class="inline-error" role="alert">{{ historyError }}</p>
+        <EmptyState v-else-if="!recent.length" title="暂无记录" text="" icon="logs" />
+        <button
+          v-for="row in recent"
+          :key="row.id"
+          class="recent-request"
+          :disabled="loading || loadingSource"
+          @click="router.push({ path: '/logs', query: { request: row.id } })"
+        >
+          <span class="recent-request-label"
+            ><span class="mono">#{{ row.id }}</span
+            ><span
+              class="status-dot"
+              :class="requestStatus(row)"
+              role="img"
+              :aria-label="statusLabels[requestStatus(row)]"
+              :title="statusLabels[requestStatus(row)]"
+            ></span></span
+          ><strong>{{ row.text }}</strong
+          ><small>{{ requestKinds[row.kind] }} · {{ dateTime(row.created_at) }}</small>
+        </button>
+      </div>
+    </el-drawer>
   </div>
 </template>

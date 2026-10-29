@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "drawer": {
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844
+  },
+  "branding": {
+    "width": 134,
+    "height": 22,
+    "scrollWidth": 0,
+    "font": "500 20px / 33px Georgia, serif",
+    "whiteSpace": "nowrap"
+  },
+  "fonts": {
+    "fonts": [
+      {
+        "familyName": "Microsoft YaHei",
+        "postScriptName": "MicrosoftYaHei",
+        "isCustomFont": false,
+        "glyphCount": 2
+      }
+    ]
+  }
+}

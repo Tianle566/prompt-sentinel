@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "checks": [
+    "real-protected-response-clears-composer-and-retains-reply",
+    "history-request-link-opens-detail"
+  ],
+  "errors": [],
+  "realRequest": {
+    "endpoint": "chat",
+    "status": 200,
+    "logged": true
+  },
+  "mockedApiOrModels": false
+}

@@ -1,0 +1,6 @@
+npm notice run prompt-sentinel-console@1.0.0 npx
+npm notice run prettier --check src/styles.css src/console.css src/components/Layout.vue src/pages/Chat.vue src/pages/Dashboard.vue index.html
+Checking formatting...
+All matched files use Prettier code style!
+Checking formatting...
+All matched files use Prettier code style!

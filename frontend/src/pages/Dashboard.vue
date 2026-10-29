@@ -53,16 +53,16 @@ const daily = computed(() => {
   return rows
 })
 const base = {
-  color: ['#3b68e8', '#d95e66', '#7b88a1', '#b5bcd0', '#9a83d6'],
+  color: ['#b77e5b', '#b86d60', '#8d9276', '#d3bea4', '#9b9385'],
   textStyle: {
     fontFamily: 'Segoe UI, Microsoft YaHei, sans-serif',
-    fontSize: 11,
-    color: '#7b8496',
+    fontSize: 12,
+    color: '#736e62',
   },
   tooltip: {
     backgroundColor: '#fff',
-    borderColor: '#e6e8ee',
-    textStyle: { color: '#273044', fontSize: 12 },
+    borderColor: '#edebe7',
+    textStyle: { color: '#736e62', fontSize: 12 },
   },
 }
 const trendOption = computed(() => ({
@@ -73,20 +73,20 @@ const trendOption = computed(() => ({
     right: 0,
     icon: 'circle',
     itemWidth: 7,
-    textStyle: { color: '#737c8e', fontSize: 11 },
+    textStyle: { color: '#736e62', fontSize: 12 },
   },
   grid: { left: 36, top: 43, right: 18, bottom: 26 },
   xAxis: {
     type: 'category',
     boundaryGap: false,
     data: daily.value.map((v) => v.date.slice(5)),
-    axisLine: { lineStyle: { color: '#e9ebf1' } },
+    axisLine: { lineStyle: { color: '#efeeeb' } },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     minInterval: 1,
-    splitLine: { lineStyle: { color: '#eff1f5', type: 'dashed' } },
+    splitLine: { lineStyle: { color: '#f4f3f0', type: 'dashed' } },
   },
   series: [
     {
@@ -95,7 +95,7 @@ const trendOption = computed(() => ({
       smooth: false,
       symbolSize: 6,
       lineStyle: { width: 2 },
-      areaStyle: { color: '#3b68e80c' },
+      areaStyle: { color: '#b363470c' },
       data: daily.value.map((v) => v.total),
     },
     {
@@ -117,7 +117,7 @@ const attackOption = computed(() => ({
     top: 'middle',
     icon: 'circle',
     itemWidth: 7,
-    textStyle: { color: '#687386', fontSize: 12 },
+    textStyle: { color: '#736e62', fontSize: 12 },
   },
   series: [
     {
@@ -136,19 +136,19 @@ const layersOption = computed(() => ({
   xAxis: {
     type: 'category',
     data: stats.value?.layers.map((v) => v.name),
-    axisLine: { lineStyle: { color: '#e9ebf1' } },
+    axisLine: { lineStyle: { color: '#efeeeb' } },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     minInterval: 1,
-    splitLine: { lineStyle: { color: '#eff1f5', type: 'dashed' } },
+    splitLine: { lineStyle: { color: '#f4f3f0', type: 'dashed' } },
   },
   series: [
     {
       type: 'bar',
       barMaxWidth: 25,
-      itemStyle: { color: '#8ca3e9', borderRadius: [3, 3, 0, 0] },
+      itemStyle: { color: '#bd9a89', borderRadius: [3, 3, 0, 0] },
       data: stats.value?.layers.map((v) => v.value),
     },
   ],

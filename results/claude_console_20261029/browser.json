@@ -1,0 +1,240 @@
+{
+  "status": "passed",
+  "checks": [
+    "login-validation-and-real-authentication",
+    "all-pages-desktop-tablet-and-mobile",
+    "on-demand-history-and-escape",
+    "protected-conversation-suggestions-and-reset",
+    "detection-log-detail-and-replay",
+    "real-model-comparison-and-interception",
+    "collapsed-navigation-and-keyboard-search",
+    "mobile-navigation-history-and-management-dialogs"
+  ],
+  "sizes": [
+    {
+      "name": "dashboard-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "chat-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "logs-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "attack-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "documents-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "evaluation-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "policy-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "rules-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "accounts-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "samples-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "audits-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "runtime-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "dashboard-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "chat-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "logs-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "attack-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "documents-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "evaluation-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "policy-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "rules-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "accounts-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "samples-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "audits-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "runtime-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "dashboard-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "chat-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "logs-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "attack-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "documents-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "evaluation-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "policy-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "rules-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "accounts-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "samples-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "audits-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "runtime-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "collapsed-sidebar",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "member-dialog-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "evaluation-dialog-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "rule-dialog-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "history-drawer-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "realInference": [
+    {
+      "endpoint": "chat",
+      "status": 200,
+      "logged": true
+    },
+    {
+      "endpoint": "detect",
+      "status": 200,
+      "logged": true
+    },
+    {
+      "endpoint": "chat/compare",
+      "status": 200,
+      "logged": true
+    }
+  ],
+  "mockedApiOrModels": false
+}

@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "frontend": "http://127.0.0.1:5173/chat",
+  "same_project_backend_proxy": true,
+  "new_theme_served": true,
+  "production_login_or_model_requests_performed": false
+}

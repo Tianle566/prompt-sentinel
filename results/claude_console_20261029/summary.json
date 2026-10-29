@@ -1,0 +1,67 @@
+{
+  "status": "passed",
+  "date": "2026-10-29",
+  "timezone": "Asia/Shanghai",
+  "base_commit": "2fefea548557c49963491e397aec6b2e36207c64",
+  "scope": "Claude-inspired visual redesign of the existing local console, with existing business routes and back-end behavior preserved.",
+  "source_sha256_lf_normalized": {
+    "README.md": "4590455d225efa35b5673d4d8138745a84a375529d78d35fbcbb6d605b67cdc7",
+    "design-qa.md": "c5f9f27ab19892e66191fce00f941d9044931bccadde1255b76abe776280eb3e",
+    "frontend/index.html": "c91b43ca3e2793c4b100748c3038da9cfafb47f94b06350ff6e02c42e66ccad7",
+    "frontend/public/favicon.svg": "4e293eaf78ef60396307c6cade9a2c4ff980ddf8a284365a021d070fb1ba101f",
+    "frontend/src/styles.css": "18a775ca3dc9da409b95c08bc06fa7fe3a4e1c4e9310edcc4138c61cb7188a79",
+    "frontend/src/console.css": "6a48a6f9983f87d953eed24ed5e2709d6ddaa068c3e45f2306f2dabc8ba8f4f7",
+    "frontend/src/components/Layout.vue": "3928adab9a8fd56d3123a8082d9d1efc286eabb95cacc8662a48d4ec066f3118",
+    "frontend/src/pages/Chat.vue": "705a56bad6f56fff583d0704318284e3800318b58e9c0d4550bb5d90f7742ad6",
+    "frontend/src/pages/Dashboard.vue": "597b13d17c2ea674f4d27c862871535aefc9ddc2c4502d2fe6eb4ae5f28da92a"
+  },
+  "frontend_build": "passed",
+  "formatting": "passed",
+  "targeted_regression_tests": 22,
+  "browser": {
+    "workflow_groups": 10,
+    "authenticated_pages": 12,
+    "viewport_checks": 41,
+    "widths": [
+      390,
+      768,
+      1440
+    ],
+    "real_model_requests": 4,
+    "runtime_errors": 0,
+    "mocked_responses": false,
+    "final_mobile_wordmark_and_history_drawer": "passed",
+    "chinese_navigation_font": "Microsoft YaHei"
+  },
+  "preservation": {
+    "files": 3217,
+    "all_unchanged": true,
+    "changed": []
+  },
+  "qa_services_stopped": {
+    "all_stopped": true,
+    "owned_service_roots": 3,
+    "remaining": []
+  },
+  "regular_application": {
+    "status": "passed",
+    "frontend": "http://127.0.0.1:5173/chat",
+    "same_project_backend_proxy": true,
+    "new_theme_served": true,
+    "production_login_or_model_requests_performed": false
+  },
+  "visual_review": {
+    "result": "passed",
+    "before_screenshots": 4,
+    "accepted_after_screenshots": 25,
+    "report": "../../design-qa.md",
+    "screenshot_editing": false
+  },
+  "review_sequence": "Full page and workflow checks were followed by focused verification of the final mobile wordmark, history drawer, composer clearing and history links.",
+  "limits": [
+    "This is an adaptation of the requested style, not a pixel-equivalent clone of the authenticated Claude application.",
+    "The direct public Claude application required a security challenge. No authenticated Claude session was inspected.",
+    "Screenshots and model calls use independent validation data, not production traffic or a repeated thesis experiment.",
+    "The existing vendor bundle-size warning remains. Complete screen-reader conformance was not audited."
+  ]
+}

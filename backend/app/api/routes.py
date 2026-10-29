@@ -231,9 +231,10 @@ def health():
         except Exception as exc:
             target["error"] = f"本地 Ollama 尚未就绪：{type(exc).__name__}"
     else:
-        target["message"] = "OpenAI 兼容接口在调用时检查"
+        target.update(configured=True, message="OpenAI 兼容接口已配置，连接结果请在目标模型设置中测试")
     models["target"] = target
-    return {"app": "Prompt Sentinel", "project_id": hashlib.sha256(str(ROOT.resolve()).encode()).hexdigest()[:16], "status": "ok" if all(x["ready"] for x in models.values()) else "degraded", "models": models, "target": target, "device": config["models"]["device"]}
+    status = "ok" if all(x["ready"] for x in models.values()) else "configured" if target.get("configured") and all(models[key]["ready"] for key in ("deberta", "qwen_guard")) else "degraded"
+    return {"app": "Prompt Sentinel", "project_id": hashlib.sha256(str(ROOT.resolve()).encode()).hexdigest()[:16], "status": status, "models": models, "target": target, "device": config["models"]["device"]}
 
 
 @router.post("/auth/login", tags=["auth"])
@@ -775,6 +776,8 @@ def eval_artifact(job_id: str, filename: str, user: User = Depends(current_user)
 
 from backend.app.api.management import router as management_router
 from backend.app.api.operations import router as operations_router
+from backend.app.api.target_connection import router as target_connection_router
 
 router.include_router(management_router)
 router.include_router(operations_router)
+router.include_router(target_connection_router)

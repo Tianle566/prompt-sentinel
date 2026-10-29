@@ -120,4 +120,7 @@ def public_config(config: dict | None = None) -> dict:
     config = copy.deepcopy(config or get_config())
     config.pop("auth", None)
     config.pop("database", None)
+    if isinstance(config.get("target"), dict):
+        for key in ("api_key", "apiKey", "access_token", "token", "authorization"):
+            config["target"].pop(key, None)
     return config

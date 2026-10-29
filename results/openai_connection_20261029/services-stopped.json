@@ -1,0 +1,9 @@
+{
+  "all_stopped": true,
+  "ports_closed": [
+    8022,
+    5192,
+    9022
+  ],
+  "scope": "isolated review services only"
+}

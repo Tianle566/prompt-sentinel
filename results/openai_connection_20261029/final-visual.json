@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "provider_switch_preserves_endpoint_bound_key": true,
+  "final_resting_screenshots": 6,
+  "widths": [
+    390,
+    768,
+    1440
+  ]
+}

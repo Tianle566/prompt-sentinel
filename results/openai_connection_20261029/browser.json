@@ -1,0 +1,103 @@
+{
+  "status": "passed",
+  "checks": [
+    "json-import-is-masked-draft-only-and-route-guarded",
+    "draft-model-discovery-and-real-http-test-without-saving",
+    "connection-and-defense-saves-preserve-each-other",
+    "desktop-tablet-mobile-and-advanced-form-layouts",
+    "upstream-auth-errors-are-sanitized-and-keep-console-login",
+    "key-persists-through-process-restart-without-plaintext-readback",
+    "saved-connection-is-used-by-real-chat-http-pipeline",
+    "explicit-clear-removes-persisted-key",
+    "invalid-json-import-does-not-echo-input"
+  ],
+  "sizes": [
+    {
+      "name": "saved-connection-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "advanced-connection-1440",
+      "width": 1440,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "saved-connection-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "advanced-connection-768",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "saved-connection-390",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "advanced-connection-390",
+      "width": 390,
+      "scrollWidth": 390
+    }
+  ],
+  "errors": [],
+  "responses": [
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target/models",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target/test",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    },
+    {
+      "path": "/api/admin/target",
+      "status": 200,
+      "contains_key": false
+    }
+  ],
+  "language_model_inference": false,
+  "vendor_api_tested": false,
+  "protocol_fixture": "local HTTP server",
+  "production_config_modified": false
+}

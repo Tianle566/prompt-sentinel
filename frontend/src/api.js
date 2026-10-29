@@ -3,6 +3,7 @@ export const api = axios.create({ baseURL: '/api', timeout: 20000 })
 api.interceptors.request.use((config) => {
   if (/^\/(?:detect|chat(?:\/compare)?|attack\/run|document\/summarize)$/.test(config.url || ''))
     config.timeout = 900000
+  if (config.url === '/admin/target/test') config.timeout = 45000
   const token = sessionStorage.getItem('sentinel_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config

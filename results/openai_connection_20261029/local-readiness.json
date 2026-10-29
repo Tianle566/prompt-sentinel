@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "backend_http": 200,
+  "frontend_http": 200,
+  "frontend_proxy_matches_project": true,
+  "admin_login": true,
+  "target_metadata_http": 200,
+  "new_connection_routes_present": true,
+  "new_frontend_component_served": true,
+  "production_target_provider": "ollama",
+  "production_saved_key_present": false,
+  "live_vendor_api_tested": false
+}

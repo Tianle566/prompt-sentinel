@@ -28,7 +28,7 @@ async def lifespan(app):
 
 
 config = get_config()
-app = FastAPI(title=config["app"]["name"], description="提示词注入攻击检测与多层防护系统。所有模型推理均在本地进行，研究评测不调用第三方模型。", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title=config["app"]["name"], description="提示词注入攻击检测与多层防护系统。默认使用本地模型，支持管理员配置 OpenAI 兼容目标接口；攻击对照及 ASR 研究评测限定本机。", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=config["app"]["cors_origins"], allow_credentials=False, allow_methods=["*"], allow_headers=["Authorization", "Content-Type"])
 app.include_router(router)
 

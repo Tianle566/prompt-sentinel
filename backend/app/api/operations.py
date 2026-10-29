@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.auth import admin_user, current_user
 from backend.app.core.config import ROOT, get_config, public_config, save_config
+from backend.app.core.target_credentials import saved_secret_values
 from backend.app.db.migrations import backup_sqlite
 from backend.app.db.models import EvaluationJob, User
 from backend.app.db.session import get_db
@@ -176,6 +177,7 @@ def runtime_errors(name: str, actor: User = Depends(admin_user)):
     config = get_config()
     sensitive = [os.environ.get(value) for key, value in config["auth"].items() if key.endswith("_env")]
     sensitive.append(os.environ.get(config["target"].get("api_key_env", "TARGET_API_KEY")))
+    sensitive.extend(saved_secret_values())
     credentials_path = ROOT / ".runtime" / "credentials.json"
     try:
         credentials = json.loads(credentials_path.read_text(encoding="utf-8"))

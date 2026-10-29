@@ -1,0 +1,4 @@
+npm notice run prompt-sentinel-console@1.0.0 npx
+npm notice run prettier --check src/components/TargetConnection.vue src/pages/Policy.vue src/pages/Audits.vue src/components/Layout.vue src/api.js src/console.css
+Checking formatting...
+All matched files use Prettier code style!

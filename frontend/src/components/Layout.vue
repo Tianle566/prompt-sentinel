@@ -270,7 +270,7 @@ onBeforeUnmount(() => {
             ><template #reference
               ><button
                 class="health-badge"
-                :class="{ degraded: health?.status !== 'ok' || healthError }"
+                :class="{ degraded: !['ok', 'configured'].includes(health?.status) || healthError }"
               >
                 <span class="live-dot"></span
                 >{{
@@ -278,7 +278,7 @@ onBeforeUnmount(() => {
                     ? '后端未连接'
                     : !health
                       ? '检查服务中'
-                      : health.status === 'ok'
+                      : ['ok', 'configured'].includes(health.status)
                         ? '服务状态'
                         : '部分服务未就绪'
                 }}<Icon name="chevrondown" :size="13" /></button
@@ -305,9 +305,11 @@ onBeforeUnmount(() => {
                       target: '目标语言模型',
                     }[key] || key
                   }}</span
-                  ><el-tag :type="model.ready ? 'success' : 'warning'" size="small">{{
-                    model.ready ? '已就绪' : '未就绪'
-                  }}</el-tag>
+                  ><el-tag
+                    :type="model.ready ? 'success' : model.configured ? 'info' : 'warning'"
+                    size="small"
+                    >{{ model.ready ? '已就绪' : model.configured ? '已配置' : '未就绪' }}</el-tag
+                  >
                 </div>
                 <p class="helper">运行设备：{{ health?.device || '—' }}</p></template
               >

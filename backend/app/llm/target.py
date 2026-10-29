@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import copy
-import os
 import threading
 
 import httpx
@@ -10,6 +9,7 @@ import ollama
 import psutil
 
 from backend.app.core.config import get_config, resolve_path
+from backend.app.core.target_credentials import CredentialError, credential_for, normalize_base_url
 from backend.app.detectors.runtime import model_load_lock
 
 _tokenizers = {}
@@ -21,13 +21,14 @@ class TargetError(RuntimeError):
 
 
 class TargetLLM:
-    def __init__(self, config: dict | None = None, client: httpx.Client | None = None):
+    def __init__(self, config: dict | None = None, client: httpx.Client | None = None, api_key_override: str | None = None):
         self.config = copy.deepcopy(config if config is not None else get_config())
         self.settings = self.config["target"]
         self.model = self.settings["model"]
         if self.settings.get("provider", "ollama") == "ollama" and psutil.virtual_memory().total < 16 * 1024 ** 3:
             self.model = self.settings.get("small_model", "qwen3:0.6b")
         self._client = client
+        self._api_key_override = api_key_override
 
     def _load_tokenizer(self):
         """The exact Qwen chat tokenizer is downloaded beside local GGUFs."""
@@ -67,7 +68,10 @@ class TargetLLM:
         return count
 
     def _request(self, method: str, path: str, **kwargs):
-        url = self.settings["base_url"].rstrip("/") + path
+        base_url = self.settings["base_url"].rstrip("/")
+        if self.settings.get("provider") == "openai":
+            base_url = normalize_base_url(base_url)
+        url = base_url + path
         if self._client is not None:
             response = self._client.request(method, url, **kwargs)
         else:
@@ -75,6 +79,41 @@ class TargetLLM:
                 response = client.request(method, url, **kwargs)
         response.raise_for_status()
         return response.json()
+
+    def _headers(self) -> dict:
+        try:
+            key = self._api_key_override if self._api_key_override is not None else credential_for(self.settings)[0]
+        except CredentialError as exc:
+            raise TargetError(str(exc)) from None
+        return {"Content-Type": "application/json", **({"Authorization": "Bearer " + key} if key else {})}
+
+    @staticmethod
+    def _http_error(status: int) -> str:
+        if status in (401, 403):
+            return f"接口鉴权失败（HTTP {status}），请检查 API Key 和模型调用权限"
+        if status == 429:
+            return "接口额度或请求频率受限（HTTP 429），请检查配额或稍后重试"
+        return f"目标模型服务返回 HTTP {status}；请检查服务地址、模型名称及调用权限"
+
+    def list_models(self) -> list[str]:
+        try:
+            local = self.settings.get("provider", "ollama") == "ollama"
+            data = self._request("GET", "/api/tags" if local else "/models", headers={} if local else self._headers())
+            rows = data["models" if local else "data"]
+            if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+                raise ValueError
+            field = "name" if local else "id"
+            return sorted({row[field] for row in rows if isinstance(row.get(field), str) and 0 < len(row[field]) <= 200})
+        except TargetError:
+            raise
+        except httpx.HTTPStatusError as exc:
+            raise TargetError(self._http_error(exc.response.status_code)) from None
+        except httpx.TimeoutException:
+            raise TargetError("获取模型列表超时，请检查服务地址") from None
+        except httpx.RequestError:
+            raise TargetError("无法连接模型服务，请检查服务地址和网络") from None
+        except (KeyError, IndexError, TypeError, ValueError, AttributeError):
+            raise TargetError("服务返回了不兼容的模型列表，可手动填写模型名称") from None
 
     def generate(self, messages: list[dict[str, str]]) -> str:
         try:
@@ -94,10 +133,7 @@ class TargetLLM:
                         data = client.chat(**body)
                 content = data["message"]["content"]
             elif self.settings["provider"] == "openai":
-                headers = {"Content-Type": "application/json"}
-                key = os.environ.get(self.settings.get("api_key_env", "TARGET_API_KEY"))
-                if key:
-                    headers["Authorization"] = "Bearer " + key
+                headers = self._headers()
                 # base_url may include /v1, as in OpenAI's official SDK.
                 body = {"model": self.model, "messages": messages, "max_tokens": int(self.settings.get("max_tokens", 192)), "temperature": float(self.settings.get("temperature", 0))}
                 data = self._request("POST", "/chat/completions", json=body, headers=headers)
@@ -114,12 +150,12 @@ class TargetLLM:
         except ConnectionError as exc:
             raise TargetError("无法连接目标模型服务，请检查 Ollama 是否启动") from exc
         except httpx.HTTPStatusError as exc:
-            raise TargetError(f"目标模型服务返回 HTTP {exc.response.status_code}；请检查本地服务与模型名称") from exc
+            raise TargetError(self._http_error(exc.response.status_code)) from None
         except httpx.TimeoutException as exc:
             raise TargetError("目标模型响应超时，请检查服务或增加超时配置") from exc
         except httpx.RequestError as exc:
             raise TargetError("无法连接目标模型服务，请检查 Ollama/兼容接口是否启动") from exc
-        except (KeyError, IndexError, TypeError, ValueError) as exc:
+        except (KeyError, IndexError, TypeError, ValueError, AttributeError) as exc:
             raise TargetError("目标模型返回了不兼容的响应格式") from exc
 
     def health(self) -> dict:
@@ -132,12 +168,7 @@ class TargetLLM:
                 if not info["ready"]:
                     info["error"] = "Ollama 中尚未导入目标本地模型"
             else:
-                headers = {}
-                key = os.environ.get(self.settings.get("api_key_env", "TARGET_API_KEY"))
-                if key:
-                    headers["Authorization"] = "Bearer " + key
-                data = self._request("GET", "/models", headers=headers)
-                info["ready"] = self.model in [item.get("id") for item in data.get("data", [])]
+                info["ready"] = self.model in self.list_models()
             return info
         except Exception as exc:
             info["error"] = f"目标模型健康检查失败：{type(exc).__name__}"

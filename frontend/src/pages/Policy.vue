@@ -3,14 +3,16 @@ import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api, errorText } from '../api'
 import Icon from '../components/Icon.vue'
+import TargetConnection from '../components/TargetConnection.vue'
 import { useUnsavedChanges } from '../composables/useUnsavedChanges'
 const config = ref(null),
   snapshot = ref(''),
   loading = ref(true),
   saving = ref(false),
-  error = ref('')
+  error = ref(''),
+  targetDirty = ref(false)
 const dirty = computed(() => !!config.value && JSON.stringify(config.value) !== snapshot.value)
-useUnsavedChanges(dirty)
+useUnsavedChanges(computed(() => dirty.value || targetDirty.value))
 const descriptions = {
   l1: { title: '规则过滤', subtitle: '中英文规则与编码异常检测', icon: 'logs' },
   l2: { title: 'DeBERTa 分类', subtitle: '英文注入概率与滑动窗口分析', icon: 'chart' },
@@ -38,7 +40,6 @@ async function save() {
       await api.put('/config', {
         layers: config.value.layers,
         fusion: config.value.fusion,
-        target: config.value.target,
       })
     ).data
     snapshot.value = JSON.stringify(config.value)
@@ -51,6 +52,12 @@ async function save() {
 }
 function reset() {
   config.value = JSON.parse(snapshot.value)
+}
+function connectionSaved(target) {
+  config.value.target = target
+  const previous = JSON.parse(snapshot.value)
+  previous.target = target
+  snapshot.value = JSON.stringify(previous)
 }
 onMounted(load)
 </script>
@@ -256,55 +263,11 @@ onMounted(load)
               />
             </div>
           </section>
-          <section class="panel target-config">
-            <div class="section-title">
-              <div>
-                <h2>目标模型</h2>
-                <p>本地 Ollama 或兼容 OpenAI 接口</p>
-              </div>
-              <Icon name="chat" class="text-teal" />
-            </div>
-            <el-form label-position="top"
-              ><el-form-item label="接口类型"
-                ><el-select v-model="config.target.provider" class="full-width" :disabled="saving"
-                  ><el-option value="ollama" label="Ollama" /><el-option
-                    value="openai"
-                    label="OpenAI 兼容接口" /></el-select></el-form-item
-              ><el-form-item label="服务地址"
-                ><el-input
-                  v-model="config.target.base_url"
-                  :disabled="saving"
-                  placeholder="http://127.0.0.1:11434" /></el-form-item
-              ><el-form-item label="模型名称"
-                ><el-input v-model="config.target.model" :disabled="saving" /></el-form-item
-              ><el-form-item label="低内存备用模型"
-                ><el-input v-model="config.target.small_model" :disabled="saving"
-              /></el-form-item>
-              <div class="two-fields">
-                <el-form-item label="最大生成 token"
-                  ><el-input-number
-                    v-model="config.target.max_tokens"
-                    :min="16"
-                    :max="8192"
-                    :disabled="saving"
-                    controls-position="right" /></el-form-item
-                ><el-form-item label="超时（秒）"
-                  ><el-input-number
-                    v-model="config.target.timeout_seconds"
-                    :min="10"
-                    :max="1800"
-                    :disabled="saving"
-                    controls-position="right"
-                /></el-form-item>
-              </div>
-              <el-form-item label="系统任务提示词"
-                ><el-input
-                  v-model="config.target.system_prompt"
-                  type="textarea"
-                  :rows="4"
-                  :disabled="saving" /></el-form-item
-            ></el-form>
-          </section>
+          <TargetConnection
+            :target="config.target"
+            @saved="connectionSaved"
+            @dirty-change="targetDirty = $event"
+          />
         </div></div
     ></template>
     <div v-else-if="!loading" class="panel"><el-button @click="load">重试加载</el-button></div>

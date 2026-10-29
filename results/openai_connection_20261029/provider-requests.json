@@ -1,0 +1,30 @@
+[
+  {
+    "method": "GET",
+    "path": "/v1/models",
+    "authorization_matches": true,
+    "model": null,
+    "has_messages": false
+  },
+  {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "authorization_matches": true,
+    "model": "compat-chat",
+    "has_messages": true
+  },
+  {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "authorization_matches": false,
+    "model": "compat-chat",
+    "has_messages": true
+  },
+  {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "authorization_matches": true,
+    "model": "compat-chat",
+    "has_messages": true
+  }
+]

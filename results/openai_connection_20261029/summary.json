@@ -1,0 +1,95 @@
+{
+  "status": "passed",
+  "feature": "Administrator-managed OpenAI-compatible target connections",
+  "tests": {
+    "full_pytest_passed": 402,
+    "new_connection_tests": 34,
+    "warnings": 1,
+    "seconds": 35.15,
+    "frontend_build": "passed",
+    "frontend_prettier": "passed"
+  },
+  "browser": {
+    "workflow_groups": 9,
+    "viewport_states": 6,
+    "widths": [
+      390,
+      768,
+      1440
+    ],
+    "runtime_errors": [],
+    "provider_switch_preserves_saved_key": true,
+    "final_screenshots_visually_reviewed": 7
+  },
+  "protocol_validation": {
+    "service": "isolated local HTTP protocol fixture",
+    "language_model_inference": false,
+    "live_vendor_api_tested": false,
+    "real_external_api_key_used": false,
+    "flows": [
+      "model listing",
+      "draft connection test",
+      "saved connection through chat pipeline",
+      "sanitized upstream authentication failure",
+      "persistence across process restart"
+    ]
+  },
+  "credentials": {
+    "storage": "ignored local .runtime/target-api-key.json",
+    "plaintext_readback": false,
+    "bound_to_endpoint": true,
+    "excluded_from_yaml_and_policy_audits": true
+  },
+  "preservation": {
+    "status": "passed",
+    "files_checked": 453,
+    "changed": [],
+    "scope": "existing tracked deliverables, results, frozen thesis corpus, and production SQLite databases",
+    "production_model_config_unchanged": true,
+    "modified_proposal_sha256": "49af88b4889ec3777590338c4b0148d9a5900e01b0944023185760ba793672de"
+  },
+  "qa_services_stopped": {
+    "all_stopped": true,
+    "ports_closed": [
+      8022,
+      5192,
+      9022
+    ],
+    "scope": "isolated review services only"
+  },
+  "regular_application_ready": {
+    "status": "passed",
+    "backend_http": 200,
+    "frontend_http": 200,
+    "frontend_proxy_matches_project": true,
+    "admin_login": true,
+    "target_metadata_http": 200,
+    "new_connection_routes_present": true,
+    "new_frontend_component_served": true,
+    "production_target_provider": "ollama",
+    "production_saved_key_present": false,
+    "live_vendor_api_tested": false
+  },
+  "source_sha256_lf_normalized": {
+    "README.md": "ded6b26652bd6c861174baac1ef8bbf32aed215ad8b83dbb05f8087d03b3fb08",
+    "backend/app/api/operations.py": "dd54ac2fce314e878bf4403c2b40adec370133d34f43c83f5ba47b10dd738637",
+    "backend/app/api/routes.py": "94e70fc23976890a8c0083b2bf34581174f98665c77f23042639d5659ac782aa",
+    "backend/app/api/target_connection.py": "b94e357a2e5864c86bd7abf962845e6a894b8853668c8adc7956388d91515851",
+    "backend/app/core/config.py": "fce2eb16f0ec5b9209e9b8a7a2eac0dca5e2d9b6e10bb8e6c6cc220076774f36",
+    "backend/app/core/target_credentials.py": "223dcd3e904f49b29112878f6a159d3d3a4a441421a0e4d3c4441f6073bf2c00",
+    "backend/app/llm/target.py": "0efc8f6d8a35b22967ad6d650db67736f0d72b597b095a09f6e38742026d0b5f",
+    "backend/app/main.py": "1c232eb80d817df403de48aba4cc8cb9ad403e92a4484db0c95c51986421e9f6",
+    "backend/tests/test_target_connection.py": "b4f9e0a46fab1bc48e6ce394c9e7d9165bc97b44d3cf6350b7cdc12e8d09619f",
+    "frontend/src/api.js": "df96a85ac7cac552b17d8cdf3054098e3c1228f07fa10fcfbf51f3846084c1a8",
+    "frontend/src/components/Layout.vue": "9261b76a6744da87b0e183dcdda9bda4efb55d0a634ec3634ba7576ed4f51361",
+    "frontend/src/components/TargetConnection.vue": "135dccc2033a3101feb082cb8c5171fe6f5ea0f0334dd06efc95301918e3fbed",
+    "frontend/src/console.css": "1065d6a4ab887af32847d010aac1a2d0fa5ba543512b6d67c0557498970847d7",
+    "frontend/src/pages/Audits.vue": "5b5c37754b6b408b19c15ce265cb9d1c8a415abc4c2437dfd54891b7bed1aee4",
+    "frontend/src/pages/Policy.vue": "6db13cce9098028e3afc7573ef02431ff42850211ea1415f43b1fc057090a965"
+  },
+  "references": [
+    "https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create",
+    "https://developers.openai.com/api/reference/resources/models/methods/list",
+    "https://developers.openai.com/api/reference/overview"
+  ]
+}

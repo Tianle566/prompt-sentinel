@@ -2,6 +2,8 @@
 
 毕业设计题目：**面向大语言模型应用的提示词注入攻击检测与多层防护系统设计与实现**。
 
+**模型接入：** 管理员可在“防护策略 → 目标模型”填写 OpenAI 兼容地址、API Key 与模型，或导入 JSON；支持获取模型列表、测试、保存及清除本机密钥。密钥独立保存在忽略目录中，连接保存后用于后续对话与文档请求。
+
 **界面更新（2026-10-29）：** 按 Claude 的视觉方向重整控制台，采用暖白底色、柔和侧栏、陶土色强调和更清晰的文字层级；对话区居中，历史记录按需打开，发送成功后清空输入。桌面、平板、手机与真实模型流程的验证见[界面验收记录](results/claude_console_20261029/summary.json)。
 
 **控制台更新（2026-10-29）：** 重整导航、概览、日志与模型工作台，移除常驻研究说明。新增筛选链接、日志复测、请求转样本、样本载入测试、全局搜索及未保存提醒；成员与评测采用按需打开的表单。368项完整测试通过；本轮截图、成熟产品对照与实际业务验证见[产品改造验收](results/product_console_20261029/summary.json)。
@@ -219,6 +221,9 @@ Swagger 的 `/api/auth/login` 使用 JSON `{ "username": "...", "password": "...
 | `GET /api/logs`、`GET /api/logs/{id}` | 日志筛选与详情 |
 | `GET /api/stats` | 统计图表数据 |
 | `GET/PUT /api/config` | 读取/保存策略，保存需要管理员 |
+| `GET/PUT /api/admin/target` | 管理员读取/保存模型连接；返回密钥配置状态，不返回密钥 |
+| `POST /api/admin/target/models` | 使用草稿连接获取模型列表，不保存配置 |
+| `POST /api/admin/target/test` | 使用草稿连接发送简短测试请求，不保存配置 |
 | `GET /api/eval/datasets`、`POST/GET /api/eval/jobs` | 数据集与评测任务 |
 | `GET /api/eval/jobs/{id}`、`GET /api/eval/artifacts/{id}/{filename}` | 进度、结果和认证下载 |
 
@@ -229,6 +234,26 @@ Swagger 的 `/api/auth/login` 使用 JSON `{ "username": "...", "password": "...
 SQLite 默认 `data/sentinel.db`，使用 WAL 与外键约束。可通过 `database.url` 或 `SENTINEL_DATABASE_URL` 切换 SQLAlchemy 连接字符串；使用 MySQL 时另外安装 `pymysql`，例如 `mysql+pymysql://...`。日期存储为 UTC，前端按浏览器时区展示。
 
 目标可配置为 `provider: openai`，设置 `base_url`、`model`、`api_key_env` 指向兼容服务，密钥放入对应环境变量。攻击测试、对照演示及 ASR 实验限制在 `localhost`/`127.0.0.1`/`::1`，不会向第三方服务自动发送攻击。
+
+### 在页面接入 OpenAI 兼容模型
+
+1. 管理员进入“防护策略 → 目标模型”，选择“OpenAI 兼容接口”。
+2. 填写服务地址和 API Key，点击“获取模型”或手动输入模型名称。地址可填写 `/v1` 基地址，或完整的 `/chat/completions` 地址，保存时会规范化。
+3. 点击“测试连接”发送一条简短请求；测试和获取模型均不会替换当前配置。确认可用后点击“保存连接”。
+
+也可通过“导入 JSON”载入以下字段，再测试和保存。支持对应的 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`OPENAI_MODEL` 字段名。
+
+```json
+{
+  "base_url": "https://api.openai.com/v1",
+  "api_key": "your-api-key",
+  "model": "your-model-id"
+}
+```
+
+保存的密钥仅存放于本机 `.runtime/target-api-key.json`，按服务地址绑定，优先于环境变量；不会写入 YAML、策略历史或 Git。留空保留已有密钥，“清除已保存密钥”只清除本机值；若仍有环境变量，则继续使用环境变量。切回 Ollama 会保留已保存的 API 密钥，便于再次切换。没有提供模型列表的服务可手动输入模型名称。
+
+兼容调用采用 [OpenAI Chat Completions](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create) 与 [Models](https://developers.openai.com/api/reference/resources/models/methods/list) 协议。模型的参数支持范围由接入服务决定，普通对话和文档可使用远程接口，注入对照测试及 ASR 研究评测仍限定本机。
 
 ## 结构与论文材料
 

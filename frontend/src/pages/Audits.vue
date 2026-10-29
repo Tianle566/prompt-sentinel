@@ -28,6 +28,7 @@ const labels = {
   'evaluation.archive': '归档评测',
   'evaluation.unarchive': '取消归档',
   'runtime.settings': '调整运行设置',
+  'target.connection': '更新模型连接',
   'database.backup': '备份数据库',
   'database.backup_download': '下载数据库备份',
   'logs.export': '导出请求日志',

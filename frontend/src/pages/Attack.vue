@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { api, errorText, attackName, duration, percentage } from '../api'
 import Icon from '../components/Icon.vue'
 import EmptyState from '../components/EmptyState.vue'
 import PipelineResult from '../components/PipelineResult.vue'
+import { requestStatus, statusLabels, statusTones } from '../console'
+const route = useRoute()
 const marker = ref('')
 const samples = ref([]),
   types = ref([]),
@@ -44,7 +47,20 @@ async function loadSamples(initial = false) {
 watch(mode, (value) => {
   if (value === 'library') loadSamples()
 })
-onMounted(() => loadSamples(true))
+onMounted(async () => {
+  await loadSamples(true)
+  const id = route.query.sample
+  if (id) {
+    try {
+      const { data } = await api.get('/attack/samples', { params: { sample_id: id, limit: 1 } })
+      if (!samples.value.some((row) => String(row.id) === String(id)))
+        samples.value.unshift(data.items[0])
+      selected.value = [String(id)]
+    } catch (e) {
+      error.value = errorText(e)
+    }
+  }
+})
 function pickOne() {
   if (!samples.value.length) return
   selected.value = [String(samples.value[Math.floor(Math.random() * samples.value.length)].id)]
@@ -93,20 +109,12 @@ function detail(item) {
 </script>
 <template>
   <div>
-    <div class="experiment-note">
-      <Icon name="lock" :size="18" />
-      <p>
-        所有攻击仅发送到本机目标模型。攻击成功由指定标记或输出审核判定；无法自动判定的结果显示为「未判定」。
-      </p>
-    </div>
     <div class="attack-grid">
       <section class="panel">
         <div class="section-title">
           <div>
             <h2>构造测试</h2>
-            <p>选择样本或输入自定义提示词</p>
           </div>
-          <span class="step-number">01</span>
         </div>
         <el-segmented
           v-model="mode"
@@ -138,6 +146,7 @@ function detail(item) {
         <template v-if="mode === 'library'"
           ><el-checkbox-group
             v-model="selected"
+            :max="25"
             v-loading="loadingSamples"
             class="sample-list"
             aria-label="攻击样本"
@@ -145,7 +154,7 @@ function detail(item) {
             <EmptyState
               v-if="!samples.length && !loadingSamples"
               title="没有可用样本"
-              text="请先运行数据集构建脚本，或切换到手动输入。"
+              text="切换到手动输入可新建测试。"
             /><el-checkbox
               v-for="sample in samples"
               :key="sample.id"
@@ -186,10 +195,7 @@ function detail(item) {
             placeholder="输入一条攻击提示词。批量测试时，在两条输入之间用单独一行 --- 分隔。"
             aria-label="自定义攻击提示词"
           />
-          <p class="helper">
-            支持单条与批量输入，最多 25 条；批量输入用单独一行 --- 分隔。
-          </p></template
-        >
+        </template>
         <div class="attack-options">
           <span><Icon name="shield" :size="17" />启用多层防护</span
           ><el-switch v-model="protectedMode" aria-label="启用多层防护" :disabled="running" />
@@ -213,9 +219,7 @@ function detail(item) {
         <div class="section-title">
           <div>
             <h2>测试结果</h2>
-            <p>检查拦截决策与攻击成功情况</p>
           </div>
-          <span class="step-number">02</span>
         </div>
         <el-alert
           v-if="error"
@@ -249,24 +253,16 @@ function detail(item) {
           </div>
           <p v-if="!resultProtected" class="helper">本轮未开启防护，不统计拦截成功率。</p>
           <p v-else class="helper">
-            成功拦截 {{ interception.intercepted }} / {{ interception.evaluated }} 条有效攻击测试。
-            错误 {{ interception.errors }} 条、未判定 {{ interception.unknown }} 条不计入分母。
-            <span v-if="!interception.evaluated">
-              暂无有效样本。请选择本地攻击样本，或为手动测试补充预期输出标记等判据。
-            </span>
+            {{ interception.intercepted }} / {{ interception.evaluated }} 有效测试
+            <span class="cell-separator">·</span>异常 {{ interception.errors }}
+            <span class="cell-separator">·</span>未判定 {{ interception.unknown }}
           </p>
         </div>
         <div v-if="running" class="processing-state">
           <span class="loading-orbit"></span>
           <h3>测试运行中</h3>
-          <p>实际输出与各层检测依据将在完成后显示</p>
         </div>
-        <EmptyState
-          v-else-if="!results.length"
-          title="等待第一轮安全测试"
-          text="左侧选择样本并运行，即可检查模型响应和防护表现。"
-          icon="attack"
-        />
+        <EmptyState v-else-if="!results.length" title="暂无测试结果" text="" icon="attack" />
         <div v-else class="attack-results">
           <button
             v-for="(item, index) in results"
@@ -277,11 +273,9 @@ function detail(item) {
             <div class="attack-result-head">
               <span class="result-index">{{ String(index + 1).padStart(2, '0') }}</span
               ><strong>{{ attackName(item.attack_type) }}</strong
-              ><el-tag
-                :type="item.result.error ? 'warning' : item.blocked ? 'success' : 'info'"
-                size="small"
-                >{{ item.result.error ? '服务异常' : item.blocked ? '已拦截' : '已放行' }}</el-tag
-              >
+              ><el-tag :type="statusTones[requestStatus(item)]" size="small">{{
+                statusLabels[requestStatus(item)]
+              }}</el-tag>
             </div>
             <p>{{ item.text }}</p>
             <div class="attack-result-foot">

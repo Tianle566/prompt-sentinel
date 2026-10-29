@@ -1,0 +1,1264 @@
+{
+  "status": "passed",
+  "checks": [
+    "login_and_dashboard_date_scope",
+    "log_search_reload_export_and_detail_link",
+    "real_input_detection_and_comparison",
+    "real_document_processing_and_log_navigation",
+    "request_to_sample_to_real_security_test",
+    "member_creation_and_ordinary_user_isolation",
+    "rule_edit_publish_restore_and_unsaved_guard",
+    "policy_unsaved_guard",
+    "evaluation_dialog_real_background_job",
+    "command_search_keyboard_and_request_deep_link",
+    "all_routes_mobile_tablet_and_desktop"
+  ],
+  "sizes": [
+    {
+      "route": "dashboard",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "dashboard",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "dashboard",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "logs",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "logs",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "logs",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "chat",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "chat",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "chat",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "attack",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "attack",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "attack",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "documents",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "documents",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "documents",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "evaluation",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "evaluation",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "evaluation",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "accounts",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "accounts",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "accounts",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "policy",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "policy",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "policy",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "rules",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "rules",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "rules",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "samples",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "samples",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "samples",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "audits",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "audits",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "audits",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "route": "runtime",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "route": "runtime",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "route": "runtime",
+      "width": 1280,
+      "scrollWidth": 1280
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "request_count": 212,
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/export.csv",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/20",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/20",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/20",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/detect",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/compare",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/document/summarize",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/document/summarize",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/27",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/27",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/samples",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/attack/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/attack/samples",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/attack/run",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/users",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/policy/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/policy/history",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/rules/history/9/restore",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/policy/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/datasets",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/c6dfa41a63b34e45a357d52fa3984548",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/eval/jobs",
+      "status": 202
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/7b698d7548e0413bad19de963812bd91",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/7b698d7548e0413bad19de963812bd91",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/7b698d7548e0413bad19de963812bd91",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/7b698d7548e0413bad19de963812bd91",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/7b698d7548e0413bad19de963812bd91",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/27",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/attack/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/datasets",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/7b698d7548e0413bad19de963812bd91",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/policy/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/audits",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/backups",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/runtime",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/attack/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/datasets",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/7b698d7548e0413bad19de963812bd91",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/policy/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules/history",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/audits",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/backups",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/runtime",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    }
+  ],
+  "scope": "Real current application and local models, isolated QA database, no intercepted or mocked API responses. Documentation screenshots are comparison references only."
+}

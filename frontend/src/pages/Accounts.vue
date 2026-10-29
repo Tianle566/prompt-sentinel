@@ -7,6 +7,8 @@ import { auth } from '../auth'
 import Icon from '../components/Icon.vue'
 
 const router = useRouter()
+const createVisible = ref(false),
+  passwordVisible = ref(false)
 const accounts = ref([])
 const total = ref(0)
 const page = ref(1)
@@ -24,6 +26,14 @@ const managing = ref(false)
 const manageError = ref('')
 const accountUpdate = reactive({ role: 'user', is_active: true })
 const resetPassword = reactive({ password: '', confirm: '' })
+function clearCreateForm() {
+  Object.assign(newAccount, { username: '', password: '', confirm: '', role: 'user' })
+  createError.value = ''
+}
+function clearPasswordForm() {
+  Object.assign(password, { old: '', next: '', confirm: '' })
+  passwordError.value = ''
+}
 
 function editAccount(account) {
   editing.value = account
@@ -97,7 +107,8 @@ async function createAccount() {
       role: newAccount.role,
     })
     Object.assign(newAccount, { username: '', password: '', confirm: '', role: 'user' })
-    ElMessage.success('账号已建立，可使用新账号登录。')
+    createVisible.value = false
+    ElMessage.success('成员已添加')
     page.value = Math.max(1, Math.ceil((total.value + 1) / 10))
     await loadAccounts()
   } catch (e) {
@@ -130,15 +141,29 @@ onMounted(() => {
 
 <template>
   <div class="accounts-page">
+    <section v-if="!auth.isAdmin.value" class="panel member-profile">
+      <div class="member-identity">
+        <span class="avatar">{{ auth.state.user?.username?.slice(0, 1).toUpperCase() }}</span>
+        <div>
+          <h2>{{ auth.state.user?.username }}</h2>
+          <p>普通用户</p>
+        </div>
+      </div>
+      <el-button @click="passwordVisible = true">修改密码</el-button>
+    </section>
     <section v-if="auth.isAdmin.value" class="panel" aria-labelledby="accounts-heading">
       <div class="section-title">
         <div>
-          <h2 id="accounts-heading">登录账号</h2>
-          <p>共 {{ total }} 个账号 · 密码保存后不可查看</p>
+          <h2 id="accounts-heading">
+            成员 <span class="count-pill">{{ total }}</span>
+          </h2>
         </div>
-        <el-button :loading="loading" @click="loadAccounts">
-          <Icon name="refresh" :size="16" />刷新列表
-        </el-button>
+        <div class="toolbar-actions">
+          <el-button @click="passwordVisible = true">修改密码</el-button
+          ><el-button :loading="loading" @click="loadAccounts" aria-label="刷新成员"
+            ><Icon name="refresh" :size="15" /></el-button
+          ><el-button type="primary" @click="createVisible = true">新建成员</el-button>
+        </div>
       </div>
       <el-alert
         v-if="listError"
@@ -195,15 +220,18 @@ onMounted(() => {
       />
     </section>
 
-    <div class="account-forms" :class="{ 'personal-only': !auth.isAdmin.value }">
-      <section v-if="auth.isAdmin.value" class="panel" aria-labelledby="create-heading">
-        <div class="section-title">
-          <div>
-            <h2 id="create-heading">新增账号</h2>
-            <p>创建后即可登录，账号和密码会持续保存。</p>
-          </div>
-          <Icon name="user" />
-        </div>
+    <el-dialog
+      v-if="auth.isAdmin.value"
+      v-model="createVisible"
+      title="新建成员"
+      width="min(480px, calc(100% - 24px))"
+      class="form-dialog"
+      :close-on-click-modal="false"
+      :close-on-press-escape="!creating"
+      :show-close="!creating"
+      @closed="clearCreateForm"
+    >
+      <section class="panel" aria-labelledby="create-heading">
         <el-alert
           v-if="createError"
           :title="createError"
@@ -230,13 +258,6 @@ onMounted(() => {
               <el-option label="管理员" value="admin" />
             </el-select>
           </el-form-item>
-          <p class="helper role-help">
-            {{
-              newAccount.role === 'admin'
-                ? '管理员可管理账号、修改防护策略和启动评测。'
-                : '普通用户可进行安全测试，并查看自己的记录。'
-            }}
-          </p>
           <el-form-item label="初始密码" for="new-password">
             <el-input
               id="new-password"
@@ -261,15 +282,18 @@ onMounted(() => {
           <el-button type="primary" native-type="submit" :loading="creating">建立账号</el-button>
         </el-form>
       </section>
-
+    </el-dialog>
+    <el-dialog
+      v-model="passwordVisible"
+      title="修改密码"
+      width="min(480px, calc(100% - 24px))"
+      class="form-dialog"
+      :close-on-click-modal="false"
+      :close-on-press-escape="!changing"
+      :show-close="!changing"
+      @closed="clearPasswordForm"
+    >
       <section class="panel" aria-labelledby="password-heading">
-        <div class="section-title">
-          <div>
-            <h2 id="password-heading">修改我的密码</h2>
-            <p>当前账号：{{ auth.state.user?.username }}</p>
-          </div>
-          <Icon name="lock" />
-        </div>
         <el-alert
           v-if="passwordError"
           :title="passwordError"
@@ -315,7 +339,7 @@ onMounted(() => {
           <el-button type="primary" native-type="submit" :loading="changing">更新密码</el-button>
         </el-form>
       </section>
-    </div>
+    </el-dialog>
     <el-dialog
       :model-value="!!editing"
       title="调整账号权限与状态"

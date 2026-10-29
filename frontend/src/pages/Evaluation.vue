@@ -5,6 +5,13 @@ import { api, errorText, number, percentage, dateTime, artifact, attackName } fr
 import { auth } from '../auth'
 import Icon from '../components/Icon.vue'
 import EmptyState from '../components/EmptyState.vue'
+const comparisonVisible = ref(false)
+const createDialog = ref(false),
+  createError = ref('')
+function openCreateDialog() {
+  createError.value = ''
+  createDialog.value = true
+}
 const datasets = ref([]),
   jobs = ref([]),
   active = ref(null),
@@ -72,11 +79,11 @@ async function toggleArchive() {
   await refresh()
 }
 const experiments = {
-  all: '全部四组实验',
-  detection: '实验 1 · 检测性能',
-  defense: '实验 2 · 防御效果',
-  ablation: '实验 3 · 消融实验',
-  overhead: '实验 4 · 运行开销',
+  all: '完整评测',
+  detection: '检测性能',
+  defense: '防护效果',
+  ablation: '消融评测',
+  overhead: '运行开销',
 }
 const statusLabels = {
   queued: '排队中',
@@ -122,7 +129,7 @@ const tableSpecs = [
   },
   {
     id: 'ablation',
-    title: '消融实验',
+    title: '消融评测',
     cols: [
       { key: 'configuration', title: '配置' },
       { key: 'f1', title: 'F1', rate: true },
@@ -239,7 +246,7 @@ async function refresh(silent = false) {
 }
 async function create() {
   creating.value = true
-  error.value = ''
+  createError.value = ''
   try {
     const body = {
       experiment: form.experiment,
@@ -254,9 +261,10 @@ async function create() {
     clearSelection()
     active.value = data
     await refresh()
-    ElMessage.success('评测已加入后台队列，可以离开当前页面。')
+    createDialog.value = false
+    ElMessage.success('评测任务已创建')
   } catch (e) {
-    error.value = errorText(e)
+    createError.value = errorText(e)
   } finally {
     creating.value = false
   }
@@ -371,126 +379,134 @@ onBeforeUnmount(() => {
       :closable="false"
       class="mb20"
     />
+    <div class="workspace-toolbar">
+      <span class="subtle-label">{{ total }} 个任务</span>
+      <div class="toolbar-actions">
+        <el-button
+          :disabled="jobs.filter((job) => job.has_result).length < 2"
+          @click="comparisonVisible = !comparisonVisible"
+          >对比任务</el-button
+        ><el-button v-if="auth.isAdmin.value" type="primary" @click="openCreateDialog"
+          ><Icon name="bolt" :size="15" />新建评测</el-button
+        >
+      </div>
+    </div>
     <div class="evaluation-layout">
-      <section class="panel evaluation-setup">
-        <div class="section-title">
-          <div>
-            <h2>创建评测任务</h2>
-            <p>固定随机种子，保留配置快照</p>
-          </div>
-          <Icon name="chart" class="text-teal" />
-        </div>
-        <el-alert
-          v-if="!auth.isAdmin.value"
-          title="普通用户可以查看自己的评测记录；创建评测需要管理员权限。"
-          type="info"
-          :closable="false"
-          class="mb20"
-        /><el-form label-position="top" :disabled="!auth.isAdmin.value || creating"
-          ><el-form-item label="数据集"
-            ><el-input
-              v-if="['all', 'ablation'].includes(form.experiment)"
-              model-value="检测集 + 攻击成功率集"
-              readonly /><el-select
-              v-else
-              v-model="form.dataset"
-              class="full-width"
-              @change="setDataset"
-              ><el-option
-                v-for="dataset in datasets"
-                :key="dataset.id"
-                :value="dataset.id"
-                :label="`${dataset.name}（${dataset.count} 条）`" /></el-select></el-form-item
-          ><el-form-item label="实验类型"
-            ><el-select v-model="form.experiment" class="full-width" @change="setExperiment"
-              ><el-option
-                v-for="(name, key) in experiments"
-                :key="key"
-                :value="key"
-                :label="name" /></el-select
-          ></el-form-item>
-          <p class="helper experiment-dataset-note">
-            {{
-              ['all', 'ablation'].includes(form.experiment)
-                ? '此实验使用检测集与攻击成功率集。'
-                : form.experiment === 'defense'
-                  ? '此实验使用攻击成功率集。'
-                  : '此实验使用检测集。'
-            }}
-          </p>
-          <el-form-item label="检测样本上限"
-            ><el-input-number
-              v-model="form.limit"
-              :min="1"
-              :max="100000"
-              controls-position="right"
-              class="full-width" /></el-form-item
-          ><el-form-item
-            v-if="['all', 'defense', 'ablation'].includes(form.experiment)"
-            label="攻击生成样本上限"
-            ><el-input-number
-              v-model="form.asr_limit"
-              :min="1"
-              :max="1000"
-              controls-position="right"
-              class="full-width"
-          /></el-form-item>
-          <div class="setting-row">
-            <div>
-              <strong>本次任务独立策略</strong>
-              <p>仅影响本次评测，不修改全局策略</p>
-            </div>
-            <el-switch v-model="custom" aria-label="启用本次评测独立策略" />
-          </div>
-          <div v-if="custom && config" class="eval-custom">
-            <label class="field-label">融合策略</label
-            ><el-select v-model="config.fusion.strategy" class="full-width"
-              ><el-option label="Any · 任意命中" value="any" /><el-option
-                label="Vote · 多数投票"
-                value="vote" /><el-option label="Weighted · 加权" value="weighted"
-            /></el-select>
-            <div class="setting-label">
-              <span>L2 分类阈值</span><strong>{{ config.layers.l2.threshold.toFixed(2) }}</strong>
-            </div>
-            <el-slider
-              v-model="config.layers.l2.threshold"
-              :min="0"
-              :max="1"
-              :step="0.01"
-              aria-label="本次评测 L2 阈值"
-            />
+      <el-dialog
+        v-model="createDialog"
+        title="新建评测"
+        width="min(520px, calc(100% - 24px))"
+        class="form-dialog"
+        :close-on-click-modal="false"
+        :close-on-press-escape="!creating"
+        :show-close="!creating"
+      >
+        <section class="panel evaluation-setup">
+          <el-alert
+            v-if="createError"
+            :title="createError"
+            type="error"
+            :closable="false"
+            show-icon
+            class="mb20"
+          />
+          <el-alert
+            v-if="!auth.isAdmin.value"
+            title="普通用户可以查看自己的评测记录；创建评测需要管理员权限。"
+            type="info"
+            :closable="false"
+            class="mb20"
+          /><el-form label-position="top" :disabled="!auth.isAdmin.value || creating"
+            ><el-form-item label="数据集"
+              ><el-input
+                v-if="['all', 'ablation'].includes(form.experiment)"
+                model-value="检测集 + 攻击成功率集"
+                readonly /><el-select
+                v-else
+                v-model="form.dataset"
+                class="full-width"
+                @change="setDataset"
+                ><el-option
+                  v-for="dataset in datasets"
+                  :key="dataset.id"
+                  :value="dataset.id"
+                  :label="`${dataset.name}（${dataset.count} 条）`" /></el-select></el-form-item
+            ><el-form-item label="实验类型"
+              ><el-select v-model="form.experiment" class="full-width" @change="setExperiment"
+                ><el-option
+                  v-for="(name, key) in experiments"
+                  :key="key"
+                  :value="key"
+                  :label="name" /></el-select
+            ></el-form-item>
+            <el-form-item v-if="form.experiment !== 'defense'" label="检测样本上限"
+              ><el-input-number
+                v-model="form.limit"
+                :min="1"
+                :max="100000"
+                controls-position="right"
+                class="full-width" /></el-form-item
+            ><el-form-item
+              v-if="['all', 'defense', 'ablation'].includes(form.experiment)"
+              label="攻击生成样本上限"
+              ><el-input-number
+                v-model="form.asr_limit"
+                :min="1"
+                :max="1000"
+                controls-position="right"
+                class="full-width"
+            /></el-form-item>
             <div class="setting-row">
               <div>
-                <strong>拦截 Controversial</strong>
-                <p>本次评测 L3 审核策略</p>
+                <strong>本次任务独立策略</strong>
+                <p>仅影响本次评测，不修改全局策略</p>
               </div>
-              <el-switch
-                v-model="config.layers.l3.block_controversial"
-                aria-label="本次评测拦截争议输入"
-              />
+              <el-switch v-model="custom" aria-label="启用本次评测独立策略" />
             </div>
-          </div>
-          <el-button
-            type="primary"
-            size="large"
-            class="full-width"
-            :loading="creating"
-            @click="create"
-            :disabled="!auth.isAdmin.value || !datasets.length || creating"
-            ><Icon v-if="!creating" name="bolt" :size="17" />启动后台评测</el-button
-          ></el-form
-        >
-        <p class="helper mt16">
-          各实验按固定协议启用对应防护层；全防护配置启用
-          L1—L5，消融逐层移除。独立策略只调整融合方式、阈值与争议输入处理。CPU
-          运行可能耗时较长，结果保留真实错误与未判定样本。
-        </p>
-      </section>
+            <div v-if="custom && config" class="eval-custom">
+              <label class="field-label">融合策略</label
+              ><el-select v-model="config.fusion.strategy" class="full-width"
+                ><el-option label="Any · 任意命中" value="any" /><el-option
+                  label="Vote · 多数投票"
+                  value="vote" /><el-option label="Weighted · 加权" value="weighted"
+              /></el-select>
+              <div class="setting-label">
+                <span>L2 分类阈值</span><strong>{{ config.layers.l2.threshold.toFixed(2) }}</strong>
+              </div>
+              <el-slider
+                v-model="config.layers.l2.threshold"
+                :min="0"
+                :max="1"
+                :step="0.01"
+                aria-label="本次评测 L2 阈值"
+              />
+              <div class="setting-row">
+                <div>
+                  <strong>拦截 Controversial</strong>
+                  <p>本次评测 L3 审核策略</p>
+                </div>
+                <el-switch
+                  v-model="config.layers.l3.block_controversial"
+                  aria-label="本次评测拦截争议输入"
+                />
+              </div>
+            </div>
+            <el-button
+              type="primary"
+              size="large"
+              class="full-width"
+              :loading="creating"
+              @click="create"
+              :disabled="!auth.isAdmin.value || !datasets.length || creating"
+              ><Icon v-if="!creating" name="bolt" :size="17" />启动后台评测</el-button
+            ></el-form
+          >
+        </section>
+      </el-dialog>
       <section class="panel evaluation-jobs" v-loading="loading">
         <div class="section-title">
           <div>
-            <h2>后台任务</h2>
-            <p>每页 20 个任务，运行进度每 4 秒自动更新</p>
+            <h2>任务列表</h2>
             <el-switch
               v-model="archived"
               active-text="查看已归档"
@@ -502,12 +518,7 @@ onBeforeUnmount(() => {
             ><Icon name="refresh" :size="15" />刷新</el-button
           >
         </div>
-        <EmptyState
-          v-if="!jobs.length"
-          title="还没有评测任务"
-          text="选择数据集与实验设置，启动第一轮可复现实验。"
-          icon="chart"
-        />
+        <EmptyState v-if="!jobs.length" title="还没有评测任务" text="" icon="chart" />
         <div v-else class="job-list">
           <button
             v-for="job in jobs"
@@ -558,10 +569,13 @@ onBeforeUnmount(() => {
         />
       </section>
     </div>
-    <section v-if="jobs.filter((job) => job.has_result).length >= 2" class="panel">
+    <section
+      v-if="comparisonVisible && jobs.filter((job) => job.has_result).length >= 2"
+      class="panel"
+    >
       <div class="section-title">
         <div>
-          <h2>实验结果对比</h2>
+          <h2>任务对比</h2>
           <p>选择当前列表中 2–4 个已结束且有结果的任务。</p>
         </div>
       </div>
@@ -578,7 +592,7 @@ onBeforeUnmount(() => {
             :value="job.id"
             :label="`${experiments[job.experiment]} · ${job.id.slice(0, 8)}`" /></el-select
         ><el-button :disabled="compareIds.length < 2" :loading="managing" @click="compare"
-          >对比所选实验</el-button
+          >对比所选任务</el-button
         >
       </div>
       <template v-if="comparison"
@@ -640,16 +654,35 @@ onBeforeUnmount(() => {
       <div class="section-title">
         <div>
           <h2>
-            实验结果 <span class="count-pill">#{{ active.id.slice(0, 8) }}</span>
+            评测结果 <span class="count-pill">#{{ active.id.slice(0, 8) }}</span>
           </h2>
           <p>{{ experiments[active.experiment] }} · {{ statusLabels[active.status] }}</p>
         </div>
-        <el-button
-          v-if="artifacts.some((v) => v.endsWith('.png'))"
-          :loading="imageLoading"
-          @click="loadImages"
-          ><Icon name="eye" :size="16" />载入实验图表</el-button
-        >
+        <div class="toolbar-actions">
+          <el-popover v-if="artifacts.length" trigger="click" placement="bottom-end" :width="340"
+            ><template #reference
+              ><el-button><Icon name="download" :size="15" />下载结果</el-button></template
+            >
+            <div class="artifact-download-menu">
+              <button
+                v-for="filename in artifacts"
+                :key="filename"
+                class="artifact-download-item"
+                @click="download(filename)"
+              >
+                <Icon :name="filename.endsWith('.png') ? 'chart' : 'document'" :size="15" /><span
+                  class="truncate"
+                  >{{ filename }}</span
+                ><Icon name="download" :size="13" />
+              </button></div
+          ></el-popover>
+          <el-button
+            v-if="artifacts.some((v) => v.endsWith('.png'))"
+            :loading="imageLoading"
+            @click="loadImages"
+            ><Icon name="eye" :size="16" />查看图表</el-button
+          >
+        </div>
       </div>
       <el-alert
         v-if="active.status === 'cancelled'"
@@ -671,7 +704,6 @@ onBeforeUnmount(() => {
       >
         <el-progress :percentage="Math.round(active.progress || 0)" :stroke-width="8" />
         <p>{{ active.message }}</p>
-        <p class="helper">任务完成后将展示实际计算的指标、图表和可下载产物。</p>
       </div>
       <template v-if="active.result"
         ><el-alert
@@ -710,11 +742,7 @@ onBeforeUnmount(() => {
                   ><template #default="{ row }">{{ value(row, col) }}</template></el-table-column
                 ></el-table
               ></TableScroll
-            ><EmptyState
-              v-else
-              title="本次任务没有该组实验结果"
-              text="可以创建对应实验，或检查评测是否完整完成。"
-              icon="chart" /></el-tab-pane
+            ><EmptyState v-else title="暂无此类结果" text="" icon="chart" /></el-tab-pane
         ></el-tabs>
         <div v-if="Object.keys(images).length" class="eval-images">
           <figure v-for="(url, filename) in images" :key="filename">
@@ -727,22 +755,8 @@ onBeforeUnmount(() => {
             </figcaption>
           </figure>
         </div>
-        <div v-if="artifacts.length" class="artifact-list">
-          <div class="detail-label">结果文件</div>
-          <button
-            v-for="filename in artifacts"
-            :key="filename"
-            class="artifact-file"
-            @click="download(filename)"
-          >
-            <Icon :name="filename.endsWith('.png') ? 'chart' : 'document'" :size="17" /><span>{{
-              filename
-            }}</span
-            ><Icon name="download" :size="15" />
-          </button>
-        </div>
         <details class="evaluation-errors">
-          <summary>查看实验元数据与数据范围</summary>
+          <summary>评测元数据</summary>
           <pre>{{
             JSON.stringify(
               {

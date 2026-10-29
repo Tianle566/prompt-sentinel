@@ -99,11 +99,16 @@ onBeforeUnmount(() => {
         >回复等级 {{ result.attack_evaluation.evidence.moderation.details.safety }}</span
       >
     </div>
-    <LayerResults
-      v-if="showLayers"
-      :detection="result.detection"
-      :hardening="result.hardening"
-      :output-check="result.output_check"
-    />
+    <details
+      v-if="showLayers && (result.detection || result.hardening || result.output_check)"
+      class="result-details"
+    >
+      <summary>检测详情</summary>
+      <LayerResults
+        :detection="result.detection"
+        :hardening="result.hardening"
+        :output-check="result.output_check"
+      />
+    </details>
   </div>
 </template>

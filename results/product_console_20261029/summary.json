@@ -1,0 +1,86 @@
+{
+  "status": "passed",
+  "date": "2026-10-29",
+  "timezone": "Asia/Shanghai",
+  "base_commit": "9e385d19f8e54281cbd7dda690b27d1657d3338b",
+  "source_sha256_lf_normalized": {
+    "backend/app/api/routes.py": "4aee4132f6d95b6537ac15eeb92483e6644d19575996bbc442e2aee03e0eb45d",
+    "backend/tests/test_api_audit_regressions.py": "7235e1d0d85809d7d7e6581a7b607a58a046be56e8603ca29cda11ef28a30de1",
+    "frontend/index.html": "39c689c2d43415cde900e8e231c3fd46b7ad0721b5300e8702957d7923a4b5df",
+    "frontend/public/favicon.svg": "92ade14ed2673652252f1c561b2027bd84eae77331d0e70872719d46c2f439c1",
+    "frontend/src/components/Layout.vue": "79f3fe570df53b47ff72fecee9b563158a516353652e2dff696438427a5bfa10",
+    "frontend/src/components/PipelineResult.vue": "2dce6e88a60e974d8e7a74f7855c9c55d4b2f7f7dbf7e65b8e2c519fbf288005",
+    "frontend/src/console.css": "e7fdf5b79ae854a5fd1e34d870909f3790d37b45b14478605d284a227bf4d695",
+    "frontend/src/pages/Accounts.vue": "38d4de219457f2ff3ac867d562f2b43e0c84ed7290ebc124f3b04560f0ea5724",
+    "frontend/src/pages/Attack.vue": "6b9d010a6ae2b375172512cfeb6ee2be12f48c05d87744f747a88216aecd9e6c",
+    "frontend/src/pages/Audits.vue": "3eebf0005dbf673a8ac963fb5c54f22b3ad729a311736b1246419ae999581ff2",
+    "frontend/src/pages/Chat.vue": "6be507aaa6cee250d5b4ca9fda9ac13fed0fed68986be8e8590149a4c69424a3",
+    "frontend/src/pages/Dashboard.vue": "79687561ecb078ecf1688124ea27f340c28da6890d12bb79d98c7870e932d849",
+    "frontend/src/pages/Documents.vue": "4d7dfb67235623b478e013d350145430d9cab6f880c888bf1a9bf43e29bafe63",
+    "frontend/src/pages/Evaluation.vue": "da1baa0857f7943bf6798781c19d6376d17452eaa391d113c4d676a293ce8700",
+    "frontend/src/pages/Login.vue": "cece6f19a0c7cc991d50c320d39a34f6e45f8af97f697920b7f3cf95746c2223",
+    "frontend/src/pages/Logs.vue": "a8a0ee2673b102c99e08b855fa6e66ff28218cabfedaef0ba7a03218f8c6433c",
+    "frontend/src/pages/Policy.vue": "3f47f2729e0945fbc635601828fcb2e8f4a9621a9e918a5dd831fe49cb058177",
+    "frontend/src/pages/Rules.vue": "6b4c2b9e55378d48f538733324600630bc4ff690447f82d584de5d6d6b05ec5f",
+    "frontend/src/pages/Runtime.vue": "b813d2a5a82f153bb640b28f12be1ba26f4e31bffbf3d58da92df4df2b69ca8e",
+    "frontend/src/pages/Samples.vue": "f5ecf07d9d7ba998cdfd63abcd6cb9fe9b8afdae495e03b2cb9c9a101cd2b8dc",
+    "frontend/src/router.js": "c24043f0dcc5ea1ceb8356e13636a92e14421e6f4ebc5a70a959b55d684f4711",
+    "backend/tests/test_console_workflows.py": "f2a671a6c89490f84767d4681acf6e0b832236110f14d207e031a1d754305aa0",
+    "frontend/src/console.js": "33790efede96af984632a65adbfb89d476b89d7532b79588095fbec29bb13a46",
+    "frontend/src/components/CommandMenu.vue": "75fd6eefef85c24669c34af8052da092c15f974be707b6b126b259e5b05f351a",
+    "frontend/src/composables/useUnsavedChanges.js": "8a7724b5b7da9cba63f5461d525ed92849bb266a537b5dad1d2626d5e10a115f"
+  },
+  "tests": {
+    "complete_pytest_passed": 368,
+    "excluded": 0,
+    "warnings": 1,
+    "focused_final_passed": 4
+  },
+  "frontend": {
+    "build": "passed",
+    "prettier": "passed",
+    "existing_chunk_size_warning": true
+  },
+  "real_http": {
+    "recorded_requests": 30,
+    "passed": true,
+    "includes_polling": true,
+    "isolated_database": true
+  },
+  "browser": {
+    "workflow_groups_passed": 19,
+    "authenticated_pages": 12,
+    "page_size_checks": 36,
+    "additional_mobile_dialog_checks": 5,
+    "runtime_errors": 0,
+    "mocked_api_or_model_replies": false
+  },
+  "preservation": {
+    "files": 3217,
+    "all_unchanged": true,
+    "changed": [],
+    "checked_at": "2026-10-29T02:59:37.161068+00:00"
+  },
+  "qa_services_stopped": {
+    "all_stopped": true,
+    "owned_processes": 8,
+    "remaining": []
+  },
+  "regular_application_ready": {
+    "status": "passed",
+    "frontend": "http://127.0.0.1:5173",
+    "backend": "http://127.0.0.1:8000",
+    "current_login_source_served": true,
+    "same_project_backend_proxy": true,
+    "production_login_or_inference_performed": false
+  },
+  "audit": "audit.json",
+  "capability_boundaries": [
+    "当前是单机、单worker控制台，保留管理员与普通用户隔离。",
+    "没有面向外部应用的独立接入密钥及应用级限额、分项目多租户、主动告警通知或多实例并发能力。",
+    "本轮补齐本地工作流程，不以页面覆盖或测试数量宣称等同成熟云平台。",
+    "截图来自独立验收库与真实本机模型调用；不是自然生产流量或新的全量论文实验。",
+    "模型、规则默认值与原实验结果没有因界面改造而调整；不声称检测准确率提高。"
+  ],
+  "note": "论文、开题报告和历史实验保持原样；本轮更新软件与使用指南。已有未提交文稿不纳入本轮提交。"
+}

@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { api, errorText } from '../api'
 import Icon from '../components/Icon.vue'
 import EmptyState from '../components/EmptyState.vue'
 import PipelineResult from '../components/PipelineResult.vue'
 import LayerResults from '../components/LayerResults.vue'
+const route = useRoute()
 const file = ref(null),
   fileInput = ref(null),
   result = ref(null),
@@ -45,6 +47,23 @@ function removeFile() {
   error.value = ''
   activeParagraph.value = null
 }
+watch(
+  () => route.query.from,
+  async (id) => {
+    if (!id) return
+    try {
+      const { data } = await api.get(`/logs/${encodeURIComponent(id)}`)
+      select(
+        new File([data.text], data.result?.document?.filename || `request-${data.id}.txt`, {
+          type: 'text/plain',
+        })
+      )
+    } catch (e) {
+      error.value = errorText(e)
+    }
+  },
+  { immediate: true }
+)
 async function summarize() {
   if (!file.value || loading.value) return
   loading.value = true
@@ -64,12 +83,6 @@ async function summarize() {
 </script>
 <template>
   <div>
-    <div class="experiment-note">
-      <Icon name="document" :size="19" />
-      <p>
-        上传文本按空行分段，逐段执行输入检测。开启防护后，命中注入指令的文档会被拦截，并保留对应段落的检测依据。
-      </p>
-    </div>
     <section class="panel upload-panel">
       <div class="section-title">
         <div>
@@ -101,12 +114,8 @@ async function summarize() {
         /></span>
         <div>
           <h3>{{ file ? file.name : '拖入文档，或选择文件' }}</h3>
-          <p>
-            {{
-              file
-                ? `${(file.size / 1024).toFixed(1)} KB · 已准备好分析`
-                : '文本内容仅发送到当前本地后端'
-            }}
+          <p v-if="file">
+            {{ `${(file.size / 1024).toFixed(1)} KB` }}
           </p>
         </div>
         <div class="upload-file-actions">
@@ -119,8 +128,7 @@ async function summarize() {
         </div>
       </div>
       <div class="upload-action">
-        <span class="helper">文档内容作为待分析数据处理，不能覆盖系统任务。</span
-        ><el-button type="primary" :disabled="!file" :loading="loading" @click="summarize"
+        <el-button type="primary" :disabled="!file" :loading="loading" @click="summarize"
           ><Icon v-if="!loading" name="shield" :size="17" />{{
             loading ? '逐段检测与生成中…' : '检测并生成摘要'
           }}</el-button
@@ -145,7 +153,7 @@ async function summarize() {
               {{
                 result
                   ? `${result.paragraphs.length} 个段落 · ${malicious} 个段落命中风险${incomplete ? ` · ${incomplete} 个检测未完成` : ''}`
-                  : '恶意段落将在原文中高亮标出'
+                  : ''
               }}
             </p>
           </div>
@@ -154,14 +162,8 @@ async function summarize() {
         <div v-if="loading" class="processing-state">
           <span class="loading-orbit"></span>
           <h3>正在逐段扫描文档</h3>
-          <p>长文档可能需要更长的检测时间</p>
         </div>
-        <EmptyState
-          v-else-if="!result"
-          title="原文与检测结果将在这里显示"
-          text="选择一份文档，开始检查间接注入风险。"
-          icon="document"
-        />
+        <EmptyState v-else-if="!result" title="暂无文档" text="" icon="document" />
         <div v-else class="paragraph-list">
           <div
             v-for="paragraph in result.paragraphs"
@@ -201,23 +203,22 @@ async function summarize() {
       <section class="panel">
         <div class="section-title">
           <div>
-            <h2>摘要与防护决策</h2>
-            <p>模型输出和完整防护依据</p>
+            <h2>处理结果</h2>
           </div>
           <Icon name="shield" class="text-teal" />
         </div>
         <PipelineResult v-if="result" :result="result.result" />
+        <router-link
+          v-if="result?.result.id"
+          :to="{ path: '/logs', query: { request: result.result.id } }"
+          class="text-action result-log-link"
+          >查看请求 #{{ result.result.id }} <Icon name="arrow" :size="13"
+        /></router-link>
         <div v-else-if="loading" class="processing-state">
           <span class="loading-orbit"></span>
           <h3>等待防护决策</h3>
-          <p>检测完成后，安全文档将进入摘要生成</p>
         </div>
-        <EmptyState
-          v-else
-          title="等待文档摘要"
-          text="当文档存在攻击指令时，将显示拦截结果。"
-          icon="shield"
-        />
+        <EmptyState v-else title="暂无处理结果" text="" icon="shield" />
       </section>
     </div>
   </div>

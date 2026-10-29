@@ -1,0 +1,173 @@
+{
+  "status": "passed",
+  "recorded_requests": 30,
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/docs",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/openapi.json",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/detect",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/detect",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/compare",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/attack/samples?attack_type=encoded&limit=2",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/attack/run",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/attack/run",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/22",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/document/summarize",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/document/summarize",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/24",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs?page=1&page_size=2&layer=L1",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs/24",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/stats",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "status_code": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/api/config",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/datasets",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/eval/jobs",
+      "status_code": 202
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/c6dfa41a63b34e45a357d52fa3984548",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/jobs/c6dfa41a63b34e45a357d52fa3984548",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/eval/artifacts/c6dfa41a63b34e45a357d52fa3984548/experiment1_detection.csv",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/logs",
+      "status_code": 200
+    }
+  ],
+  "note": "Recorded HTTP requests include background-job polling, so the count varies with completion time.",
+  "isolated_database": true,
+  "mocked_api_or_model_replies": false,
+  "protected_attack_blocked": true,
+  "unprotected_marker_observed": true,
+  "comparison_errors": [
+    null,
+    null
+  ],
+  "document": {
+    "benign_blocked": false,
+    "indirect_blocked": true,
+    "malicious_paragraphs": [
+      1
+    ]
+  },
+  "evaluation_job_id": "c6dfa41a63b34e45a357d52fa3984548"
+}

@@ -1,0 +1,42 @@
+{
+  "status": "passed",
+  "checks": [
+    "mobile-member-dialog",
+    "mobile-evaluation-dialog",
+    "mobile-rule-dialog",
+    "mobile-request-drawer",
+    "mobile-command-keyboard-navigation",
+    "runtime-unsaved-guard-and-reload",
+    "desktop-navigation-collapse",
+    "evaluation-download-and-comparison"
+  ],
+  "sizes": [
+    {
+      "name": "mobile-member-dialog",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "mobile-evaluation-dialog",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "mobile-rule-dialog",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "mobile-request-drawer",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "mobile-command-dialog",
+      "width": 390,
+      "scrollWidth": 390
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

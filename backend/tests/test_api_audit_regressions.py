@@ -221,6 +221,7 @@ def test_frontend_evaluation_request_does_not_send_dataset():
     create = source.split("async function create()", 1)[1].split("function setDataset()", 1)[0]
     js = """const form={dataset:'detect',experiment:'detection',limit:4,asr_limit:2};
 const creating={value:false},error={value:''},custom={value:false},config={value:null},active={value:null};
+const createError={value:''},createDialog={value:true},archived={value:false},page={value:1};function clearSelection(){}
 const ElMessage={success(){}},errorText=String;let payload;const api={async post(path,body){payload=body;return {data:{id:'fixture'}}}};async function refresh(){}
 async function create()""" + create + "\nawait create();console.log(JSON.stringify(payload));"
     result = subprocess.run([node, "--input-type=module", "-e", js], capture_output=True, text=True, timeout=5, check=True)

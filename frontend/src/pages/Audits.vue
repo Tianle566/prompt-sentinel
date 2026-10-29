@@ -75,8 +75,9 @@ onMounted(async () => {
   <section class="panel">
     <div class="section-title">
       <div>
-        <h2>管理操作记录</h2>
-        <p>记录操作人、时间、动作和对象；不记录密码。导出包含当前筛选下最近的最多 10000 条记录。</p>
+        <h2>
+          操作记录 <span class="count-pill">{{ total }}</span>
+        </h2>
       </div>
       <el-button @click="exportRecords" :loading="exporting">导出审计 CSV</el-button>
     </div>
@@ -131,8 +132,34 @@ onMounted(async () => {
       class="admin-pagination"
       @current-change="load()"
     />
-    <el-dialog :model-value="!!detail" title="操作详情" width="700px" @close="detail = null">
-      <pre class="admin-pre">{{ JSON.stringify(detail, null, 2) }}</pre>
-    </el-dialog>
+    <el-drawer
+      :model-value="!!detail"
+      title="操作详情"
+      size="min(650px, 100%)"
+      @close="detail = null"
+    >
+      <template v-if="detail"
+        ><dl class="request-properties">
+          <div>
+            <dt>操作</dt>
+            <dd>{{ labels[detail.action] || detail.action }}</dd>
+          </div>
+          <div>
+            <dt>操作人</dt>
+            <dd>{{ detail.username }}</dd>
+          </div>
+          <div>
+            <dt>对象</dt>
+            <dd>{{ detail.target }}</dd>
+          </div>
+          <div>
+            <dt>时间</dt>
+            <dd>{{ dateTime(detail.created_at) }}</dd>
+          </div>
+        </dl>
+        <h3 class="detail-section-title">变更内容</h3>
+        <pre class="admin-pre">{{ JSON.stringify(detail.details, null, 2) }}</pre>
+      </template>
+    </el-drawer>
   </section>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { onMounted, reactive, ref, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUnsavedChanges } from '../composables/useUnsavedChanges'
 import { api, downloadFile, errorText, number } from '../api'
 const state = ref(null),
   backups = ref([]),
@@ -11,7 +12,23 @@ const state = ref(null),
   reading = ref(false),
   logName = ref('backend'),
   log = ref(null)
-const form = reactive({})
+const form = reactive({}),
+  snapshot = ref('')
+const dirty = computed(() => !!snapshot.value && JSON.stringify(form) !== snapshot.value)
+useUnsavedChanges(dirty)
+async function reload() {
+  if (dirty.value) {
+    try {
+      await ElMessageBox.confirm('重新载入将丢弃尚未保存的设置。', '重新载入？', {
+        confirmButtonText: '重新载入',
+        cancelButtonText: '继续编辑',
+      })
+    } catch {
+      return
+    }
+  }
+  await load()
+}
 async function load() {
   loading.value = true
   error.value = ''
@@ -22,6 +39,7 @@ async function load() {
     ])
     state.value = runtime.data
     Object.assign(form, runtime.data.settings)
+    snapshot.value = JSON.stringify(form)
     backups.value = files.data.items
   } catch (e) {
     error.value = errorText(e)
@@ -34,6 +52,7 @@ async function save() {
   error.value = ''
   try {
     Object.assign(form, (await api.put('/admin/runtime/settings', form)).data)
+    snapshot.value = JSON.stringify(form)
     ElMessage.success('运行设置已保存，新请求和新评测生效。')
   } catch (e) {
     error.value = errorText(e)
@@ -91,7 +110,7 @@ onMounted(load)
         </div>
         <div class="metric-card">
           <span>磁盘可用空间</span><strong>{{ gib(state.disk.free) }}</strong
-          ><small>模型与实验保存在本机</small>
+          ><small>可用于模型与数据</small>
         </div>
         <div class="metric-card">
           <span>正在运行 / 排队</span><strong>{{ state.active_jobs }}</strong
@@ -102,9 +121,9 @@ onMounted(load)
         <div class="section-title">
           <div>
             <h2>模型与评测运行设置</h2>
-            <p>保存后影响后续请求；已启动的评测继续使用自己的配置快照。</p>
+            <span v-if="dirty" class="unsaved-dot">未保存</span>
           </div>
-          <el-button @click="load" :disabled="saving">刷新状态</el-button>
+          <el-button @click="reload" :disabled="saving">刷新状态</el-button>
         </div>
         <el-alert
           v-if="state.model_error"
@@ -152,14 +171,14 @@ onMounted(load)
                 :max="600"
                 aria-label="单次生成超时"
             /></el-form-item>
-            <el-form-item label="单个实验检测样本上限"
+            <el-form-item label="单次评测检测样本上限"
               ><el-input-number
                 v-model="form.max_detection_samples"
                 :min="1"
                 :max="100000"
                 aria-label="检测样本上限"
             /></el-form-item>
-            <el-form-item label="单个实验攻击样本上限"
+            <el-form-item label="单次评测攻击样本上限"
               ><el-input-number
                 v-model="form.max_asr_samples"
                 :min="1"
@@ -173,7 +192,7 @@ onMounted(load)
                 :max="4"
                 aria-label="任务数量上限"
             /></el-form-item>
-            <el-form-item label="单个实验时间预算（秒）"
+            <el-form-item label="单次评测时间预算（秒）"
               ><el-input-number
                 v-model="form.time_budget_seconds"
                 :min="30"
@@ -188,7 +207,7 @@ onMounted(load)
         <div class="section-title">
           <div>
             <h2>数据库备份</h2>
-            <p>备份包含账号密码哈希、日志和任务信息；论文与实验文件保存在原目录。</p>
+            <p>包含账号、日志与任务信息，仅管理员可下载。</p>
           </div>
           <el-button
             type="primary"

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api, errorText } from '../api'
 import { auth } from '../auth'
 import Icon from './Icon.vue'
+import CommandMenu from './CommandMenu.vue'
 const route = useRoute(),
   router = useRouter(),
   health = ref(null),
@@ -13,33 +14,34 @@ const route = useRoute(),
   isMobile = ref(false),
   sidebar = ref(null),
   menuButton = ref(null),
+  commandMenu = ref(null),
   refreshing = ref(false)
 const nav = [
-  { group: '工作空间', items: [{ path: '/dashboard', label: '安全概览', icon: 'dashboard' }] },
   {
-    group: '安全实验室',
+    group: '监控',
     items: [
-      { path: '/chat', label: '对话演示', icon: 'chat' },
-      { path: '/attack', label: '攻击测试台', icon: 'attack' },
-      { path: '/documents', label: '文档摘要', icon: 'document' },
+      { path: '/dashboard', label: '概览', icon: 'dashboard' },
+      { path: '/logs', label: '请求日志', icon: 'logs' },
+      { path: '/evaluation', label: '评测任务', icon: 'chart' },
     ],
   },
   {
-    group: '分析与评测',
+    group: '工作台',
     items: [
-      { path: '/logs', label: '请求与拦截日志', icon: 'logs' },
-      { path: '/evaluation', label: '评测中心', icon: 'chart' },
+      { path: '/chat', label: '安全对话', icon: 'chat' },
+      { path: '/documents', label: '文档处理', icon: 'document' },
+      { path: '/attack', label: '安全测试', icon: 'attack' },
     ],
   },
   {
-    group: '系统管理',
+    group: '管理',
     items: [
       { path: '/policy', label: '防护策略', icon: 'settings', admin: true },
-      { path: '/accounts', label: '账号管理', icon: 'user' },
-      { path: '/rules', label: '规则与策略历史', icon: 'shield', admin: true },
-      { path: '/samples', label: '攻击样本管理', icon: 'attack', admin: true },
-      { path: '/audits', label: '管理操作审计', icon: 'logs', admin: true },
-      { path: '/runtime', label: '运行维护', icon: 'settings', admin: true },
+      { path: '/rules', label: '检测规则', icon: 'shield', admin: true },
+      { path: '/samples', label: '测试样本', icon: 'attack', admin: true },
+      { path: '/accounts', label: '成员与权限', icon: 'user' },
+      { path: '/audits', label: '操作审计', icon: 'logs', admin: true },
+      { path: '/runtime', label: '系统设置', icon: 'settings', admin: true },
     ],
   },
 ]
@@ -47,7 +49,7 @@ const navigation = computed(() =>
   nav
     .map((section) => ({
       ...section,
-      group: section.group === '系统管理' && !auth.isAdmin.value ? '个人设置' : section.group,
+      group: section.group === '管理' && !auth.isAdmin.value ? '个人设置' : section.group,
       items: section.items
         .filter((item) => !item.admin || auth.isAdmin.value)
         .map((item) => ({
@@ -73,7 +75,7 @@ const pageSubtitle = computed(() =>
 watch(
   pageTitle,
   (title) => {
-    document.title = `${title || '安全研究台'} · Prompt Sentinel`
+    document.title = `${title || '控制台'} · Prompt Sentinel`
   },
   { immediate: true }
 )
@@ -145,6 +147,12 @@ function logout() {
   auth.logout()
   router.push('/login')
 }
+function shortcut(event) {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault()
+    commandMenu.value?.open()
+  }
+}
 let timer
 onMounted(() => {
   media = window.matchMedia('(max-width: 800px)')
@@ -156,10 +164,12 @@ onMounted(() => {
     collapsed.value = false
   }
   loadHealth()
+  window.addEventListener('keydown', shortcut)
   timer = setInterval(loadHealth, 60000)
 })
 onBeforeUnmount(() => {
   clearInterval(timer)
+  window.removeEventListener('keydown', shortcut)
   media?.removeEventListener('change', screenChanged)
   if (mobileOpen.value) document.body.style.overflow = bodyOverflow
 })
@@ -188,7 +198,7 @@ onBeforeUnmount(() => {
         @click="mobileOpen = false"
         ><span class="brand-mark"><Icon name="shield" :size="28" /></span
         ><span class="brand-copy"
-          ><strong>Prompt Sentinel</strong><small>提示词安全研究平台</small></span
+          ><strong>Prompt Sentinel</strong><small>AI 安全控制台</small></span
         ></router-link
       >
       <button
@@ -199,10 +209,7 @@ onBeforeUnmount(() => {
       >
         <Icon name="close" :size="19" />
       </button>
-      <div class="workspace-badge">
-        <Icon name="lock" :size="13" /><span>本地研究工作空间</span
-        ><span class="workspace-version">v1.0</span>
-      </div>
+      <div class="workspace-badge"><Icon name="lock" :size="13" /><span>默认工作区</span></div>
       <nav aria-label="主导航">
         <div v-for="section in navigation" :key="section.group" class="nav-section">
           <div class="nav-label">{{ section.group }}</div>
@@ -219,13 +226,6 @@ onBeforeUnmount(() => {
         </div>
       </nav>
       <div class="sidebar-bottom">
-        <div class="local-note">
-          <Icon name="lock" :size="17" />
-          <div>
-            <strong>本地运行，边界清晰</strong>
-            <p>检测过程可记录，实验结果可追溯</p>
-          </div>
-        </div>
         <div class="account">
           <span class="avatar">{{ auth.state.user?.username?.slice(0, 1).toUpperCase() }}</span>
           <div class="account-copy">
@@ -260,6 +260,9 @@ onBeforeUnmount(() => {
           ><Icon name="chevron" :size="13" /><strong>{{ pageTitle }}</strong>
         </div>
         <div class="topbar-right">
+          <button class="command-trigger" @click="commandMenu?.open()" aria-label="搜索页面和请求">
+            <Icon name="logs" :size="15" /><span>搜索</span><kbd>Ctrl K</kbd>
+          </button>
           <el-popover placement="bottom-end" :width="310" trigger="click"
             ><template #reference
               ><button
@@ -273,7 +276,7 @@ onBeforeUnmount(() => {
                     : !health
                       ? '检查服务中'
                       : health.status === 'ok'
-                        ? '模型文件与服务可用'
+                        ? '服务状态'
                         : '部分服务未就绪'
                 }}<Icon name="chevrondown" :size="13" /></button
             ></template>
@@ -303,34 +306,35 @@ onBeforeUnmount(() => {
                     model.ready ? '已就绪' : '未就绪'
                   }}</el-tag>
                 </div>
-                <p class="helper">
-                  设备策略：{{ health?.device || '—' }} · 详情见后端启动日志
-                </p></template
+                <p class="helper">运行设备：{{ health?.device || '—' }}</p></template
               >
             </div></el-popover
           ><span class="topbar-divider"></span
-          ><span class="topbar-role">{{ auth.isAdmin.value ? '管理员' : '研究用户' }}</span>
+          ><span class="topbar-role">{{ auth.state.user?.username }}</span>
         </div>
       </header>
       <main id="main-content" class="main-content" tabindex="-1">
         <div class="page-heading">
           <div>
-            <div class="eyebrow">{{ currentGroup }} <span>/ PROMPT SENTINEL</span></div>
             <h1>{{ pageTitle }}</h1>
-            <p>{{ pageSubtitle }}</p>
           </div>
-          <div class="page-context">
-            <Icon name="shield" :size="17" /><span>安全研究工作台</span>
-          </div>
+          <el-popover
+            v-if="route.meta.subtitle"
+            placement="bottom-end"
+            :width="320"
+            trigger="click"
+          >
+            <template #reference
+              ><button class="page-help" aria-label="页面帮助">
+                <Icon name="info" :size="16" /><span>帮助</span>
+              </button></template
+            >
+            <p class="context-help">{{ pageSubtitle }}</p>
+          </el-popover>
         </div>
         <router-view />
       </main>
-      <footer class="main-footer">
-        <span
-          >Prompt Sentinel
-          <span class="footer-dot">·</span> 面向大语言模型应用的提示词注入检测与多层防护</span
-        ><span>本地研究环境</span>
-      </footer>
     </div>
+    <CommandMenu ref="commandMenu" :navigation="navigation" />
   </div>
 </template>

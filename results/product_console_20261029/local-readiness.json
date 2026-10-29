@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "frontend": "http://127.0.0.1:5173",
+  "backend": "http://127.0.0.1:8000",
+  "current_login_source_served": true,
+  "same_project_backend_proxy": true,
+  "production_login_or_inference_performed": false
+}

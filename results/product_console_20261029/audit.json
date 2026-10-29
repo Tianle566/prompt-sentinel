@@ -1,0 +1,225 @@
+{
+  "scope": "现有Windows本地控制台的组合UX审查与实现；公开产品资料用于对照，不构成对竞品的登录后审查。",
+  "references": [
+    {
+      "product": "Cloudflare AI Gateway",
+      "url": "https://developers.cloudflare.com/ai-gateway/observability/analytics/",
+      "used_for": "按时间范围组织监控和指标"
+    },
+    {
+      "product": "Portkey",
+      "url": "https://portkey.ai/docs/product/observability/logs",
+      "used_for": "请求列表、详情、独立链接和回放入口",
+      "ui_image_inspected": true
+    },
+    {
+      "product": "Langfuse",
+      "url": "https://langfuse.com/docs/observability/overview",
+      "used_for": "围绕请求与检测过程组织排查界面",
+      "ui_image_inspected": true
+    }
+  ],
+  "flow_steps": [
+    {
+      "step": 1,
+      "name": "登录与导航",
+      "health": "已验证",
+      "pages": [
+        "登录"
+      ]
+    },
+    {
+      "step": 2,
+      "name": "监控与定位",
+      "health": "已验证",
+      "pages": [
+        "概览"
+      ]
+    },
+    {
+      "step": 3,
+      "name": "日志排查与继续处理",
+      "health": "已验证",
+      "pages": [
+        "请求日志"
+      ]
+    },
+    {
+      "step": 4,
+      "name": "对话、文档、安全测试和评测",
+      "health": "已验证",
+      "pages": [
+        "安全对话",
+        "安全测试",
+        "文档处理",
+        "评测任务"
+      ]
+    },
+    {
+      "step": 5,
+      "name": "配置与成员管理",
+      "health": "已验证",
+      "pages": [
+        "防护策略",
+        "检测规则",
+        "成员与权限",
+        "测试样本",
+        "操作审计",
+        "系统设置"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "登录",
+      "before_screenshot": "before/01-login.png",
+      "after_screenshot": "after/01-login.png",
+      "observed_before": "常驻研究宣传、架构图和本机凭据路径",
+      "implemented": "保留登录表单和按需帮助",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "概览",
+      "before_screenshot": "before/02-dashboard.png",
+      "after_screenshot": "after/page-01-dashboard.png",
+      "observed_before": "大横幅、重复说明、累计数据缺少时间筛选",
+      "implemented": "时间筛选、指标联动、异常入口、最近请求",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "请求日志",
+      "before_screenshot": "before/03-logs.png",
+      "after_screenshot": "after/page-02-logs.png",
+      "observed_before": "缺少内容和状态检索；错误可能显示为放行",
+      "implemented": "状态分类、搜索、同范围导出、详情链接及复测",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "安全对话",
+      "before_screenshot": "before/04-chat.png",
+      "after_screenshot": "after/page-03-chat.png",
+      "observed_before": "强制双通道，空态与检测说明占据页面",
+      "implemented": "默认防护生成，可切换对照和检测，详情按需展开",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "安全测试",
+      "before_screenshot": "before/05-attack.png",
+      "after_screenshot": "after/page-04-attack.png",
+      "observed_before": "批量结果与样本管理缺少直接联系",
+      "implemented": "精确载入样本、限制25条、保留有效分母",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "文档处理",
+      "before_screenshot": "before/06-documents.png",
+      "after_screenshot": "after/page-05-documents.png",
+      "observed_before": "重复介绍处理原理，缺少日志后续入口",
+      "implemented": "保留上传约束、段落状态、结果及日志复测入口",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "评测任务",
+      "before_screenshot": "before/07-evaluation.png",
+      "after_screenshot": "after/page-06-evaluation.png",
+      "observed_before": "创建表单、说明、比较和文件列表同时常驻",
+      "implemented": "按需创建和比较，紧凑任务列表，按需下载",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "防护策略",
+      "before_screenshot": "before/08-policy.png",
+      "after_screenshot": "after/page-08-policy.png",
+      "observed_before": "缺少离开未保存页面的提醒",
+      "implemented": "显式保存、撤销和未保存确认",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "检测规则",
+      "before_screenshot": "before/09-rules.png",
+      "after_screenshot": "after/page-09-rules.png",
+      "observed_before": "整表是输入框，长正则占据列表",
+      "implemented": "浏览检索与编辑分离，发布、恢复和未保存提醒",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "成员与权限",
+      "before_screenshot": "before/10-accounts.png",
+      "after_screenshot": "after/page-07-accounts.png",
+      "observed_before": "新增与改密表单一直展开",
+      "implemented": "成员表优先，创建与改密按需打开",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "测试样本",
+      "before_screenshot": "before/11-samples.png",
+      "after_screenshot": "after/page-10-samples.png",
+      "observed_before": "只读样本缺少完整查看与继续测试入口",
+      "implemented": "详情、载入测试及从日志新建样本",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "操作审计",
+      "before_screenshot": "before/12-audits.png",
+      "after_screenshot": "after/page-11-audits.png",
+      "observed_before": "详情直接显示整条原始对象",
+      "implemented": "先展示操作信息，再查看实际变更",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    },
+    {
+      "name": "系统设置",
+      "before_screenshot": "before/13-runtime.png",
+      "after_screenshot": "after/page-12-runtime.png",
+      "observed_before": "刷新或离开可能覆盖未保存参数",
+      "implemented": "参数变更提醒，保留备份及错误日志入口",
+      "strength_retained": "已有真实接口、权限检查和持久化数据继续使用",
+      "accessibility": "检查重排、键盘入口与弹窗；没有进行完整屏幕阅读器审查"
+    }
+  ],
+  "visual_review": {
+    "status": "passed",
+    "accepted_after_images": [
+      "page-01-dashboard.png",
+      "page-02-logs.png",
+      "page-03-chat.png",
+      "page-04-attack.png",
+      "page-05-documents.png",
+      "page-06-evaluation.png",
+      "page-07-accounts.png",
+      "page-08-policy.png",
+      "page-09-rules.png",
+      "page-10-samples.png",
+      "page-11-audits.png",
+      "page-12-runtime.png",
+      "01-login.png",
+      "03-request-detail.png",
+      "04-real-comparison.png",
+      "05-document-interception.png",
+      "06-security-test.png",
+      "08-mobile.png",
+      "mobile-member-dialog.png",
+      "mobile-evaluation-dialog.png",
+      "mobile-rule-dialog.png"
+    ],
+    "method": "Saved browser images inspected. Final page images show resting states; workflow images show real completion states from this audit. Mobile modal transitions were fast-forwarded for capture, with no screenshot editing."
+  },
+  "capability_boundaries": [
+    "当前是单机、单worker控制台，保留管理员与普通用户隔离。",
+    "没有面向外部应用的独立接入密钥及应用级限额、分项目多租户、主动告警通知或多实例并发能力。",
+    "本轮补齐本地工作流程，不以页面覆盖或测试数量宣称等同成熟云平台。",
+    "截图来自独立验收库与真实本机模型调用；不是自然生产流量或新的全量论文实验。",
+    "模型、规则默认值与原实验结果没有因界面改造而调整；不声称检测准确率提高。"
+  ]
+}

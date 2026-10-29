@@ -1,0 +1,239 @@
+{
+  "files": [
+    {
+      "path": "after/01-login.png",
+      "sha256": "41eae2857145e689b76005a634de293abd0338962c7a826ad41d16d95c8a5938",
+      "bytes": 21978
+    },
+    {
+      "path": "after/03-request-detail.png",
+      "sha256": "91896273174e7267bbf8f91035777b209160cfa4b1ed22205eb21aa8c1fa1dcb",
+      "bytes": 94243
+    },
+    {
+      "path": "after/04-real-comparison.png",
+      "sha256": "2f3ef8f93b7fcb0e9f25427105d968a3b465276bb525010d6854ba1036d41e05",
+      "bytes": 108495
+    },
+    {
+      "path": "after/05-document-interception.png",
+      "sha256": "961d9c58db67f65031723e6a682386400e06ee98e31ccdcfe0c9cbb331f7d44a",
+      "bytes": 83367
+    },
+    {
+      "path": "after/06-security-test.png",
+      "sha256": "792bd18627634e50b470f6438620e60b94f87d5c3b0cd6779af7fec2bff3ea53",
+      "bytes": 109727
+    },
+    {
+      "path": "after/08-mobile.png",
+      "sha256": "9491cbde799a6c4d19fbc7459e950991af7a252419e88ddef453c9a8e0013494",
+      "bytes": 73109
+    },
+    {
+      "path": "after/mobile-evaluation-dialog.png",
+      "sha256": "7493d9d78eb09ad6d874cade250c615a672b8088f8d629e258785cdabec5da17",
+      "bytes": 37358
+    },
+    {
+      "path": "after/mobile-member-dialog.png",
+      "sha256": "68900a00338a6a3e3eca7cfff9c574879b8d0dea1b30502998c41ab4d4f2ba30",
+      "bytes": 27734
+    },
+    {
+      "path": "after/mobile-rule-dialog.png",
+      "sha256": "48c7d6ec8d024039d9f81828b019a67b2ac5f390da7582b4cd3370d7cd9fb5c8",
+      "bytes": 35329
+    },
+    {
+      "path": "after/page-01-dashboard.png",
+      "sha256": "97d826348bd8e3b9982d5dce794dc90e6c388ea62e6e79313756203d069e6df2",
+      "bytes": 120366
+    },
+    {
+      "path": "after/page-02-logs.png",
+      "sha256": "691d31663e4092c434a6788c874c19c0d0a123440f7b15db749561654ffb3618",
+      "bytes": 127137
+    },
+    {
+      "path": "after/page-03-chat.png",
+      "sha256": "4935254f18596b7a9337f1f00adf888da686ef9f79254b0e367490624265c997",
+      "bytes": 77308
+    },
+    {
+      "path": "after/page-04-attack.png",
+      "sha256": "91922dca9dd6719789ee818943a410e98f24277e34f7862dbcd448c2bf6bf51d",
+      "bytes": 95109
+    },
+    {
+      "path": "after/page-05-documents.png",
+      "sha256": "b4dbbbe733038e400ff027bef83de99d0d1b27e14a37316b84a4428ad7bfd397",
+      "bytes": 59201
+    },
+    {
+      "path": "after/page-06-evaluation.png",
+      "sha256": "bcb2f8c363ef8718b10d29404126cebbca57364fe38df7582357feabd5f4028f",
+      "bytes": 88870
+    },
+    {
+      "path": "after/page-07-accounts.png",
+      "sha256": "1b42f063fa04f078152e5a5437cdd73c27d9a4381339b71f887de462a693065b",
+      "bytes": 59568
+    },
+    {
+      "path": "after/page-08-policy.png",
+      "sha256": "2ef4d0f284c9a2c7c4f0817259e3d290c4cbc5e5e2dcc16707c80cf311815679",
+      "bytes": 121380
+    },
+    {
+      "path": "after/page-09-rules.png",
+      "sha256": "3f39259db1c28e54cf0841cef2dbd749df82589c657930df94c4e0ea858ac34d",
+      "bytes": 142444
+    },
+    {
+      "path": "after/page-10-samples.png",
+      "sha256": "c21f438546562c886a4ded2d31edc171c088633feee6e07e9c21bf9a1de8eca7",
+      "bytes": 206614
+    },
+    {
+      "path": "after/page-11-audits.png",
+      "sha256": "46521aa12821e312c935cd38bdfba727d0fdc1514e17f0c0c63bf21b46bb0a08",
+      "bytes": 86465
+    },
+    {
+      "path": "after/page-12-runtime.png",
+      "sha256": "a88963c7266ea697c133f61fb679507693821c119ecb41b41cf1c30c0aa86d25",
+      "bytes": 84023
+    },
+    {
+      "path": "audit.json",
+      "sha256": "d2f8bbbe1e257082879cbf68bfc2200c5ebe42bf7191fadce92f8ec0cb518fc3",
+      "bytes": 9790
+    },
+    {
+      "path": "before/01-login.png",
+      "sha256": "982572d42776281b8708e85d7f3446bb48af770ece3ecc6b477e568629de678c",
+      "bytes": 356629
+    },
+    {
+      "path": "before/02-dashboard.png",
+      "sha256": "4f0b88cc5850fde2f92f72dce788f7aa9bd672a113c76e84a05616822165535f",
+      "bytes": 172156
+    },
+    {
+      "path": "before/03-logs.png",
+      "sha256": "a8ca79972e8cfddcf0484317d75c7c5435c44bc166d39a4fac4f2283b305d00f",
+      "bytes": 177630
+    },
+    {
+      "path": "before/04-chat.png",
+      "sha256": "746009e4beeb8c3ecadde67eb05e61855f86087d55acd837b4c10fd3e9d82551",
+      "bytes": 104681
+    },
+    {
+      "path": "before/05-attack.png",
+      "sha256": "64c428c046cdb9cf04d7b4b0d9f286951e1c974ca5a58e46581d162f6f1de0eb",
+      "bytes": 135314
+    },
+    {
+      "path": "before/06-documents.png",
+      "sha256": "7cc6c0fce5a45adbb90e2e07dd0c25420ab6d50abdf84ebbd4cfb43f72ceeb4b",
+      "bytes": 107248
+    },
+    {
+      "path": "before/07-evaluation.png",
+      "sha256": "d79ceca0c2691614d4082bfb98d33b704ebca788e30768894f8949727b86dd53",
+      "bytes": 154929
+    },
+    {
+      "path": "before/08-policy.png",
+      "sha256": "2c345787308ded775d762e395f952508e6b8cc7b54f5fdc700a4c11f78c5ab56",
+      "bytes": 180309
+    },
+    {
+      "path": "before/09-rules.png",
+      "sha256": "1be5413e16ddcd931087fdf9af1641c05cbcb463fdb6fc3d86ff8a7a308fd61b",
+      "bytes": 221485
+    },
+    {
+      "path": "before/10-accounts.png",
+      "sha256": "fb8fa9f15d859e70824f4883dd6573760734f87479e73c26ce64b7c07ad6cb77",
+      "bytes": 112946
+    },
+    {
+      "path": "before/11-samples.png",
+      "sha256": "9bad402b564954a75ac56e583a05aab11e1e556f8b8dd0c2829b7b20a7e78f0b",
+      "bytes": 240326
+    },
+    {
+      "path": "before/12-audits.png",
+      "sha256": "04ce334684137cdbe4dac16ec435d45600e6252a57c6de9835e75d1d3ea9cf1f",
+      "bytes": 82408
+    },
+    {
+      "path": "before/13-runtime.png",
+      "sha256": "c15c3fb10b06c1faffd52ac78341c74aaf7cdaced9a68660d069068552505121",
+      "bytes": 120147
+    },
+    {
+      "path": "browser-extras.json",
+      "sha256": "226d914e60d088f4618155145cee4e1daf25b9454b682311bb29be03f15b46d3",
+      "bytes": 852
+    },
+    {
+      "path": "browser.json",
+      "sha256": "827caaec0a893a65c24381283779f44e62d63f6d51d0919b9763005e1ce9554e",
+      "bytes": 22543
+    },
+    {
+      "path": "build.log",
+      "sha256": "34dd6fb33685d0db98494233a827073b9d07b8a0c9b1a3963eb715d22d549e68",
+      "bytes": 2704
+    },
+    {
+      "path": "final-layout.json",
+      "sha256": "95a5471df712418827cef96ddd9bfc16aa9b85d16955964b98e869ea964bd69c",
+      "bytes": 735
+    },
+    {
+      "path": "focused-tests.log",
+      "sha256": "038f1176adb4221d6e1de2fb8d6575f8dfd250deb0bac1a7780d3f3792927dc8",
+      "bytes": 561
+    },
+    {
+      "path": "format.log",
+      "sha256": "f20510a9da4717c51c4cffee6d0dd88d6c9a723d0a83711d01216f5b48961283",
+      "bytes": 68
+    },
+    {
+      "path": "http-checks.json",
+      "sha256": "47b7b531f0dbafebcd9fc9eb16dc146799a191e26da3f143f05f0a45e54d2692",
+      "bytes": 3521
+    },
+    {
+      "path": "local-readiness.json",
+      "sha256": "257cbc6cb31334a43e87dadce4d5bd8ef1d65fcdbfe9c9c50e3a7f1b04c30874",
+      "bytes": 231
+    },
+    {
+      "path": "preservation.json",
+      "sha256": "7cba35bcf97c7ced9bfe3ea97bc27747937b7861a8ace99f612075bf4aab05ed",
+      "bytes": 114
+    },
+    {
+      "path": "pytest.log",
+      "sha256": "f52cfa9622ae01efaa4ab7a75c92b53701280b3adcbde7962798b5a817968e55",
+      "bytes": 969
+    },
+    {
+      "path": "services-stopped.json",
+      "sha256": "60c81f087dbc78ac6bcbd0ca06efbeef87b209090349664e471c438a00f12db4",
+      "bytes": 69
+    },
+    {
+      "path": "summary.json",
+      "sha256": "df9f07171667dcef7d06883c25aa4e666605e39a84a67421293c5ea32e421a47",
+      "bytes": 4722
+    }
+  ]
+}

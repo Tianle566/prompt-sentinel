@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "sizes": [
+    {
+      "name": "documents-final-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "evaluation-final-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "rules-final-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "runtime-final-mobile",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "mobile-member-dialog",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "mobile-evaluation-dialog",
+      "width": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "mobile-rule-dialog",
+      "width": 390,
+      "scrollWidth": 390
+    }
+  ],
+  "errors": []
+}

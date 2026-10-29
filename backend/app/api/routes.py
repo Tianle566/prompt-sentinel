@@ -125,7 +125,7 @@ def _scope(statement, user: User):
     return statement if user.role == "admin" else statement.where(RequestLog.user_id == user.id)
 
 
-def _attack_interception_stats(db: Session, user: User, log_ids: list[int] | None = None):
+def _attack_interception_stats(db: Session, user: User, log_ids: list[int] | None = None, start=None, end=None):
     """Count actual interceptions of declared attack tests, not all blocked traffic."""
     evaluation = RequestLog.result["attack_evaluation"]
     oracle_type = evaluation["oracle"]["type"].as_string()
@@ -145,6 +145,7 @@ def _attack_interception_stats(db: Session, user: User, log_ids: list[int] | Non
     ).where(RequestLog.kind == "attack", RequestLog.protected.is_(True), RequestLog.attack_type.not_in(("benign", "normal")))
     if log_ids is not None:
         statement = statement.where(RequestLog.id.in_(log_ids))
+    statement = _period_query(statement, start, end)
     total, evaluated, intercepted, errors = (int(value or 0) for value in db.execute(_scope(statement, user)).one())
     return {"total": total, "evaluated": evaluated, "intercepted": intercepted, "not_intercepted": evaluated - intercepted, "errors": errors, "unknown": total - evaluated - errors, "rate": intercepted / evaluated if evaluated else None}
 
@@ -311,7 +312,7 @@ def detect(body: ChatBody, user: User = Depends(current_user), db: Session = Dep
     _input(body.text)
     with _inference_slot():
         result = _json(_detection().detect(body.text))
-    _save_log(db, user, body.text, True, {"detection": result, "blocked": result["is_attack"], "latency_ms": result["latency_ms"]}, "detect")
+    result["id"] = _save_log(db, user, body.text, True, {"detection": result, "blocked": result["is_attack"], "latency_ms": result["latency_ms"]}, "detect")
     return result
 
 
@@ -348,8 +349,12 @@ def compare(body: ChatBody, user: User = Depends(current_user), db: Session = De
 
 
 @router.get("/attack/samples", tags=["attack"])
-def samples(attack_type: str | None = None, limit: int = Query(20, ge=1, le=200), user: User = Depends(current_user), db: Session = Depends(get_db)):
+def samples(attack_type: str | None = None, limit: int = Query(20, ge=1, le=200), sample_id: str | None = Query(None, max_length=100), user: User = Depends(current_user), db: Session = Depends(get_db)):
     data = active_samples(db) + _samples()
+    if sample_id:
+        data = [sample for sample in data if str(sample.get("id")) == sample_id]
+        if not data:
+            raise HTTPException(404, "样本不存在或已停用")
     if attack_type:
         data = [s for s in data if s.get("attack_type") == attack_type]
     # Return public attack criteria; canaries are generated only at runtime.
@@ -465,14 +470,44 @@ def document(file: UploadFile = File(...), protected: Literal["true", "false"] =
     return {"filename": Path(file.filename).name, "paragraphs": paragraphs, "result": output}
 
 
+def _log_failure():
+    return or_(
+        func.coalesce(RequestLog.result["error"].as_string(), "") != "",
+        RequestLog.result["detection"]["reliable"].as_boolean().is_(False),
+        RequestLog.result["output_check"]["status"].as_string() == "error",
+        RequestLog.result["hardening"]["status"].as_string() == "error",
+    )
+
+
+def _log_status(log: RequestLog) -> str:
+    result = log.result or {}
+    failed = (result.get("error") or (result.get("detection") or {}).get("reliable") is False
+              or (result.get("output_check") or {}).get("status") == "error"
+              or (result.get("hardening") or {}).get("status") == "error")
+    return "error" if failed else "blocked" if log.blocked else "allowed"
+
+
+def _period_query(statement, start=None, end=None):
+    # SQLite stores UTC without a timezone; normalize offsets before comparing.
+    start = start.astimezone(timezone.utc).replace(tzinfo=None) if start and start.tzinfo else start
+    end = end.astimezone(timezone.utc).replace(tzinfo=None) if end and end.tzinfo else end
+    if start and end and start > end:
+        raise HTTPException(422, "开始时间不能晚于结束时间")
+    if start:
+        statement = statement.where(RequestLog.created_at >= start)
+    if end:
+        statement = statement.where(RequestLog.created_at <= end)
+    return statement
+
+
 def _log_summary(log: RequestLog, detail=False):
-    result = {"id": log.id, "kind": log.kind, "user_id": log.user_id, "text": log.text if detail else log.text[:180], "protected": log.protected, "blocked": log.blocked, "attack_type": log.attack_type, "hit_layers": log.hit_layers, "latency_ms": log.latency_ms, "created_at": log.created_at.isoformat() + ("Z" if log.created_at.tzinfo is None else "")}
+    result = {"id": log.id, "kind": log.kind, "user_id": log.user_id, "text": log.text if detail else log.text[:180], "protected": log.protected, "blocked": log.blocked, "status": _log_status(log), "attack_type": log.attack_type, "hit_layers": log.hit_layers, "latency_ms": log.latency_ms, "created_at": log.created_at.isoformat() + ("Z" if log.created_at.tzinfo is None else "")}
     if detail:
         result["result"] = log.result
     return result
 
 
-def _log_query(user, attack_type=None, layer=None, start=None, end=None, user_id=None):
+def _log_query(user, attack_type=None, layer=None, start=None, end=None, user_id=None, q=None, status=None, kind=None, blocked=None):
     statement = _scope(select(RequestLog), user)
     if user_id is not None:
         if user.role != "admin" and user_id != user.id:
@@ -484,16 +519,27 @@ def _log_query(user, attack_type=None, layer=None, start=None, end=None, user_id
         if layer not in ("L1", "L2", "L3", "L4", "L5"):
             raise HTTPException(422, "层名称须为 L1 到 L5")
         statement = statement.where(cast(RequestLog.hit_layers, String).contains(f'"{layer}"'))
-    if start:
-        statement = statement.where(RequestLog.created_at >= start)
-    if end:
-        statement = statement.where(RequestLog.created_at <= end)
-    return statement
+    if q and q.strip():
+        query = q.strip()
+        match = RequestLog.text.contains(query, autoescape=True)
+        if query.startswith("#") and query[1:].isascii() and query[1:].isdigit() and len(query) <= 19:
+            match = RequestLog.id == int(query[1:])
+        elif query.isascii() and query.isdigit() and len(query) <= 18:
+            match = or_(match, RequestLog.id == int(query))
+        statement = statement.where(match)
+    if status:
+        decision = case((_log_failure(), "error"), (RequestLog.blocked.is_(True), "blocked"), else_="allowed")
+        statement = statement.where(decision == status)
+    if kind:
+        statement = statement.where(RequestLog.kind == kind)
+    if blocked is not None:
+        statement = statement.where(RequestLog.blocked.is_(blocked))
+    return _period_query(statement, start, end)
 
 
 @router.get("/logs", tags=["logs"])
-def logs(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), attack_type: str | None = None, layer: str | None = None, start: datetime | None = None, end: datetime | None = None, user_id: int | None = Query(None, ge=1), user: User = Depends(current_user), db: Session = Depends(get_db)):
-    statement = _log_query(user, attack_type, layer, start, end, user_id)
+def logs(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), attack_type: str | None = None, layer: str | None = None, start: datetime | None = None, end: datetime | None = None, user_id: int | None = Query(None, ge=1), q: str | None = Query(None, max_length=300), status: Literal["allowed", "blocked", "error"] | None = None, kind: Literal["chat", "compare", "attack", "document", "detect"] | None = None, blocked: bool | None = None, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    statement = _log_query(user, attack_type, layer, start, end, user_id, q, status, kind, blocked)
     total = db.scalar(select(func.count()).select_from(statement.subquery()))
     rows = db.scalars(statement.order_by(RequestLog.id.desc()).offset((page - 1) * page_size).limit(page_size)).all()
     types = db.scalars(_scope(select(RequestLog.attack_type).distinct(), user).order_by(RequestLog.attack_type)).all()
@@ -502,13 +548,13 @@ def logs(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), a
 
 
 @router.get("/logs/export.csv", tags=["logs"])
-def export_logs(attack_type: str | None = None, layer: str | None = None, start: datetime | None = None, end: datetime | None = None, user_id: int | None = Query(None, ge=1), user: User = Depends(current_user), db: Session = Depends(get_db)):
-    statement = _log_query(user, attack_type, layer, start, end, user_id).order_by(RequestLog.id.desc()).limit(10000)
+def export_logs(attack_type: str | None = None, layer: str | None = None, start: datetime | None = None, end: datetime | None = None, user_id: int | None = Query(None, ge=1), q: str | None = Query(None, max_length=300), status: Literal["allowed", "blocked", "error"] | None = None, kind: Literal["chat", "compare", "attack", "document", "detect"] | None = None, blocked: bool | None = None, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    statement = _log_query(user, attack_type, layer, start, end, user_id, q, status, kind, blocked).order_by(RequestLog.id.desc()).limit(10000)
     rows = db.scalars(statement).all()
     usernames = dict(db.execute(select(User.id, User.username).where(User.id.in_({row.user_id for row in rows}))).all())
-    text = csv_text(["ID", "账号", "时间", "用途", "输入", "开启防护", "已拦截", "攻击类型", "命中层", "耗时毫秒"], [[row.id, usernames.get(row.user_id), row.created_at.isoformat(), row.kind, row.text, row.protected, row.blocked, row.attack_type, ",".join(row.hit_layers), row.latency_ms] for row in rows])
+    text = csv_text(["ID", "账号", "时间", "用途", "输入", "开启防护", "已拦截", "攻击类型", "命中层", "耗时毫秒", "执行状态"], [[row.id, usernames.get(row.user_id), row.created_at.isoformat(), row.kind, row.text, row.protected, row.blocked, row.attack_type, ",".join(row.hit_layers), row.latency_ms, _log_status(row)] for row in rows])
     if user.role == "admin":
-        audit(db, user, "logs.export", "request_logs", {"count": len(rows), "user_id": user_id, "attack_type": attack_type, "layer": layer})
+        audit(db, user, "logs.export", "request_logs", {"count": len(rows), "user_id": user_id, "attack_type": attack_type, "layer": layer, "status": status, "kind": kind, "blocked": blocked, "start": start.isoformat() if start else None, "end": end.isoformat() if end else None, "search_applied": bool(q)})
         db.commit()
     return Response(text, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": 'attachment; filename="request-logs.csv"'})
 
@@ -522,17 +568,20 @@ def log_detail(log_id: int, user: User = Depends(current_user), db: Session = De
 
 
 @router.get("/stats", tags=["stats"])
-def stats(user: User = Depends(current_user), db: Session = Depends(get_db)):
+def stats(start: datetime | None = None, end: datetime | None = None, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    def scope(statement):
+        return _period_query(_scope(statement, user), start, end)
+
     blocked_value = case((RequestLog.blocked.is_(True), 1), else_=0)
-    total, blocked, average = db.execute(_scope(select(func.count(RequestLog.id), func.sum(blocked_value), func.avg(RequestLog.latency_ms)), user)).one()
+    total, blocked, average, errors = db.execute(scope(select(func.count(RequestLog.id), func.sum(blocked_value), func.avg(RequestLog.latency_ms), func.sum(case((_log_failure(), 1), else_=0))))).one()
     blocked = int(blocked or 0)
     day = func.date(RequestLog.created_at)
-    daily = db.execute(_scope(select(day, func.count(RequestLog.id), func.sum(blocked_value)), user).group_by(day).order_by(day)).all()
-    attacks = db.execute(_scope(select(RequestLog.attack_type, func.count(RequestLog.id)).where(RequestLog.blocked.is_(True)), user).group_by(RequestLog.attack_type).order_by(RequestLog.attack_type)).all()
+    daily = db.execute(scope(select(day, func.count(RequestLog.id), func.sum(blocked_value))).group_by(day).order_by(day)).all()
+    attacks = db.execute(scope(select(RequestLog.attack_type, func.count(RequestLog.id)).where(RequestLog.blocked.is_(True))).group_by(RequestLog.attack_type).order_by(RequestLog.attack_type)).all()
     names = ("L1", "L2", "L3", "L5")
-    layer_counts = db.execute(_scope(select(*[func.sum(case((cast(RequestLog.hit_layers, String).contains(f'"{name}"'), 1), else_=0)) for name in names]), user)).one()
+    layer_counts = db.execute(scope(select(*[func.sum(case((cast(RequestLog.hit_layers, String).contains(f'"{name}"'), 1), else_=0)) for name in names]))).one()
     # JSON layer details are the only Python-side aggregation, bounded in SQL.
-    recent = db.scalars(_scope(select(RequestLog.result), user).order_by(RequestLog.created_at.desc(), RequestLog.id.desc()).limit(1000)).all()
+    recent = db.scalars(scope(select(RequestLog.result)).order_by(RequestLog.created_at.desc(), RequestLog.id.desc()).limit(1000)).all()
     latency = defaultdict(list)
     for result in recent:
         results = list((result.get("detection") or {}).get("layer_results", []))
@@ -540,7 +589,8 @@ def stats(user: User = Depends(current_user), db: Session = Depends(get_db)):
         for result in results:
             if result.get("enabled", True) and result.get("status") == "ok":
                 latency[result["layer"]].append(result.get("latency_ms", 0))
-    return {"total_requests": total, "blocked_requests": blocked, "block_rate": blocked / total if total else 0, "attack_interception": _attack_interception_stats(db, user), "average_latency_ms": average or 0, "attack_types": [{"name": name, "value": count} for name, count in attacks], "daily": [{"date": date.isoformat() if hasattr(date, "isoformat") else str(date), "total": count, "blocked": int(hits)} for date, count, hits in daily], "layers": [{"name": name, "value": int(count or 0)} for name, count in zip(names, layer_counts)], "latencies": [{"name": k, "value": sum(v) / len(v)} for k, v in sorted(latency.items())]}
+    latest = db.scalars(scope(select(RequestLog)).order_by(RequestLog.created_at.desc(), RequestLog.id.desc()).limit(6)).all()
+    return {"total_requests": total, "blocked_requests": blocked, "error_requests": int(errors or 0), "block_rate": blocked / total if total else 0, "attack_interception": _attack_interception_stats(db, user, start=start, end=end), "average_latency_ms": average or 0, "attack_types": [{"name": name, "value": count} for name, count in attacks], "daily": [{"date": date.isoformat() if hasattr(date, "isoformat") else str(date), "total": count, "blocked": int(hits)} for date, count, hits in daily], "layers": [{"name": name, "value": int(count or 0)} for name, count in zip(names, layer_counts)], "latencies": [{"name": k, "value": sum(v) / len(v)} for k, v in sorted(latency.items())], "recent_requests": [_log_summary(row) for row in latest]}
 
 
 @router.get("/config", tags=["config"])

@@ -3,12 +3,14 @@ import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api, errorText } from '../api'
 import Icon from '../components/Icon.vue'
+import { useUnsavedChanges } from '../composables/useUnsavedChanges'
 const config = ref(null),
   snapshot = ref(''),
   loading = ref(true),
   saving = ref(false),
   error = ref('')
 const dirty = computed(() => !!config.value && JSON.stringify(config.value) !== snapshot.value)
+useUnsavedChanges(dirty)
 const descriptions = {
   l1: { title: '规则过滤', subtitle: '中英文规则与编码异常检测', icon: 'logs' },
   l2: { title: 'DeBERTa 分类', subtitle: '英文注入概率与滑动窗口分析', icon: 'chart' },
@@ -64,10 +66,6 @@ onMounted(load)
       role="alert"
     /><template v-if="config"
       ><div class="policy-topline">
-        <div class="experiment-note">
-          <Icon name="info" :size="18" />
-          <p>保存立即影响后续请求；已启动的评测继续使用其配置快照。所有变更均记录审计日志。</p>
-        </div>
         <div class="policy-actions">
           <span v-if="dirty" class="unsaved-dot">有未保存的更改</span
           ><el-button @click="reset" :disabled="!dirty || saving">撤销更改</el-button
@@ -88,7 +86,6 @@ onMounted(load)
               <span class="layer-large-id">L{{ index + 1 }}</span>
               <div>
                 <h2>{{ item.title }}</h2>
-                <p>{{ item.subtitle }}</p>
               </div>
               <el-switch
                 v-model="config.layers[key].enabled"
@@ -98,8 +95,9 @@ onMounted(load)
             </div>
             <div class="layer-config-body" v-if="config.layers[key].enabled">
               <div v-if="key === 'l1'" class="helper">
-                规则库来自
-                backend/rules.yaml，支持忽略指令、角色扮演、提示泄露、编码混淆、零宽字符与伪造分隔符。
+                <router-link to="/rules" class="text-action"
+                  >管理检测规则 <Icon name="arrow" :size="13"
+                /></router-link>
               </div>
               <template v-if="key === 'l2'"
                 ><div class="setting-label">
@@ -306,13 +304,9 @@ onMounted(load)
                   :rows="4"
                   :disabled="saving" /></el-form-item
             ></el-form>
-            <p class="helper">
-              API 密钥由后端环境变量管理。攻击测试和 ASR 评测仅允许连接本机模型。
-            </p>
           </section>
-        </div>
-      </div></template
-    >
+        </div></div
+    ></template>
     <div v-else-if="!loading" class="panel"><el-button @click="load">重试加载</el-button></div>
   </div>
 </template>

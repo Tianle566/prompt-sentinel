@@ -1,7 +1,11 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router'
 import { api, attackName, errorText } from '../api'
+const route = useRoute(),
+  router = useRouter(),
+  preview = ref(null)
 const items = ref([]),
   total = ref(0),
   page = ref(1),
@@ -90,14 +94,29 @@ async function remove(row) {
     if (!['cancel', 'close'].includes(e)) error.value = errorText(e)
   }
 }
-onMounted(() => load())
+onMounted(async () => {
+  await load()
+  if (route.query.from) {
+    try {
+      const { data } = await api.get(`/logs/${encodeURIComponent(route.query.from)}`)
+      edit()
+      form.text = data.text
+      form.source = `请求 #${data.id}`
+      form.lang = /[\u4e00-\u9fff]/.test(data.text) ? 'zh' : 'en'
+      await router.replace('/samples')
+    } catch (e) {
+      error.value = errorText(e)
+    }
+  }
+})
 </script>
 <template>
   <section class="panel">
     <div class="section-title">
       <div>
-        <h2>攻击与正常测试样本</h2>
-        <p>内置论文样本只读。自定义样本不会改变论文数据或历史实验的分母。</p>
+        <h2>
+          样本库 <span class="count-pill">{{ total }}</span>
+        </h2>
       </div>
       <el-button type="primary" @click="edit()">新增样本</el-button>
     </div>
@@ -105,7 +124,7 @@ onMounted(() => load())
       <el-select v-model="origin" aria-label="样本来源" @change="load(true)"
         ><el-option label="全部样本" value="all" /><el-option
           label="自定义样本"
-          value="custom" /><el-option label="内置论文样本（只读）" value="builtin" /></el-select
+          value="custom" /><el-option label="内置样本（只读）" value="builtin" /></el-select
       ><el-input
         v-model="search"
         placeholder="搜索内容、来源或 ID"
@@ -123,7 +142,13 @@ onMounted(() => load())
       role="alert"
     />
     <TableScroll
-      ><el-table :data="items" v-loading="loading" empty-text="暂无符合条件的样本">
+      ><el-table
+        :data="items"
+        v-loading="loading"
+        class="clickable-table"
+        empty-text="暂无符合条件的样本"
+        @row-click="(row) => (preview = row)"
+      >
         <el-table-column label="样本内容" min-width="280" show-overflow-tooltip
           ><template #default="{ row }">{{ row.text }}</template></el-table-column
         >
@@ -139,7 +164,7 @@ onMounted(() => load())
           ><template #default="{ row }"
             >{{ row.source
             }}<small class="table-subtitle">{{
-              row.origin === 'builtin' ? '论文样本 · 只读' : '自定义样本'
+              row.origin === 'builtin' ? '内置样本 · 只读' : '自定义样本'
             }}</small></template
           ></el-table-column
         >
@@ -153,9 +178,13 @@ onMounted(() => load())
         <el-table-column label="操作" min-width="160"
           ><template #default="{ row }"
             ><template v-if="row.origin === 'custom'"
-              ><el-button size="small" @click="edit(row)">编辑</el-button
-              ><el-button size="small" type="danger" @click="remove(row)">移除</el-button></template
-            ><span v-else class="helper">只读</span></template
+              ><el-button size="small" @click.stop="edit(row)">编辑</el-button
+              ><el-button size="small" type="danger" @click.stop="remove(row)"
+                >移除</el-button
+              ></template
+            ><el-button v-else text size="small" @click.stop="preview = row"
+              >查看</el-button
+            ></template
           ></el-table-column
         >
       </el-table></TableScroll
@@ -169,6 +198,53 @@ onMounted(() => load())
       class="admin-pagination"
       @current-change="load()"
     />
+    <el-drawer
+      :model-value="!!preview"
+      title="样本详情"
+      size="min(680px, 100%)"
+      @close="preview = null"
+    >
+      <template v-if="preview"
+        ><dl class="request-properties">
+          <div>
+            <dt>ID</dt>
+            <dd>{{ preview.id }}</dd>
+          </div>
+          <div>
+            <dt>类别</dt>
+            <dd>{{ attackName(preview.attack_type) }}</dd>
+          </div>
+          <div>
+            <dt>来源</dt>
+            <dd>{{ preview.source }}</dd>
+          </div>
+          <div>
+            <dt>状态</dt>
+            <dd>
+              {{ preview.enabled ? '已启用' : '已停用' }} ·
+              {{ preview.origin === 'builtin' ? '内置' : '自定义' }}
+            </dd>
+          </div>
+        </dl>
+        <div class="input-preview">{{ preview.text }}</div>
+        <div class="detail-section-title"><h3>判据</h3></div>
+        <p class="helper">
+          {{
+            { marker: '指定输出标记', canary: '系统标记泄露', guard_unsafe: '回复审核' }[
+              preview.oracle?.type
+            ] || '未指定'
+          }}<span v-if="preview.oracle?.marker"> · {{ preview.oracle.marker }}</span>
+        </p>
+        <div class="toolbar-actions mt20">
+          <el-button
+            type="primary"
+            :disabled="!preview.enabled"
+            @click="router.push({ path: '/attack', query: { sample: preview.id } })"
+            >载入安全测试</el-button
+          >
+        </div></template
+      >
+    </el-drawer>
     <el-dialog
       v-model="visible"
       :title="editing ? '编辑自定义样本' : '新增自定义样本'"

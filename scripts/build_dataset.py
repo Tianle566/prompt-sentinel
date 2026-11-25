@@ -10,16 +10,25 @@ import base64
 import hashlib
 import json
 import random
+import shutil
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
 from collections import Counter
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
+from typing import IO
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+from scripts.verification_output import require_unfrozen_path
+
+PUBLISH_LOCK = Path(".runtime/dataset-publish.lock")
 
 # Pinned revisions, resolved from the official repository APIs on 2026-10-22.
 SOURCES = {
@@ -49,13 +58,47 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def fetch_sources(raw_dir: Path, offline: bool = False) -> dict:
+def _writable_path(path: Path, root: Path) -> Path:
+    resolved = require_unfrozen_path(path, root, ROOT)
+    if resolved.exists() and not resolved.is_file():
+        raise ValueError(f"目标必须是文件路径：{path}")
+    for parent in resolved.parents:
+        if parent.exists():
+            if not parent.is_dir():
+                raise ValueError(f"上级路径必须是目录：{parent}")
+            break
+    return resolved
+
+
+@contextmanager
+def _atomic_output(path: Path, root: Path, mode: str = "w") -> Iterator[IO]:
+    path = _writable_path(path, root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        encoding = None if mode == "wb" else "utf-8"
+        with tempfile.NamedTemporaryFile(mode=mode, encoding=encoding, dir=path.parent, delete=False) as stream:
+            temporary = Path(stream.name)
+            yield stream
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def _source_paths(raw_dir: Path, root: Path) -> tuple[Path, dict[str, Path]]:
+    previous = _writable_path(raw_dir / "sources.json", root)
+    paths = {key: _writable_path(raw_dir / spec["filename"], root) for key, spec in SOURCES.items()}
+    return previous, paths
+
+
+def fetch_sources(raw_dir: Path, offline: bool = False, root: Path = ROOT) -> dict:
+    previous, paths = _source_paths(raw_dir, root)
     raw_dir.mkdir(parents=True, exist_ok=True)
-    previous = raw_dir / "sources.json"
     recorded = json.loads(previous.read_text(encoding="utf-8")) if previous.exists() else {}
     manifest = {}
     for key, spec in SOURCES.items():
-        path = raw_dir / spec["filename"]
+        path = paths[key]
         if not path.exists():
             if offline:
                 raise FileNotFoundError(f"Missing official source {path}; run build_dataset.py online once")
@@ -64,10 +107,9 @@ def fetch_sources(raw_dir: Path, offline: bool = False) -> dict:
             for attempt in range(4):
                 try:
                     request = urllib.request.Request(spec["url"], headers={"User-Agent": "Prompt-Sentinel-Dataset/1.0"})
-                    with urllib.request.urlopen(request, timeout=120) as response, path.with_suffix(path.suffix + ".part").open("wb") as target:
+                    with _atomic_output(path, root, "wb") as target, urllib.request.urlopen(request, timeout=120) as response:
                         while block := response.read(1024 * 1024):
                             target.write(block)
-                    path.with_suffix(path.suffix + ".part").replace(path)
                     break
                 except (OSError, urllib.error.URLError) as exc:
                     last = exc
@@ -79,8 +121,56 @@ def fetch_sources(raw_dir: Path, offline: bool = False) -> dict:
         if prior.get("revision") == spec["revision"] and prior.get("sha256") and prior["sha256"] != digest:
             raise ValueError(f"Source checksum mismatch: {path}; restore the pinned official bytes")
         manifest[key] = {**spec, "sha256": digest, "bytes": path.stat().st_size}
-    previous.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    with _atomic_output(previous, root) as target:
+        target.write(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     return manifest
+
+
+def _temporary_file(path: Path, prefix: str) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=prefix, delete=False) as stream:
+        return Path(stream.name)
+
+
+def _publish_dataset(staged: dict[Path, Path], root: Path) -> None:
+    from filelock import FileLock
+
+    lock = _writable_path(root / PUBLISH_LOCK, root)
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with FileLock(str(lock), timeout=30):
+        backups: dict[Path, Path] = {}
+        retained: set[Path] = set()
+        try:
+            for path in staged:
+                if _writable_path(path, root) != path:
+                    raise ValueError(f"发布目标在构建期间发生变化：{path}")
+                if path.exists():
+                    backups[path] = _temporary_file(path, ".previous-")
+                    shutil.copyfile(path, backups[path])
+            for path, temporary in staged.items():
+                temporary.replace(path)
+        except (Exception, KeyboardInterrupt) as error:
+            rollback_errors = []
+            for path, temporary in reversed(staged.items()):
+                if temporary.exists():
+                    continue
+                backup = backups.get(path)
+                try:
+                    if backup is None:
+                        path.unlink(missing_ok=True)
+                    else:
+                        backup.replace(path)
+                except OSError as exc:
+                    if backup is not None:
+                        retained.add(backup)
+                    rollback_errors.append(f"{path}（{exc}，备份：{backup}）" if backup else f"{path}（{exc}）")
+            if rollback_errors:
+                raise RuntimeError("评测数据发布失败，以下文件未能恢复：" + "；".join(rollback_errors)) from error
+            raise
+        finally:
+            for backup in backups.values():
+                if backup not in retained:
+                    backup.unlink(missing_ok=True)
 
 
 def _attack_type(category: str) -> str:
@@ -173,13 +263,30 @@ def _template(index: int, kind: str, marker: str | None = None) -> tuple[str, st
 
 def build_dataset(config: dict | None = None, *, offline: bool = False, root: Path | None = None) -> dict:
     from backend.app.core.config import get_config
-    import pandas as pd
+
     config = config or get_config()
-    root = Path(root or ROOT)
+    root = Path(root or ROOT).resolve()
     settings = config["data"]
-    rng = random.Random(settings["seed"])
+    outputs = {
+        key: _writable_path(root / Path(settings[key]).expanduser(), root)
+        for key in ("detect_path", "asr_path")
+    }
+    manifest_path = _writable_path(root / "data" / "processed" / "manifest.json", root)
+    destinations = {*outputs.values(), manifest_path}
+    if len(destinations) != len(outputs) + 1:
+        raise ValueError("评测数据集和清单必须使用不同的文件")
     raw_dir = root / "data" / "raw"
-    provenance = fetch_sources(raw_dir, offline)
+    raw_manifest, raw_sources = _source_paths(raw_dir, root)
+    reserved = {raw_manifest, *raw_sources.values()}
+    if collisions := destinations.intersection(reserved):
+        raise ValueError(f"评测输出不得覆盖原始数据或原始数据清单：{next(iter(collisions))}")
+    if _writable_path(root / PUBLISH_LOCK, root) in destinations | reserved:
+        raise ValueError("评测数据路径不得与发布锁重合")
+
+    import pandas as pd
+
+    rng = random.Random(settings["seed"])
+    provenance = fetch_sources(raw_dir, offline, root)
     detect = []
     frame = pd.read_parquet(raw_dir / SOURCES["deepset_test"]["filename"])
     for index, row in frame.iterrows():
@@ -247,18 +354,23 @@ def build_dataset(config: dict | None = None, *, offline: bool = False, root: Pa
     # Deterministic stratification order avoids taking only one attack family when
     # a CPU-sized limit is configured by the operator.
     rng.shuffle(asr)
-    processed = root / "data" / "processed"
-    processed.mkdir(parents=True, exist_ok=True)
-    for key, records in (("detect_path", detect), ("asr_path", asr)):
-        configured = Path(settings[key])
-        path = configured if configured.is_absolute() else root / configured
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in records), encoding="utf-8")
     manifest = {"schema_version": 1, "template_version": 2, "seed": settings["seed"], "sources": provenance, "configuration": settings, "detect_count": len(detect), "asr_count": len(asr), "detect_by_source": dict(Counter(row["source"] for row in detect)), "detect_by_language_label": dict(Counter(f"{row['lang']}:{row['label']}" for row in detect)), "safety_categories": category_counts, "asr_by_type": dict(Counter(row["attack_type"] for row in asr)), "notes": ["No source response text is used as target-model output.", "Alpaca instructions are treated as benign by provenance, not individually human relabeled; label noise is possible.", "Safety-Prompts official categories include broad safety risks, not only strict instruction-hierarchy violations; original category is preserved.", "English attack_type is a documented lexical taxonomy; binary labels retain official test labels.", "Encoded and indirect template v2 samples are constructed locally with five structures per language; they are not independent natural attacks.", "ASR generated templates use harmless markers; other role_play output safety is automatically judged and requires human review."]}
-    for key in ("detect_path", "asr_path"):
-        path = Path(settings[key]); path = path if path.is_absolute() else root / path
-        manifest[key + "_sha256"] = sha256(path)
-    (processed / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with ExitStack() as cleanup:
+        staged = {}
+        for key, records in (("detect_path", detect), ("asr_path", asr)):
+            path = outputs[key]
+            temporary = _temporary_file(_writable_path(path, root), ".dataset-")
+            cleanup.callback(temporary.unlink, missing_ok=True)
+            with temporary.open("w", encoding="utf-8") as target:
+                for row in records:
+                    target.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+            manifest[key + "_sha256"] = sha256(temporary)
+            staged[path] = temporary
+        temporary = _temporary_file(_writable_path(manifest_path, root), ".dataset-")
+        cleanup.callback(temporary.unlink, missing_ok=True)
+        temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        staged[manifest_path] = temporary
+        _publish_dataset(staged, root)
     return manifest
 
 
@@ -266,7 +378,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--offline", action="store_true", help="Use and checksum local official raw sources only")
     args = parser.parse_args()
-    manifest = build_dataset(offline=args.offline)
+    try:
+        manifest = build_dataset(offline=args.offline)
+    except ValueError as exc:
+        parser.error(str(exc))
     print(json.dumps({key: manifest[key] for key in ("seed", "detect_count", "asr_count", "detect_by_source", "safety_categories", "asr_by_type")}, ensure_ascii=False, indent=2))
 
 

@@ -14,6 +14,8 @@ const results = computed(() => [
   ...(props.hardening ? [props.hardening] : []),
   ...(props.outputCheck ? [props.outputCheck] : []),
 ])
+const isHorizon = (layer) => layer.details?.repo === 'Horizon-Labs/prompt-injection-guard-small'
+const name = (layer) => (isHorizon(layer) ? 'Horizon 注入分类' : names[layer.layer] || layer.layer)
 const state = (layer) =>
   !layer.enabled || layer.status === 'disabled'
     ? '已关闭'
@@ -34,7 +36,7 @@ const state = (layer) =>
       <span class="layer-id">{{ layer.layer }}</span>
       <div class="layer-body">
         <div class="layer-title">
-          <strong>{{ names[layer.layer] || layer.layer }}</strong
+          <strong>{{ name(layer) }}</strong
           ><span
             class="status-text"
             :class="
@@ -46,10 +48,17 @@ const state = (layer) =>
         <div class="layer-meta">
           <span v-if="layer.score !== null && layer.score !== undefined"
             >{{
-              layer.layer === 'L2' ? '注入概率' : layer.layer === 'L3' ? '策略判定值' : '检测信号'
+              layer.details?.document_review === 'allowed'
+                ? '原始分类分数'
+                : layer.layer === 'L2'
+                  ? '分类分数'
+                  : layer.layer === 'L3'
+                    ? '策略判定值'
+                    : '检测信号'
             }}
             {{ layer.score.toFixed(3) }}</span
           ><span v-if="layer.details?.safety">安全等级 {{ layer.details.safety }}</span
+          ><span v-if="layer.details?.document_review === 'allowed'">文档复核通过</span
           ><span v-if="layer.details?.moderation?.safety"
             >回复等级 {{ layer.details.moderation.safety }}</span
           ><span v-if="layer.details?.window_count > 1"
@@ -63,7 +72,7 @@ const state = (layer) =>
       </div>
     </div>
     <div v-if="detection" class="fusion-note">
-      <span
+      <span v-if="!detection.layer_results?.some(isHorizon)"
         >融合策略 <strong>{{ detection.strategy }}</strong></span
       ><span v-if="!detection.reliable" class="text-warning">检测结果不完整</span
       ><span v-else>输入检测 {{ duration(detection.latency_ms) }}</span>

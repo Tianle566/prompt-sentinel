@@ -14,6 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from scripts.verification_output import prepare_report_path, require_unfrozen_path, write_report
+
 
 def lines(path):
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -29,10 +31,35 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def _report_destination(folder: Path, report_path: str | Path | None) -> Path:
+    destination = Path(report_path).expanduser() if report_path is not None else folder / "independent_audit.json"
+    if not destination.is_absolute():
+        destination = ROOT / destination
+    require_unfrozen_path(destination, ROOT)
+    if report_path is not None and (destination.exists() or destination.is_symlink()):
+        raise FileExistsError(f"审计报告路径已存在，请指定新的 --report 路径：{destination}")
+    return destination
+
+
+def _write_audit_report(destination: Path, report: dict, explicit: bool) -> Path:
+    require_unfrozen_path(destination, ROOT)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        write_report(destination, report)
+    except FileExistsError:
+        if explicit:
+            raise
+        require_unfrozen_path(ROOT / "results", ROOT)
+        destination = prepare_report_path(ROOT, None, "audit", "independent_audit.json")
+        write_report(destination, report)
+    return destination
+
+
 def audit(directory="results", allow_sampled=False, data_dir=None, report_path=None):
     folder = Path(directory)
     if not folder.is_absolute():
         folder = ROOT / folder
+    destination = _report_destination(folder, report_path)
     summary = json.loads((folder / "summary.json").read_text(encoding="utf-8"))
     snapshot = json.loads((folder / "config_snapshot.json").read_text(encoding="utf-8"))
     checks = []
@@ -159,12 +186,9 @@ def audit(directory="results", allow_sampled=False, data_dir=None, report_path=N
     if not allow_sampled:
         check(all(row["oracle"] == "guard_unsafe" for row in review), "50 manual checks target the actual model-based unsafe-response oracle")
     report = {"status": "passed", "directory": str(folder), "checks_passed": len(checks), "checks": checks, "detection_count": len(detect), "asr_cells": len(asr), "cpu_only": summary["environment"]["configured_device"] == "cpu" and summary["environment"].get("target_gpu_disabled") and summary["environment"].get("observed_detector_devices") == ["cpu"], "human_review_completed": review_state == "annotated", "human_review_state": review_state, "human_annotated_rows": len(annotated), "file_sha256": {path.name: digest(path) for path in folder.iterdir() if path.is_file() and path.suffix in (".csv", ".png")}}
-    destination = Path(report_path) if report_path is not None else folder / "independent_audit.json"
-    if not destination.is_absolute():
-        destination = ROOT / destination
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps({key: report[key] for key in ("status", "checks_passed", "detection_count", "asr_cells", "cpu_only")}, indent=2))
+    destination = _write_audit_report(destination, report, explicit=report_path is not None)
+    result = {key: report[key] for key in ("status", "checks_passed", "detection_count", "asr_cells", "cpu_only")}
+    print(json.dumps({**result, "report_path": str(destination)}, indent=2))
     return report
 
 
@@ -175,4 +199,7 @@ if __name__ == "__main__":
     parser.add_argument("--data-dir", help="Directory containing the frozen detect_set.jsonl and asr_set.jsonl")
     parser.add_argument("--report", help="Write the audit report elsewhere without replacing historical evidence")
     args = parser.parse_args()
-    audit(args.directory, args.allow_sampled, args.data_dir, args.report)
+    try:
+        audit(args.directory, args.allow_sampled, args.data_dir, args.report)
+    except (FileExistsError, ValueError) as exc:
+        parser.error(str(exc))

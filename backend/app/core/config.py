@@ -85,6 +85,9 @@ def validate_config(config: dict) -> dict:
     for key, high in {"max_detection_samples": 100000, "max_asr_samples": 1000, "max_queued_jobs": 4}.items():
         if key in config.get("evaluation", {}):
             _integer(config["evaluation"][key], key, 1, high)
+    documents = config.get("documents", {})
+    if not isinstance(documents, dict) or not isinstance(documents.get("review_enabled", False), bool):
+        raise ValueError("documents.review_enabled 必须是布尔值")
     return config
 
 

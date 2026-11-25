@@ -50,11 +50,11 @@ Windows：安装 Python 3.11 和 Node.js 后，在项目目录双击 `start.bat`
 start.bat
 ```
 
-脚本会建立虚拟环境、安装依赖、安装项目私有的官方 Ollama 程序（如果系统已有则使用已有程序）、下载模型并从本地 GGUF 导入、构建数据集，然后启动后端与前端。之后执行 `./start.sh` 或 `start.bat` 即可。首次初始化耗时取决于网络与磁盘。各平台统一由 `scripts/serve.py` 管理，Ctrl+C 只停止本次脚本启动的服务及其子进程；服务日志保存在 `.runtime/`。
+脚本会建立虚拟环境、安装依赖、安装项目私有的官方 Ollama 程序（如果系统已有则使用已有程序）、下载模型并从本地 GGUF 导入，然后启动后端与前端。之后执行 `./start.sh` 或 `start.bat` 即可。首次初始化耗时取决于网络与磁盘。各平台统一由 `scripts/serve.py` 管理，Ctrl+C 只停止本次脚本启动的服务及其子进程；服务日志保存在 `.runtime/`。
 
-若原端口已有其他 Ollama，启动器会为项目选择空闲回环端口并写回 `backend/config.yaml`，保留已有服务，确保项目模型存储在 `models/ollama`。后端端口读取 `app.port`，前端端口可由 `app.frontend_port` 调整。`start.bat --check` / `./start.sh --check` 离线检查 Python、依赖版本、Node.js、配置、模型和数据文件，不安装、不启动服务，也不证明模型已完成真实推理。结构化报告可通过项目 Python 运行 `scripts/doctor.py --json` 获取。
+若原端口已有其他 Ollama，启动器会为项目选择空闲回环端口并写回 `backend/config.yaml`，保留已有服务，确保项目模型存储在 `models/ollama`。后端端口读取 `app.port`，前端端口可由 `app.frontend_port` 调整。`start.bat --check` / `./start.sh --check` 离线检查 Python、依赖版本、Node.js、配置、模型和数据文件，不安装、不启动服务，也不证明模型已完成真实推理。缺少可选评测数据只显示警告，不会导致应用就绪检查失败。结构化报告可通过项目 Python 运行 `scripts/doctor.py --json` 获取。
 
-安装因网络中断后直接重跑启动脚本：已有虚拟环境会逐项核对 `backend/requirements.txt`，自动补齐缺失或不兼容的依赖。前端依赖安装未完成或锁文件变化时自动重新安装。启动窗口分阶段提示当前进度；无需删除模型、数据库或论文。`--setup` 会重新校验模型下载并重建数据，已有完整环境日常直接启动即可。
+安装因网络中断后直接重跑启动脚本：已有虚拟环境会逐项核对 `backend/requirements.txt`，自动补齐缺失或不兼容的依赖。前端依赖安装未完成或锁文件变化时自动重新安装。Ollama 安装器会保存官方包信息，重试时继续同一版本的下载，并核对完整文件的大小与 SHA-256；已缓存的完整包可直接用于恢复安装。启动窗口分阶段提示当前进度；无需删除模型、数据库或论文。依赖和服务准备期间再次启动同一项目，会提示已有启动器在运行，避免重复准备或改写端口。`--setup` 会重新校验模型下载，已有完整环境日常直接启动即可。评测数据缺失时仍可启动应用，需要重建时按下方“数据与四组实验”单独执行构建命令。
 
 部署必须使用单 worker：金丝雀会话、登录计数和任务队列都保存在单个进程内，多个进程之间不会同步这些状态；uvicorn 不要加 `--workers`，使用下方默认的单进程启动命令。
 
@@ -102,7 +102,6 @@ export OLLAMA_HOST=127.0.0.1:11434
 
 ```bash
 .venv/bin/python scripts/download_models.py --import-ollama
-.venv/bin/python scripts/build_dataset.py
 .venv/bin/python scripts/smoke_test.py
 .venv/bin/python scripts/smoke_test.py --device cpu
 .venv/bin/python -m pytest -q
@@ -151,6 +150,14 @@ Windows 对应解释器为 `.venv\Scripts\python.exe`，环境变量使用 `set 
 
 使用`Ctrl/Cmd + K`搜索页面和有权访问的请求。常用操作在页面直接呈现，指标口径与使用帮助按需展开。新日志的执行异常独立标记，不会将未成功执行的请求显示为放行。
 
+### 正常文档的分类复核
+
+`documents.review_enabled` 控制文档专用的误报复核，缺省为关闭。启用后，仅在完整防护、`any` 融合和故障拦截均生效、原检测可靠且只有 L2 命中时，使用固定版本的 [Horizon-Labs 多语种分类器](https://huggingface.co/Horizon-Labs/prompt-injection-guard-small) 复核全文和每个原始命中片段。全部复核分数必须低于 **0.1** 才允许继续摘要；L1/L3 命中、模型缺失、校验失败或推理异常仍保留原拦截。原始 L2 分数与证据保存在日志中，页面会区分初始分类信号和复核结果。
+
+复核使用本地 CPU ONNX 与发布方原始 tokenizer，固定版本 `2efc2ed5abecd21eb45c2506d231a65d6e392b85`，按 1024 token 窗口和 128 token 重叠覆盖全文。安装文件约 303 MB，首次加载核对模型和 tokenizer 的固定 SHA-256。可用项目 Python 执行 `scripts/download_document_guard.py` 安装或修复。它不是无误保证，尤其不能将有限办公样例的改善推广为所有文档的准确率。此开关只作用于文档处理，不改动聊天、独立检测或既有论文实验的检测策略。
+
+管理员可在文档页保持防护开启，选择 **Horizon 单模型（试用）** 为本次 TXT 摘要启用单模型检测。试用沿用已有的本地 ONNX 权重和规则、提示加固、输出字符串检查。初始片段与长文归并均由 Horizon 分类，检测异常时拦截。试用结果与日志会标明实际分类器。重新选回默认多模型即可使用日常流程。
+
 ## 五层防护
 
 安全概览分别展示“请求拦截率”和“攻击拦截成功率”。前者是拦截请求数占全部请求的比例；后者是成功拦截数占有效攻击测试数的比例，仅统计攻击测试台中开启防护、判据明确、检测可靠且无运行错误的记录。错误和未判定单独显示，没有有效样本时显示 `—`。攻击未达成目标但请求已放行时，不算成功拦截。概览统计当前账号可访问且处于所选时间范围的记录，攻击测试台另外显示本轮结果；该指标不等同于检测准确率，也不替代评测任务的 ASR。
@@ -175,6 +182,8 @@ DeBERTa 官方模型主要针对英文，中文检测和越狱识别存在局限
 
 ## 数据与四组实验
 
+项目已附带 `data/processed/` 中的评测数据。需要重新构建时单独执行以下命令，构建器会拒绝写入 `data/frozen/`。
+
 ```bash
 # 首次从官方固定版本下载并构建
 .venv/bin/python scripts/build_dataset.py
@@ -194,7 +203,7 @@ DeBERTa 官方模型主要针对英文，中文检测和越狱识别存在局限
 
 论文主实验保存在 `results/thesis_v2_20261022/`；`results/` 根目录是历史 v1。v2 的 `config_snapshot.json` 指向本轮隔离构建的语料，数据哈希与模板版本随实验保留。既有 `data/processed/` 不因论文补跑自动覆盖；使用当前构建脚本重建时，编码和间接注入样本会记录 `template_version: 2`。复现应先核对配置快照与语料哈希，不能仅凭同样的样本数认为两轮数据相同。
 
-新实验必须选用尚未保存实验的目录（例如 `results/my-new-run`），评测器会拒绝覆盖既有原始结果或复核证据。新实验完成后，将审计/整理命令的目录参数改为对应目录。已有 AI 或人工标注时，`finalize_results.py` 会拒绝重新抽样；可分别使用 `audit_results.py` 和 `import_results.py` 保留标注后核对与导入。v2 已完成独立数学重算和已保存结构化判据检查；其整理阶段未再次调用模型重放审核，不与 v1 的模型判据重放混称。
+新实验必须选用尚未保存实验的目录（例如 `results/my-new-run`），评测器会拒绝覆盖既有原始结果或复核证据。新实验完成后，将审计/整理命令的目录参数改为对应目录。已有 AI 或人工标注时，`finalize_results.py` 会拒绝重新抽样；可分别使用 `audit_results.py` 和 `import_results.py` 保留标注后核对与导入。首次审计仍生成实验目录下的 `independent_audit.json`；该文件已存在时，默认在新的 `results/audit_*` 目录保存复查报告，并显示位置。显式指定的 `--report` 也不能覆盖已有文件或写入冻结数据目录。v2 已完成独立数学重算和已保存结构化判据检查；其整理阶段未再次调用模型重放审核，不与 v1 的模型判据重放混称。
 
 检测集字段为 `id,text,lang,attack_type,source,label`；额外保存原始类别、源行号和模板版本。包含 deepset 全部 test、Safety-Prompts 指令攻击六个原始类别各 100 条、Alpaca 中文正常指令 300 条、编码和间接注入模板各 50 条。ASR 默认 200 条，每条都有 `oracle` 判据。`data/processed/manifest.json` 记录源 URL、固定 commit、哈希、抽样种子和数据计数。
 

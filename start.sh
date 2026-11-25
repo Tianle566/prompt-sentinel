@@ -8,7 +8,6 @@ if [[ "${1:-}" == "--check" ]]; then
   fi
   exec .venv/bin/python scripts/doctor.py
 fi
-mkdir -p .runtime
 if [[ ! -x .venv/bin/python ]]; then
   if command -v uv >/dev/null 2>&1; then
     uv venv --python 3.11 .venv
@@ -16,5 +15,4 @@ if [[ ! -x .venv/bin/python ]]; then
     python3.11 -m venv .venv
   fi
 fi
-.venv/bin/python scripts/bootstrap.py
 exec .venv/bin/python scripts/serve.py "$@"

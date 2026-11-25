@@ -2,9 +2,20 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def require_unfrozen_path(path: Path, *roots: Path) -> Path:
+    absolute = Path(os.path.abspath(path))
+    resolved = path.resolve()
+    for root in roots:
+        frozen = root.resolve() / "data" / "frozen"
+        if absolute.is_relative_to(frozen) or resolved.is_relative_to(frozen.resolve()):
+            raise ValueError(f"冻结语料目录禁止写入：{path}")
+    return resolved
 
 
 def prepare_report_path(root: Path, output_dir: str | Path | None, kind: str, filename: str) -> Path:

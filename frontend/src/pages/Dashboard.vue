@@ -53,16 +53,16 @@ const daily = computed(() => {
   return rows
 })
 const base = {
-  color: ['#b77e5b', '#b86d60', '#8d9276', '#d3bea4', '#9b9385'],
+  color: ['#3856dd', '#7183d1', '#328d9d', '#9774cb', '#a65e76'],
   textStyle: {
     fontFamily: 'Segoe UI, Microsoft YaHei, sans-serif',
     fontSize: 12,
-    color: '#736e62',
+    color: '#5d6b82',
   },
   tooltip: {
-    backgroundColor: '#fff',
-    borderColor: '#edebe7',
-    textStyle: { color: '#736e62', fontSize: 12 },
+    backgroundColor: '#ffffff',
+    borderColor: '#e1e7f0',
+    textStyle: { color: '#192439', fontSize: 12 },
   },
 }
 const trendOption = computed(() => ({
@@ -73,37 +73,49 @@ const trendOption = computed(() => ({
     right: 0,
     icon: 'circle',
     itemWidth: 7,
-    textStyle: { color: '#736e62', fontSize: 12 },
+    textStyle: { color: '#5d6b82', fontSize: 12 },
   },
   grid: { left: 36, top: 43, right: 18, bottom: 26 },
   xAxis: {
     type: 'category',
     boundaryGap: false,
     data: daily.value.map((v) => v.date.slice(5)),
-    axisLine: { lineStyle: { color: '#efeeeb' } },
+    axisLine: { lineStyle: { color: '#e1e7f0' } },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     minInterval: 1,
-    splitLine: { lineStyle: { color: '#f4f3f0', type: 'dashed' } },
+    splitLine: { lineStyle: { color: '#e9edf5', type: 'dashed' } },
   },
   series: [
     {
       name: '全部请求',
       type: 'line',
-      smooth: false,
-      symbolSize: 6,
-      lineStyle: { width: 2 },
-      areaStyle: { color: '#b363470c' },
+      smooth: 0.25,
+      symbolSize: 5,
+      lineStyle: { width: 2.5 },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: '#3856dd37' },
+            { offset: 1, color: '#3856dd05' },
+          ],
+        },
+      },
       data: daily.value.map((v) => v.total),
     },
     {
       name: '已拦截',
       type: 'line',
-      smooth: false,
-      symbolSize: 6,
-      lineStyle: { width: 2 },
+      smooth: 0.25,
+      symbolSize: 5,
+      lineStyle: { width: 2, type: 'dashed' },
       data: daily.value.map((v) => v.blocked),
     },
   ],
@@ -117,15 +129,15 @@ const attackOption = computed(() => ({
     top: 'middle',
     icon: 'circle',
     itemWidth: 7,
-    textStyle: { color: '#736e62', fontSize: 12 },
+    textStyle: { color: '#5d6b82', fontSize: 12 },
   },
   series: [
     {
       type: 'pie',
-      radius: ['58%', '77%'],
+      radius: ['59%', '76%'],
       center: ['32%', '50%'],
       label: { show: false },
-      itemStyle: { borderWidth: 3, borderColor: '#fff', borderRadius: 2 },
+      itemStyle: { borderWidth: 3, borderColor: '#ffffff', borderRadius: 6 },
       data: (stats.value?.attack_types || []).map((v) => ({ ...v, name: attackName(v.name) })),
     },
   ],
@@ -136,19 +148,19 @@ const layersOption = computed(() => ({
   xAxis: {
     type: 'category',
     data: stats.value?.layers.map((v) => v.name),
-    axisLine: { lineStyle: { color: '#efeeeb' } },
+    axisLine: { lineStyle: { color: '#e1e7f0' } },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     minInterval: 1,
-    splitLine: { lineStyle: { color: '#f4f3f0', type: 'dashed' } },
+    splitLine: { lineStyle: { color: '#e9edf5', type: 'dashed' } },
   },
   series: [
     {
       type: 'bar',
       barMaxWidth: 25,
-      itemStyle: { color: '#bd9a89', borderRadius: [3, 3, 0, 0] },
+      itemStyle: { color: '#7183d1', borderRadius: [4, 4, 0, 0] },
       data: stats.value?.layers.map((v) => v.value),
     },
   ],
@@ -158,8 +170,7 @@ const layersOption = computed(() => ({
   <div class="dashboard operational-dashboard">
     <div class="workspace-toolbar">
       <div class="toolbar-status">
-        <span class="live-dot"></span><span>请求监控</span
-        ><small v-if="updated">更新于 {{ updated }}</small>
+        <strong>请求监控</strong><small v-if="updated">更新于 {{ updated }}</small>
       </div>
       <div class="toolbar-actions">
         <el-select
@@ -175,71 +186,93 @@ const layersOption = computed(() => ({
         <el-button :loading="loading" @click="load" aria-label="刷新概览"
           ><Icon name="refresh" :size="15"
         /></el-button>
-        <el-button type="primary" @click="router.push('/chat')"
-          ><Icon name="chat" :size="15" />新建对话</el-button
-        >
       </div>
     </div>
     <el-alert v-if="error" :title="error" type="error" :closable="false" show-icon class="mb20" />
-    <div v-loading="loading" class="operational-metrics">
-      <button class="operational-metric" @click="logs()">
-        <span>请求总数<Icon name="arrow" :size="14" /></span
-        ><strong>{{ number(stats?.total_requests) }}</strong
-        ><small>当前时间范围</small>
-      </button>
-      <button class="operational-metric" @click="logs('blocked')">
-        <span>已拦截<Icon name="arrow" :size="14" /></span
-        ><strong>{{ number(stats?.blocked_requests) }}</strong
-        ><small
-          ><b class="metric-red">{{ percentage(stats?.block_rate) }}</b> 请求拦截率</small
-        >
-      </button>
-      <div class="operational-metric">
-        <span>平均响应时间<Icon name="clock" :size="15" /></span
-        ><strong class="metric-time">{{ duration(stats?.average_latency_ms) }}</strong
-        ><small>检测与模型生成</small>
-      </div>
-      <button class="operational-metric" @click="logs('error')">
-        <span>执行异常<Icon name="arrow" :size="14" /></span
-        ><strong :class="{ 'metric-amber': stats?.error_requests }">{{
-          number(stats?.error_requests)
-        }}</strong
-        ><small>{{ stats?.error_requests ? '查看异常记录' : '无异常记录' }}</small>
-      </button>
-    </div>
-    <div class="operational-chart-grid">
+    <div class="dashboard-monitor-grid">
       <section class="panel traffic-chart">
         <div class="section-title">
           <h2>请求趋势</h2>
           <span class="subtle-label">UTC · 按日</span>
         </div>
+        <div v-loading="loading" class="operational-metrics">
+          <button class="operational-metric" @click="logs()">
+            <span class="metric-header">
+              <span class="metric-icon"><Icon name="logs" :size="17" /></span>
+              <span>请求总数</span>
+              <Icon class="metric-link-icon" name="arrow" :size="14" /> </span
+            ><strong>{{ number(stats?.total_requests) }}</strong
+            ><small>当前时间范围</small>
+          </button>
+          <button class="operational-metric metric-blocked" @click="logs('blocked')">
+            <span class="metric-header">
+              <span class="metric-icon"><Icon name="shield" :size="17" /></span>
+              <span>已拦截</span>
+              <Icon class="metric-link-icon" name="arrow" :size="14" /> </span
+            ><strong>{{ number(stats?.blocked_requests) }}</strong
+            ><small
+              ><b>{{ percentage(stats?.block_rate) }}</b> 请求拦截率</small
+            >
+          </button>
+          <div class="operational-metric">
+            <span class="metric-header">
+              <span class="metric-icon"><Icon name="clock" :size="17" /></span>
+              <span>平均响应时间</span> </span
+            ><strong class="metric-time">{{ duration(stats?.average_latency_ms) }}</strong
+            ><small>检测与模型生成</small>
+          </div>
+          <button class="operational-metric" @click="logs('error')">
+            <span class="metric-header">
+              <span class="metric-icon"><Icon name="warning" :size="17" /></span>
+              <span>执行异常</span>
+              <Icon class="metric-link-icon" name="arrow" :size="14" /> </span
+            ><strong :class="{ 'metric-amber': stats?.error_requests }">{{
+              number(stats?.error_requests)
+            }}</strong
+            ><small>{{ stats?.error_requests ? '查看异常记录' : '无异常记录' }}</small>
+          </button>
+        </div>
         <Chart
           v-if="stats?.daily?.length"
           :option="trendOption"
           label="请求与拦截趋势"
-          height="245px"
+          height="260px"
         />
         <EmptyState v-else title="暂无请求" icon="chart" text="" />
       </section>
-      <section class="panel">
-        <div class="section-title">
-          <h2>拦截分布</h2>
-          <router-link
-            :to="{ path: '/logs', query: { ...period, blocked: 'true' } }"
-            class="text-action"
-            >查看记录<Icon name="arrow" :size="13"
+      <div class="monitor-rail">
+        <section class="panel defense-summary glass-surface">
+          <div class="section-title">
+            <h2>防护表现</h2>
+            <el-popover trigger="click" :width="290"
+              ><template #reference
+                ><button class="icon-button" aria-label="防护指标说明">
+                  <Icon name="info" :size="16" /></button
+              ></template>
+              <p class="context-help">
+                拦截成功率仅统计开启防护的有效攻击测试。执行错误及未判定结果不计入分母；它不代表全部请求的准确率。
+              </p></el-popover
+            >
+          </div>
+          <div class="interception-value">
+            <span>攻击拦截成功率</span
+            ><strong>{{ percentage(stats?.attack_interception?.rate) }}</strong
+            ><small
+              >{{ number(stats?.attack_interception?.intercepted) }} /
+              {{ number(stats?.attack_interception?.evaluated) }} 有效测试</small
+            >
+          </div>
+          <div v-if="stats?.total_requests" class="defense-breakdown">
+            <h3>各层命中次数</h3>
+            <Chart :option="layersOption" label="各层命中次数" height="156px" />
+          </div>
+          <router-link to="/attack" class="text-action defense-test-link"
+            >运行安全测试<Icon name="arrow" :size="14"
           /></router-link>
-        </div>
-        <Chart
-          v-if="stats?.attack_types?.length"
-          :option="attackOption"
-          label="拦截类型分布"
-          height="245px"
-        />
-        <EmptyState v-else title="暂无拦截" icon="shield" text="" />
-      </section>
+        </section>
+      </div>
     </div>
-    <div class="operational-bottom-grid">
+    <div class="dashboard-activity-grid">
       <section class="panel recent-panel">
         <div class="section-title">
           <h2>最近请求</h2>
@@ -289,36 +322,22 @@ const layersOption = computed(() => ({
           </el-table></TableScroll
         >
       </section>
-      <section class="panel defense-summary">
+      <section class="panel distribution-panel">
         <div class="section-title">
-          <h2>防护表现</h2>
-          <el-popover trigger="click" :width="290"
-            ><template #reference
-              ><button class="icon-button" aria-label="防护指标说明">
-                <Icon name="info" :size="16" /></button
-            ></template>
-            <p class="context-help">
-              拦截成功率仅统计开启防护的有效攻击测试。执行错误及未判定结果不计入分母；它不代表全部请求的准确率。
-            </p></el-popover
-          >
-        </div>
-        <div class="interception-value">
-          <span>攻击拦截成功率</span
-          ><strong>{{ percentage(stats?.attack_interception?.rate) }}</strong
-          ><small
-            >{{ number(stats?.attack_interception?.intercepted) }} /
-            {{ number(stats?.attack_interception?.evaluated) }} 有效测试</small
-          >
+          <h2>拦截分布</h2>
+          <router-link
+            :to="{ path: '/logs', query: { ...period, blocked: 'true' } }"
+            class="text-action"
+            >查看记录<Icon name="arrow" :size="13"
+          /></router-link>
         </div>
         <Chart
-          v-if="stats?.total_requests"
-          :option="layersOption"
-          label="各层命中次数"
-          height="140px"
+          v-if="stats?.attack_types?.length"
+          :option="attackOption"
+          label="拦截类型分布"
+          height="245px"
         />
-        <router-link to="/attack" class="text-action defense-test-link"
-          >运行安全测试<Icon name="arrow" :size="14"
-        /></router-link>
+        <EmptyState v-else title="暂无拦截" icon="shield" text="" />
       </section>
     </div>
   </div>

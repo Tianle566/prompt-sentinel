@@ -4,7 +4,6 @@ set PYTHONUTF8=1
 set PYTHONIOENCODING=utf-8
 cd /d "%~dp0"
 if /I "%~1"=="--check" goto :check
-if not exist .runtime mkdir .runtime
 if not exist .venv\Scripts\python.exe (
   where uv >nul 2>nul
   if errorlevel 1 (
@@ -21,8 +20,6 @@ if not exist .venv\Scripts\python.exe (
   )
   if errorlevel 1 goto :error
 )
-.venv\Scripts\python.exe scripts\bootstrap.py
-if errorlevel 1 goto :error
 .venv\Scripts\python.exe scripts\serve.py %*
 if errorlevel 1 goto :error
 exit /b 0

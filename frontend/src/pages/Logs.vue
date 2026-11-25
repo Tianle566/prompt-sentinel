@@ -21,7 +21,6 @@ const filters = reactive({
   user_id: null,
   blocked: '',
 })
-const appliedParams = ref({})
 const moreCount = computed(
   () =>
     ['user_id', 'attack_type', 'layer', 'blocked'].filter(
@@ -32,9 +31,7 @@ const availableTypes = ref(Object.keys(attackTypes)),
   users = ref([]),
   rows = ref([]),
   total = ref(0)
-const page = ref(1),
-  pageSize = ref(20),
-  loading = ref(false),
+const loading = ref(false),
   exporting = ref(false),
   error = ref('')
 const drawer = ref(false),
@@ -45,7 +42,7 @@ const drawer = ref(false),
 let loadSequence = 0,
   detailSequence = 0
 const scalar = (value) => (typeof value === 'string' ? value : '')
-function params() {
+function params(filters) {
   const value = {}
   for (const name of ['q', 'status', 'kind', 'attack_type', 'layer', 'user_id']) {
     if (filters[name]) value[name] = filters[name]
@@ -57,34 +54,44 @@ function params() {
   if (filters.blocked !== '') value.blocked = filters.blocked
   return value
 }
-function readQuery(query) {
-  for (const key of ['q', 'status', 'kind', 'attack_type', 'layer'])
-    filters[key] = scalar(query[key])
-  filters.user_id = /^\d+$/.test(scalar(query.user_id)) ? Number(query.user_id) : null
-  filters.blocked = ['true', 'false'].includes(query.blocked) ? query.blocked : ''
-  filters.dates =
-    query.start &&
-    query.end &&
-    Number.isFinite(Date.parse(query.start)) &&
-    Number.isFinite(Date.parse(query.end))
-      ? [new Date(query.start), new Date(query.end)]
-      : null
-  page.value = Math.max(1, Math.min(100000, Number(query.page) || 1))
-  pageSize.value = [10, 20, 50].includes(Number(query.page_size)) ? Number(query.page_size) : 20
-}
+const committedFilters = computed(() => {
+  const query = route.query
+  const start = scalar(query.start),
+    end = scalar(query.end)
+  return {
+    q: scalar(query.q),
+    status: scalar(query.status),
+    kind: scalar(query.kind),
+    attack_type: scalar(query.attack_type),
+    layer: scalar(query.layer),
+    user_id: /^\d+$/.test(scalar(query.user_id)) ? Number(query.user_id) : null,
+    blocked: ['true', 'false'].includes(query.blocked) ? query.blocked : '',
+    dates:
+      Number.isFinite(Date.parse(start)) && Number.isFinite(Date.parse(end))
+        ? [new Date(start), new Date(end)]
+        : null,
+  }
+})
+const appliedParams = computed(() => params(committedFilters.value))
+const filterKey = computed(() => JSON.stringify(appliedParams.value))
+const page = computed(() =>
+  Math.max(1, Math.min(100000, Math.trunc(Number(scalar(route.query.page))) || 1))
+)
+const pageSize = computed(() => {
+  const value = Number(scalar(route.query.page_size))
+  return [10, 20, 50].includes(value) ? value : 20
+})
 async function load() {
   const current = ++loadSequence
   loading.value = true
   error.value = ''
   try {
-    const currentParams = params()
     const { data } = await api.get('/logs', {
-      params: { page: page.value, page_size: pageSize.value, ...currentParams },
+      params: { page: page.value, page_size: pageSize.value, ...appliedParams.value },
     })
     if (current !== loadSequence) return
     rows.value = data.items
     total.value = data.total
-    appliedParams.value = currentParams
     availableTypes.value = [
       ...new Set([...Object.keys(attackTypes), ...(data.attack_types || [])]),
     ].filter(Boolean)
@@ -94,11 +101,25 @@ async function load() {
     if (current === loadSequence) loading.value = false
   }
 }
-function apply(reset = true) {
-  if (reset) page.value = 1
-  const query = { ...params(), page: String(page.value), page_size: String(pageSize.value) }
-  if (JSON.stringify(route.query) === JSON.stringify(query)) load()
-  else router.push({ path: '/logs', query })
+function navigate(criteria, nextPage, nextSize) {
+  const query = { ...criteria, page: String(nextPage), page_size: String(nextSize) }
+  const target = { path: '/logs', query }
+  if (
+    JSON.stringify(criteria) === filterKey.value &&
+    nextPage === page.value &&
+    nextSize === pageSize.value
+  )
+    load()
+  if (router.resolve(target).fullPath !== route.fullPath) router.push(target)
+}
+function apply() {
+  navigate(params(filters), 1, pageSize.value)
+}
+function changePage(nextPage) {
+  if (nextPage !== page.value) navigate(appliedParams.value, nextPage, pageSize.value)
+}
+function changePageSize(nextSize) {
+  if (nextSize !== pageSize.value) navigate(appliedParams.value, 1, nextSize)
 }
 function clear() {
   Object.assign(filters, {
@@ -162,16 +183,22 @@ function replay() {
   })
 }
 watch(
-  () => route.query,
-  (query, previous) => {
-    const withoutRequest = ({ request, ...rest } = {}) => JSON.stringify(rest)
-    if (!previous || withoutRequest(query) !== withoutRequest(previous)) {
-      readQuery(query)
-      load()
+  [filterKey, page, pageSize],
+  ([key], [previousKey]) => {
+    if (key !== previousKey) {
+      Object.assign(filters, committedFilters.value)
+      total.value = 0
     }
-    if (query.request && (!previous || query.request !== previous.request))
-      fetchDetail(query.request)
-    if (!query.request) {
+    rows.value = []
+    load()
+  },
+  { immediate: true }
+)
+watch(
+  () => scalar(route.query.request),
+  (id) => {
+    if (id) fetchDetail(id)
+    else {
       detailSequence++
       drawer.value = false
     }
@@ -386,13 +413,14 @@ onMounted(async () => {
     <div class="pagination-wrap">
       <span>共 {{ total }} 条</span
       ><el-pagination
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
+        v-if="total"
+        :current-page="page"
+        :page-size="pageSize"
         :total="total"
         :page-sizes="[10, 20, 50]"
         layout="sizes, prev, pager, next"
-        @current-change="apply(false)"
-        @size-change="apply()"
+        @update:current-page="changePage"
+        @update:page-size="changePageSize"
       />
     </div>
     <el-drawer
@@ -411,7 +439,9 @@ onMounted(async () => {
             ><span class="subtle-label">{{ dateTime(detail.created_at) }}</span>
             <div class="toolbar-actions">
               <el-button size="small" @click="copyLink">复制链接</el-button
-              ><el-button type="primary" size="small" @click="replay">重新测试</el-button>
+              ><el-button type="primary" size="small" @click="replay">{{
+                detail.kind === 'document' ? '载入文档' : '载入输入'
+              }}</el-button>
             </div>
           </div>
           <el-tabs v-model="detailTab"

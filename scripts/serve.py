@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 import os
 import shutil
@@ -12,18 +13,42 @@ import subprocess
 import sys
 import threading
 import time
+from contextlib import contextmanager
+from collections.abc import Iterator
 from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-import httpx
-import psutil
-from backend.app.core.config import get_config, resolve_path, save_config
-from scripts.doctor import diagnose, node_version, supported_node
+from scripts import bootstrap
+from scripts.doctor import diagnose, document_guard_files, evaluation_checks, print_checks, resolve_node_tools, supported_node
+
+
+@contextmanager
+def launcher_lock(runtime: Path) -> Iterator[bool]:
+    runtime.mkdir(exist_ok=True)
+    with (runtime / "serve.lock").open("a+b") as lock:
+        lock.seek(0)
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            if error.errno not in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+                raise
+            yield False
+        else:
+            yield True
 
 
 def healthy(url):
+    import httpx
+
     try:
         return httpx.get(url, timeout=2).is_success
     except httpx.HTTPError:
@@ -31,6 +56,8 @@ def healthy(url):
 
 
 def project_store(url):
+    import httpx
+
     try:
         tags = httpx.get(url + "/api/tags", timeout=3).json().get("models", [])
         if not tags:
@@ -42,6 +69,8 @@ def project_store(url):
 
 
 def project_api(url):
+    import httpx
+
     try:
         response = httpx.get(url.rstrip("/") + "/api/health", timeout=3)
         data = response.json()
@@ -62,29 +91,42 @@ def free_port(start):
 
 
 def run(setup=False, check=False):
-    os.chdir(ROOT)
-    config = get_config()
     if check:
         report = diagnose()
-        for row in report["checks"]:
-            print(f"[{'通过' if row['ok'] else '待处理'}] {row['name']}：{row['detail']}")
+        print_checks(report["checks"])
         if not report["ok"]:
-            raise RuntimeError("环境尚未准备完整，运行 start.bat 或 ./start.sh 完成初始化")
+            raise RuntimeError("环境尚未准备完整，请按上方提示处理")
         return
+    with launcher_lock(ROOT / ".runtime") as acquired:
+        if not acquired:
+            print("Prompt Sentinel 正在启动或已在运行。", flush=True)
+            return
+        os.chdir(ROOT)
+        if bootstrap.main():
+            raise RuntimeError("Python 依赖准备失败")
+        run_services(setup)
+
+
+def run_services(setup: bool) -> None:
+    import httpx
+    import psutil
+    from backend.app.core.config import get_config, resolve_path, save_config
+
+    config = get_config()
     print("[1/5] 检查本机环境与前端依赖…", flush=True)
-    npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
-    version = node_version()
-    if not npm or not version or not supported_node(version):
+    node = resolve_node_tools()
+    npm = node.npm
+    if not npm or not node.version or not supported_node(node.version):
         raise RuntimeError("请先安装 Node.js 20.19+ / 22.12+（含 npm）")
+    frontend_env = node.environment()
     lock = ROOT / "frontend" / "package-lock.json"
     fingerprint = hashlib.sha256(lock.read_bytes()).hexdigest()
     stamp = ROOT / ".runtime" / "frontend-lock.sha256"
     frontend_ready = (ROOT / "frontend" / "node_modules" / ".package-lock.json").is_file()
     if setup or not frontend_ready or not stamp.is_file() or stamp.read_text(encoding="utf-8").strip() != fingerprint:
-        subprocess.run([npm, "ci"], cwd=ROOT / "frontend", check=True, shell=os.name == "nt")
+        subprocess.run([npm, "ci"], cwd=ROOT / "frontend", env=frontend_env, check=True, shell=os.name == "nt")
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.write_text(fingerprint, encoding="utf-8")
-    (ROOT / ".runtime").mkdir(exist_ok=True)
     stop_request = ROOT / ".runtime" / "stop.request"
     stop_request.unlink(missing_ok=True)
     owned, streams = [], []
@@ -116,6 +158,19 @@ def run(setup=False, check=False):
             path = resolve_path(config["models"][key]["path"])
             if setup or not (path / "config.json").is_file() or not (path / "tokenizer_config.json").is_file() or not list(path.glob("*.safetensors")):
                 download(key)
+        if config.get("documents", {}).get("review_enabled", False):
+            try:
+                path, present = document_guard_files(config, resolve_path)
+                if setup or not present:
+                    from scripts.download_document_guard import download as download_document_guard
+
+                    download_document_guard(path)
+            except Exception as error:
+                print(
+                    f"文档复核模型准备失败（{type(error).__name__}）。复核不可用时保留原有文档拦截，应用继续启动。"
+                    "可联网运行项目 Python scripts/download_document_guard.py。",
+                    flush=True,
+                )
         if config["target"]["provider"] == "ollama":
             print("[3/5] 准备本地 Ollama 与目标模型…", flush=True)
             from scripts.install_ollama import install
@@ -149,9 +204,7 @@ def run(setup=False, check=False):
             if setup or model not in [item["name"] for item in tags]:
                 import_local_target(config, executable)
         print("[4/5] 检查评测数据…", flush=True)
-        if setup or not all(resolve_path(config["data"][key]).is_file() for key in ("detect_path", "asr_path")):
-            from scripts.build_dataset import build_dataset
-            build_dataset(config)
+        print_checks([row for row in evaluation_checks(config, resolve_path) if row["warning"]])
         print("[5/5] 启动应用服务…", flush=True)
         host, port = config["app"]["host"], int(config["app"]["port"])
         api_url = f"http://{host}:{port}"
@@ -165,7 +218,7 @@ def run(setup=False, check=False):
         if healthy(frontend_url) and not project_api(frontend_url):
             raise RuntimeError(f"{frontend_url} 已属于另一个前端，请修改 app.frontend_port")
         if not healthy(frontend_url):
-            process = launch([npm, "run", "dev", "--", "--host", "127.0.0.1", "--port", str(frontend_port), "--strictPort"], "frontend.log", cwd=ROOT / "frontend", env={**os.environ, "SENTINEL_BACKEND_URL": api_url})
+            process = launch([npm, "run", "dev", "--", "--host", "127.0.0.1", "--port", str(frontend_port), "--strictPort"], "frontend.log", cwd=ROOT / "frontend", env={**frontend_env, "SENTINEL_BACKEND_URL": api_url})
             ready(frontend_url, process)
         print(f"\nPrompt Sentinel 已就绪\n前端：{frontend_url}\nSwagger：{api_url}/docs\n初始账户：{ROOT / '.runtime' / 'credentials.json'}\nCtrl+C 仅停止本次启动的服务。\n", flush=True)
         while not stop.wait(1):

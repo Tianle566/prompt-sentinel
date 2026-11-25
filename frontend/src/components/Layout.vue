@@ -247,7 +247,7 @@ onBeforeUnmount(() => {
       </div>
     </aside>
     <div class="main-shell" :inert="mobileOpen ? true : undefined">
-      <header class="topbar">
+      <header class="topbar glass-surface">
         <div class="breadcrumb">
           <button
             ref="menuButton"
@@ -319,23 +319,35 @@ onBeforeUnmount(() => {
         </div>
       </header>
       <main id="main-content" class="main-content" tabindex="-1">
-        <div v-if="route.path !== '/chat'" class="page-heading">
-          <div>
-            <h1>{{ pageTitle }}</h1>
-          </div>
-          <el-popover
-            v-if="route.meta.subtitle"
-            placement="bottom-end"
-            :width="320"
-            trigger="click"
-          >
-            <template #reference
-              ><button class="page-help" aria-label="页面帮助">
-                <Icon name="info" :size="16" /><span>帮助</span>
-              </button></template
+        <div
+          v-if="route.path !== '/chat'"
+          class="page-heading"
+          :class="{ 'overview-heading': route.path === '/dashboard' }"
+        >
+          <div class="page-heading-title">
+            <h1>{{ route.path === '/dashboard' ? '安全概览' : pageTitle }}</h1>
+            <el-popover
+              v-if="route.meta.subtitle"
+              placement="bottom-start"
+              :width="300"
+              trigger="click"
             >
-            <p class="context-help">{{ pageSubtitle }}</p>
-          </el-popover>
+              <template #reference>
+                <button class="page-help" aria-label="页面帮助" title="页面帮助">
+                  <Icon name="info" :size="17" />
+                </button>
+              </template>
+              <p class="context-help">{{ pageSubtitle }}</p>
+            </el-popover>
+          </div>
+          <div v-if="route.path === '/dashboard'" class="overview-actions">
+            <router-link class="overview-action" to="/documents">
+              <Icon name="document" :size="16" />处理文档
+            </router-link>
+            <router-link class="overview-action primary" to="/chat">
+              <Icon name="chat" :size="16" />新建安全对话
+            </router-link>
+          </div>
         </div>
         <router-view />
       </main>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, errorText, dateTime } from '../api'
 import { requestKinds, requestStatus, statusLabels } from '../console'
@@ -18,6 +18,7 @@ const mode = ref('protected'),
   session = ref(crypto.randomUUID().replaceAll('-', ''))
 const recent = ref([]),
   historyError = ref(''),
+  loadingHistory = ref(false),
   source = ref(null),
   loadingSource = ref(false),
   historyOpen = ref(false)
@@ -34,43 +35,55 @@ const suggestions = [
 const resultId = computed(() =>
   mode.value === 'compare' ? result.value?.protected?.id : result.value?.id
 )
+let historyController,
+  submissionSequence = 0
 async function history() {
+  historyController?.abort()
+  historyController = new AbortController()
+  const { signal } = historyController
+  loadingHistory.value = true
   historyError.value = ''
   try {
     const responses = await Promise.all(
       ['chat', 'compare', 'detect'].map((kind) =>
-        api.get('/logs', { params: { kind, page_size: 8 } })
+        api.get('/logs', { params: { kind, page_size: 8 }, signal })
       )
     )
+    if (signal.aborted) return
     recent.value = responses
       .flatMap(({ data }) => data.items)
       .sort((a, b) => b.id - a.id)
       .slice(0, 10)
   } catch (e) {
-    historyError.value = errorText(e)
-  }
-}
-async function loadSource(id) {
-  if (loading.value) return
-  loadingSource.value = true
-  error.value = ''
-  try {
-    const { data } = await api.get(`/logs/${encodeURIComponent(id)}`)
-    text.value = data.text
-    source.value = data.id
-    result.value = null
-    sentText.value = ''
-    session.value = crypto.randomUUID().replaceAll('-', '')
-  } catch (e) {
-    error.value = errorText(e)
+    if (!signal.aborted) historyError.value = errorText(e)
   } finally {
-    loadingSource.value = false
+    if (!signal.aborted) loadingHistory.value = false
   }
 }
 watch(
   () => route.query.from,
-  (id) => {
-    if (id) loadSource(id)
+  async (id, _previous, onCleanup) => {
+    if (typeof id !== 'string' || !id) {
+      loadingSource.value = false
+      return
+    }
+    const controller = new AbortController()
+    const { signal } = controller
+    onCleanup(() => controller.abort())
+    loadingSource.value = true
+    error.value = ''
+    try {
+      const { data } = await api.get(`/logs/${encodeURIComponent(id)}`, { signal })
+      if (signal.aborted) return
+      clearConversation()
+      mode.value = data.kind === 'detect' ? 'detect' : 'protected'
+      text.value = data.text
+      source.value = data.id
+    } catch (e) {
+      if (!signal.aborted) error.value = errorText(e)
+    } finally {
+      if (!signal.aborted) loadingSource.value = false
+    }
   },
   { immediate: true }
 )
@@ -81,48 +94,63 @@ watch(mode, () => {
 })
 async function submit() {
   if (!text.value.trim() || loading.value || loadingSource.value) return
+  const sequence = ++submissionSequence
   loading.value = true
   error.value = ''
   result.value = null
   sentText.value = text.value.trim()
   const chosen = mode.value
   try {
-    result.value = (
-      await api.post(
-        chosen === 'compare' ? '/chat/compare' : chosen === 'detect' ? '/detect' : '/chat',
-        { text: sentText.value, protected: true, session_id: session.value }
-      )
-    ).data
+    const { data } = await api.post(
+      chosen === 'compare' ? '/chat/compare' : chosen === 'detect' ? '/detect' : '/chat',
+      { text: sentText.value, protected: true, session_id: session.value }
+    )
+    if (sequence !== submissionSequence) return
+    result.value = data
     text.value = ''
     source.value = null
-    await history()
+    void history()
   } catch (e) {
-    error.value = errorText(e)
+    if (sequence === submissionSequence) error.value = errorText(e)
   } finally {
-    loading.value = false
+    if (sequence === submissionSequence) loading.value = false
   }
 }
-function reset() {
+function clearConversation() {
+  submissionSequence++
+  loading.value = false
   result.value = null
   sentText.value = ''
   error.value = ''
   text.value = ''
   source.value = null
   session.value = crypto.randomUUID().replaceAll('-', '')
+}
+function reset() {
+  clearConversation()
   if (route.query.from) router.replace('/chat')
 }
 onMounted(history)
+onBeforeUnmount(() => {
+  historyController?.abort()
+  submissionSequence++
+})
 </script>
 <template>
   <div class="playground-workspace">
     <section class="playground-main">
       <div class="playground-toolbar">
-        <el-segmented v-model="mode" :options="modes" aria-label="运行模式" :disabled="loading" />
+        <el-segmented
+          v-model="mode"
+          :options="modes"
+          aria-label="运行模式"
+          :disabled="loading || loadingSource"
+        />
         <div class="toolbar-actions">
           <el-button text class="history-trigger" aria-label="最近记录" @click="historyOpen = true">
             <Icon name="clock" :size="16" /><span>最近记录</span>
           </el-button>
-          <el-button text :disabled="loading" @click="reset"
+          <el-button text :disabled="loading || loadingSource" @click="reset"
             ><Icon name="chat" :size="15" />新建</el-button
           >
         </div>
@@ -225,7 +253,7 @@ onMounted(history)
           </div>
         </div>
       </div>
-      <div v-if="!result && !loading" class="chat-suggestions">
+      <div v-if="!result && !loading && !loadingSource" class="chat-suggestions">
         <button
           v-for="item in suggestions"
           :key="item.label"
@@ -250,6 +278,9 @@ onMounted(history)
           /></router-link>
         </div>
         <p v-if="historyError" class="inline-error" role="alert">{{ historyError }}</p>
+        <p v-else-if="loadingHistory && !recent.length" class="subtle-label" role="status">
+          正在载入最近记录…
+        </p>
         <EmptyState v-else-if="!recent.length" title="暂无记录" text="" icon="logs" />
         <button
           v-for="row in recent"

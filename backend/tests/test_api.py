@@ -1,5 +1,6 @@
 import copy
 import json
+from types import SimpleNamespace
 
 import bcrypt
 import pytest
@@ -14,6 +15,7 @@ from backend.app.core import config as config_module
 from backend.app.core.auth import create_token
 from backend.app.db.models import Base, PolicyAudit, RequestLog, User
 from backend.app.db.session import get_db
+from backend.app.schemas import DetectionResult, LayerResult, PipelineResult
 
 
 @pytest.fixture
@@ -156,6 +158,28 @@ def test_document_hierarchical_summary_covers_all_source_text(api, monkeypatch):
     assert all(call[1] is not None for call in calls[:source_chunks])
     assert calls[-1][1] is None  # Generated summaries receive a fresh detection pass.
     assert result["blocked"] is False and result["detection"]["reliable"] is True
+
+
+def test_document_does_not_rescan_an_already_covered_suffix(api, monkeypatch):
+    client, _, user, _ = api
+    checked = []
+
+    def detect(text):
+        checked.append(text)
+        isolated_suffix = len(text) < 128
+        return DetectionResult(is_attack=isolated_suffix, layer_results=[LayerResult(layer="L2", is_attack=isolated_suffix)])
+
+    def generate(text, protected, *, detection, **kwargs):
+        return PipelineResult(output="会议纪要摘要", detection=detection, session_id="test").model_dump()
+
+    monkeypatch.setattr(routes, "_detection", lambda config: SimpleNamespace(detect=detect))
+    monkeypatch.setattr(routes, "_run", generate)
+    text = ("仓库记录盘点时间、交接人和物资名称。" * 100)[:1150]
+    response = client.post("/api/document/summarize", headers=user, files={"file": ("meeting.txt", text.encode(), "text/plain")})
+
+    assert response.status_code == 200
+    assert checked == [text]
+    assert response.json()["result"]["blocked"] is False
 
 
 def test_returned_chat_session_is_stable_and_isolated_per_user(api, monkeypatch):
